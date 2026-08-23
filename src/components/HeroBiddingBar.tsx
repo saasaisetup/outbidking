@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Minus, Plus, ChevronDown, Globe } from 'lucide-react';
 import { CATEGORIES } from '@/lib/categories';
 import { PlatformStats } from '@/lib/types';
+import { CategoryIcon } from './CategoryIcon';
 
 interface HeroBiddingBarProps {
   stats: PlatformStats;
@@ -23,7 +24,7 @@ export function HeroBiddingBar({
   onOpenStats,
 }: HeroBiddingBarProps) {
   const [url, setUrl] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState('ai-agents-infrastructure');
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [isXHandle, setIsXHandle] = useState(false);
   const [isInstagram, setIsInstagram] = useState(false);
@@ -45,9 +46,6 @@ export function HeroBiddingBar({
       setIsInstagram(false);
       const cleanHandle = trimmed.replace(/^@/, '').replace(/^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\//, '').split('/')[0].split('?')[0];
       setFaviconUrl(`https://unavatar.io/twitter/${cleanHandle}`);
-      if (!category) {
-        setCategory('people-profiles');
-      }
       return;
     }
 
@@ -72,7 +70,7 @@ export function HeroBiddingBar({
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [url, category]);
+  }, [url]);
 
   const handleDecrement = () => {
     onBidAmountChange(Math.max(5, currentBidAmount - 1));
@@ -82,8 +80,8 @@ export function HeroBiddingBar({
     onBidAmountChange(currentBidAmount + 1);
   };
 
-  // Only allow clicking when both URL and category are provided
-  const isFormValid = url.trim().length > 0 && category.length > 0;
+  // Allow submitting
+  const isFormValid = url.trim().length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +94,7 @@ export function HeroBiddingBar({
 
     onSubmitBid({
       url: finalUrl,
-      category: category,
+      category: category || 'ai-agents-infrastructure',
       bidAmount: currentBidAmount || 5,
       logoUrl: faviconUrl || undefined,
       isHandle: isXHandle,
@@ -106,12 +104,12 @@ export function HeroBiddingBar({
   const totalVisitorsFormatted = (stats?.totalClicksDelivered || 142732).toLocaleString();
 
   return (
-    <section className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-5 sm:pt-8 pb-4 flex flex-col items-center text-center">
+    <section className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-5 sm:pt-7 pb-4 flex flex-col items-center text-center">
       {/* Visitor Pill displaying 1,081 online and visitors */}
       <button
         type="button"
         onClick={onOpenStats}
-        className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors mb-5 sm:mb-7 shadow-2xs cursor-pointer max-w-full"
+        className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors mb-5 sm:mb-6 shadow-2xs cursor-pointer max-w-full"
       >
         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
         <span className="font-semibold text-zinc-800 dark:text-zinc-200">1,081 online</span>
@@ -173,27 +171,27 @@ export function HeroBiddingBar({
         <span>?</span>
       </div>
 
-      {/* Subtitle */}
-      <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#ea6c52] dark:text-[#f87171] max-w-xl font-medium leading-relaxed px-2">
+      {/* Subtitle matching media_1787458001988.png */}
+      <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#f87171] dark:text-[#f87171] max-w-lg font-medium leading-relaxed px-2">
         New spots start at $5. Paying less than the #1 price still puts you on the board at whatever place that bid can take.
       </p>
 
-      {/* Upscaled Main Responsive Input Form */}
+      {/* Main Responsive Input Form matching media_1787458001988.png */}
       <form
         onSubmit={handleSubmit}
-        className="mt-5 sm:mt-7 w-full max-w-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5"
+        className="mt-5 sm:mt-6 w-full max-w-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3"
       >
-        {/* URL Input with Favicon, X Logo, or Instagram Logo */}
-        <div className="flex-1 flex items-center gap-3 px-4 sm:px-4.5 py-3 sm:py-3.5 rounded-2xl bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs focus-within:border-[#4ade80] transition-colors">
+        {/* URL Input with rounded-full pill styling */}
+        <div className="flex-1 flex items-center gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs focus-within:border-[#f87171] transition-colors">
           {isXHandle ? (
-            <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-xs font-black flex-shrink-0">
+            <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
               𝕏
             </div>
           ) : isInstagram ? (
-            <div className="w-6 h-6 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
+            <div className="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
               <svg viewBox="0 0 24 24" className="w-full h-full" fill="none">
                 <defs>
-                  <radialGradient id="ig-input-grad" cx="25%" cy="110%" r="130%">
+                  <radialGradient id="ig-input-bar-grad" cx="25%" cy="110%" r="130%">
                     <stop offset="0%" stopColor="#fdf497" />
                     <stop offset="10%" stopColor="#fdf497" />
                     <stop offset="45%" stopColor="#fd5949" />
@@ -201,7 +199,7 @@ export function HeroBiddingBar({
                     <stop offset="95%" stopColor="#285AEB" />
                   </radialGradient>
                 </defs>
-                <rect width="24" height="24" rx="5" fill="url(#ig-input-grad)" />
+                <rect width="24" height="24" rx="5" fill="url(#ig-input-bar-grad)" />
                 <rect x="4" y="4" width="16" height="16" rx="4" stroke="#ffffff" strokeWidth="2" fill="none" />
                 <circle cx="12" cy="12" r="3.5" stroke="#ffffff" strokeWidth="2" fill="none" />
                 <circle cx="16.5" cy="7.5" r="1" fill="#ffffff" />
@@ -216,7 +214,7 @@ export function HeroBiddingBar({
               onError={() => setFaviconUrl(null)}
             />
           ) : (
-            <Globe className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+            <Globe className="w-4 h-4 text-zinc-400 flex-shrink-0" />
           )}
 
           <input
@@ -230,46 +228,37 @@ export function HeroBiddingBar({
           />
         </div>
 
-        {/* Category Dropdown */}
-        <div className="relative w-full sm:w-auto">
+        {/* Category Dropdown with rounded-full pill styling */}
+        <div className="relative w-full sm:w-auto flex items-center">
+          <div className="absolute left-3.5 pointer-events-none z-10">
+            <CategoryIcon slug={category || 'ai-agents-infrastructure'} size="sm" />
+          </div>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full sm:w-52 py-3 sm:py-3.5 pl-4 pr-9 rounded-2xl bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium focus:outline-none cursor-pointer appearance-none shadow-xs"
+            className="w-full sm:w-56 py-2.5 sm:py-3 pl-11 pr-8 rounded-full bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium focus:outline-none cursor-pointer appearance-none shadow-xs"
           >
-            <option value="" className="dark:bg-[#181613] text-zinc-400">
-              Choose a category
-            </option>
             {CATEGORIES.filter((c) => c.slug !== 'all').map((c) => (
               <option key={c.slug} value={c.slug} className="dark:bg-[#181613] text-zinc-900 dark:text-zinc-200">
-                {c.icon} {c.name}
+                {c.name}
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
         </div>
 
-        {/* 3D Tactile "Rankbid" Button */}
+        {/* Peach / Terracotta "Outbid" Button matching media_1787458001988.png */}
         <button
           type="submit"
-          disabled={!isFormValid}
-          className={`w-full sm:w-auto px-8 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight text-black transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center ${
-            isFormValid
-              ? 'bg-[#52d489] hover:bg-[#45c77c] border border-[#3cb56e] shadow-[0_4px_0_0_#2b8a53] active:translate-y-[2px] active:shadow-[0_2px_0_0_#2b8a53] cursor-pointer opacity-100'
-              : 'bg-[#52d489]/50 border border-[#3cb56e]/40 shadow-[0_2px_0_0_#2b8a53]/40 opacity-40 cursor-not-allowed'
-          }`}
+          className="w-full sm:w-auto px-7 py-2.5 sm:py-3 rounded-full font-bold text-sm sm:text-base tracking-tight text-white bg-[#f4a28c] hover:bg-[#ea6c52] active:scale-95 transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center cursor-pointer shadow-xs"
         >
-          Rankbid
+          Outbid
         </button>
       </form>
 
       {/* Subtext matching media_1787458001988.png */}
-      <p className="mt-2.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-normal">
+      <p className="mt-3 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-normal">
         Already on the list? Enter the same URL or @handle and up your bid.
-      </p>
-
-      <p className="mt-1.5 text-[9px] sm:text-[11px] font-mono tracking-wider text-zinc-400 dark:text-[#78716c] uppercase px-2">
-        $1 TO GET ON THE BOARD · A SEAT IS THAT BID + $1 · OLDER EQUAL BID STAYS HIGHER
       </p>
     </section>
   );
