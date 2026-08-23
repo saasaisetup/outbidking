@@ -210,26 +210,26 @@ export default function HomePage() {
       {/* Top Header */}
       <Header />
 
-      {/* Main View Mode Selector (Map vs Board) with Responsive Layout */}
-      <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-2 pb-1 flex items-center justify-between gap-2">
-        <div className="inline-flex p-0.5 sm:p-1 rounded-2xl bg-zinc-100 dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs">
+      {/* Centered Compact View Switcher matching media_1787500529760.png */}
+      <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-1.5 pb-0.5 flex items-center justify-center">
+        <div className="inline-flex p-0.5 rounded-xl bg-zinc-100 dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs">
           <button
             type="button"
             onClick={() => setViewMode('board')}
-            className={`flex items-center gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer select-none ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
               viewMode === 'board'
                 ? 'bg-white dark:bg-[#25221d] text-zinc-900 dark:text-white shadow-xs'
                 : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
-            <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#ea6c52]" />
+            <Layers className="w-3.5 h-3.5 text-[#ea6c52]" />
             <span>Classic Board</span>
           </button>
 
           <button
             type="button"
             onClick={() => setViewMode('map')}
-            className={`flex items-center gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer select-none ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
               viewMode === 'map'
                 ? 'bg-[#ea6c52] text-white shadow-xs'
                 : 'text-zinc-500 hover:text-[#ea6c52]'
@@ -237,20 +237,11 @@ export default function HomePage() {
           >
             <span>🗺️</span>
             <span>World Map</span>
-            <span className="px-1 py-0.5 rounded text-[9px] sm:text-[10px] font-mono font-bold bg-black/20 text-white">
+            <span className="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-black/20 text-white">
               WAR
             </span>
           </button>
         </div>
-
-        {/* VISIT Fullscreen Map Link */}
-        <Link
-          href="/map"
-          className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-zinc-900 border border-zinc-700 hover:border-[#ea6c52] text-[10px] sm:text-xs font-mono font-black text-zinc-300 hover:text-white transition-all shadow-xs group shrink-0"
-        >
-          <span>FULLSCREEN MAP</span>
-          <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#ea6c52] group-hover:translate-x-0.5 transition-transform" />
-        </Link>
       </div>
 
       {viewMode === 'board' ? (

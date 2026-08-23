@@ -47,19 +47,19 @@ export function Header({
 
         <Link
           href="/categories"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-[10px] sm:text-xs hidden xs:inline"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-[10px] sm:text-xs hidden sm:inline"
         >
           Categories
         </Link>
         <Link
           href="/about"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-[10px] sm:text-xs hidden xs:inline"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-[10px] sm:text-xs font-semibold"
         >
           About
         </Link>
         <Link
           href="/rules"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-[10px] sm:text-xs"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-[10px] sm:text-xs font-semibold"
         >
           Rules
         </Link>

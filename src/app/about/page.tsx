@@ -8,6 +8,8 @@ import { StatsModal } from '@/components/StatsModal';
 import { RulesModal } from '@/components/RulesModal';
 import { PlatformStats } from '@/lib/types';
 
+import { StatsPill } from '@/components/StatsPill';
+
 export default function AboutPage() {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
@@ -29,19 +31,7 @@ export default function AboutPage() {
         <main className="w-full max-w-2xl mx-auto px-4 pt-6 pb-16 flex flex-col items-start">
           {/* Visitor Pill */}
           <div className="w-full flex justify-center mb-6">
-            <button
-              onClick={() => setIsStatsOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200">1,081 online</span>
-              <span>·</span>
-              <span>142,732 visitors</span>
-              <span>·</span>
-              <span className="text-[#ea6c52] font-semibold flex items-center">
-                stats <span className="ml-0.5">→</span>
-              </span>
-            </button>
+            <StatsPill onOpenStats={() => setIsStatsOpen(true)} />
           </div>
 
           {/* Heading */}
