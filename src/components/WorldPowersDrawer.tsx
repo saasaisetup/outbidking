@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WorldPower, WarEvent } from '@/lib/types';
 import { Crown, ExternalLink, Flame, Shield, ChevronDown, ChevronUp, EyeOff, Eye } from 'lucide-react';
 
@@ -15,11 +15,18 @@ export function WorldPowersDrawer({
   warEvents,
   onSelectCountry,
 }: WorldPowersDrawerProps) {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
   const [isFeedCollapsed, setIsFeedCollapsed] = useState(false);
 
+  useEffect(() => {
+    // Open by default on desktop screens (>= 768px)
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      setIsVisible(true);
+    }
+  }, []);
+
   return (
-    <aside aria-label="World Powers and War Intel" className="absolute left-3 sm:left-5 top-16 sm:top-20 z-20 flex flex-col gap-3 max-w-[280px] sm:max-w-[320px] pointer-events-none">
+    <aside aria-label="World Powers and War Intel" className="absolute left-2 sm:left-5 top-12 sm:top-20 z-20 flex flex-col gap-2 sm:gap-3 max-w-[230px] sm:max-w-[320px] pointer-events-none">
       {/* Visibility Toggle Button */}
       <button
         type="button"

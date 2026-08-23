@@ -19,7 +19,7 @@ export function UnclaimedLandDrawer({
   const unclaimedCount = unclaimed.length;
 
   return (
-    <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end">
+    <div className="absolute bottom-3 sm:bottom-4 right-2 sm:right-4 z-20 flex flex-col items-end">
       {/* Expanded Drawer List */}
       {isOpen && (
         <div className="mb-2 w-72 sm:w-80 max-h-80 rounded-2xl bg-[#0e0e12]/95 backdrop-blur-xl border border-zinc-800 shadow-2xl p-3 flex flex-col font-mono text-xs overflow-hidden animate-in slide-in-from-bottom-2 duration-150">

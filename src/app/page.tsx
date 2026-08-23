@@ -25,7 +25,6 @@ import { OutbidToast } from '@/components/OutbidToast';
 
 import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug, TerritoryState, WorldPower, WarEvent, MapStats } from '@/lib/types';
 import { soundManager } from '@/lib/sound';
-import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
 import { subscribeToLivePresence } from '@/lib/presence';
 import { Globe, Layers, ExternalLink } from 'lucide-react';
@@ -207,38 +206,38 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen selection:bg-[#e05d44] selection:text-white font-sans transition-colors duration-200">
+    <div className="min-h-screen selection:bg-[#e05d44] selection:text-white font-sans transition-colors duration-200 overflow-x-hidden">
       {/* Top Header */}
       <Header />
 
-      {/* Main View Mode Selector (Map vs Board) with Direct VISIT Button */}
-      <div className="w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex items-center justify-between">
-        <div className="inline-flex p-1 rounded-2xl bg-zinc-100 dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs">
+      {/* Main View Mode Selector (Map vs Board) with Responsive Layout */}
+      <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-2 pb-1 flex items-center justify-between gap-2">
+        <div className="inline-flex p-0.5 sm:p-1 rounded-2xl bg-zinc-100 dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs">
           <button
             type="button"
             onClick={() => setViewMode('board')}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer select-none ${
+            className={`flex items-center gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer select-none ${
               viewMode === 'board'
                 ? 'bg-white dark:bg-[#25221d] text-zinc-900 dark:text-white shadow-xs'
                 : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
-            <Layers className="w-4 h-4 text-[#ea6c52]" />
+            <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#ea6c52]" />
             <span>Classic Board</span>
           </button>
 
           <button
             type="button"
             onClick={() => setViewMode('map')}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer select-none ${
+            className={`flex items-center gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer select-none ${
               viewMode === 'map'
                 ? 'bg-[#ea6c52] text-white shadow-xs'
                 : 'text-zinc-500 hover:text-[#ea6c52]'
             }`}
           >
             <span>🗺️</span>
-            <span>World War Map</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-black/20 text-white">
+            <span>World Map</span>
+            <span className="px-1 py-0.5 rounded text-[9px] sm:text-[10px] font-mono font-bold bg-black/20 text-white">
               WAR
             </span>
           </button>
@@ -247,10 +246,10 @@ export default function HomePage() {
         {/* VISIT Fullscreen Map Link */}
         <Link
           href="/map"
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-zinc-900 border border-zinc-700 hover:border-[#ea6c52] text-xs font-mono font-black text-zinc-300 hover:text-white transition-all shadow-xs group"
+          className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-zinc-900 border border-zinc-700 hover:border-[#ea6c52] text-[10px] sm:text-xs font-mono font-black text-zinc-300 hover:text-white transition-all shadow-xs group shrink-0"
         >
           <span>FULLSCREEN MAP</span>
-          <ExternalLink className="w-3.5 h-3.5 text-[#ea6c52] group-hover:translate-x-0.5 transition-transform" />
+          <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#ea6c52] group-hover:translate-x-0.5 transition-transform" />
         </Link>
       </div>
 
@@ -305,10 +304,10 @@ export default function HomePage() {
           />
         </main>
       ) : (
-        <main className="w-full pb-12 pt-3">
-          <div className="w-full px-2 sm:px-6">
+        <main className="w-full pb-12 pt-2 sm:pt-3">
+          <div className="w-full px-2 sm:px-4 max-w-6xl mx-auto">
             {/* Full-Sized Interactive World War Map Container */}
-            <div className="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-[#070709] h-[78vh] min-h-[580px]">
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-[#070709] h-[65vh] sm:h-[75vh] min-h-[440px] sm:min-h-[580px]">
               <WorldWarMap
                 territories={territories}
                 selectedTerritory={selectedTerritory}

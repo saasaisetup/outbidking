@@ -132,7 +132,7 @@ export function CommandSideDrawer({
       />
 
       {/* Slide-in Command Side Drawer matching media_1787488185015.png */}
-      <aside aria-label="Territory Command Drawer" className="relative w-full max-w-md h-full bg-[#0d0d12] border-l border-[#1f1f28] shadow-2xl p-5 sm:p-6 text-white font-sans overflow-y-auto pointer-events-auto z-10 animate-in slide-in-from-right duration-250 flex flex-col justify-between scrollbar-thin">
+      <aside aria-label="Territory Command Drawer" className="relative w-full max-w-full sm:max-w-md h-full bg-[#0d0d12] border-l border-[#1f1f28] shadow-2xl p-4 sm:p-6 text-white font-sans overflow-y-auto pointer-events-auto z-10 animate-in slide-in-from-right duration-250 flex flex-col justify-between scrollbar-thin">
         <div>
           {/* Top Command Header */}
           <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-4">
