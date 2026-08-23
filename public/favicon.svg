@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Subtle dark canvas background -->
+  <rect width="32" height="32" rx="7" fill="#0e0d0b"/>
+  <!-- Exact 3-bar brand mark matching header logo -->
+  <!-- Top bar (Terracotta Orange) -->
+  <rect x="5" y="7" width="12" height="4" rx="2" fill="#e05d44"/>
+  <!-- Middle bar (Bright White) -->
+  <rect x="5" y="14" width="22" height="4" rx="2" fill="#ffffff"/>
+  <!-- Bottom bar (Bright White) -->
+  <rect x="5" y="21" width="16" height="4" rx="2" fill="#ffffff"/>
+</svg>
