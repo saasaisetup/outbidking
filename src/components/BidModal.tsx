@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Loader2, ShieldCheck, Zap, CreditCard, Wallet, Globe, Crown } from 'lucide-react';
+import { X, Loader2, ShieldCheck, Zap, CreditCard, Wallet, Globe, Crown, Sparkles } from 'lucide-react';
 import { PlatformStats } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
 import confetti from 'canvas-confetti';
@@ -27,32 +27,87 @@ export function BidModal({
   onBidSuccess,
 }: BidModalProps) {
   const [url, setUrl] = useState(initialUrl);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [category, setCategory] = useState(initialCategory);
   const [bidAmount, setBidAmount] = useState(initialBidAmount);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [isXHandle, setIsXHandle] = useState(false);
+  const [isInstagram, setIsInstagram] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'sandbox' | 'crypto' | 'lemonsqueezy' | 'stripe'>('sandbox');
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isScraping, setIsScraping] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Top price to grab rank #1
-  const kingBid = stats?.currentKing?.totalBid || 14018;
+  const kingBid = stats?.currentKing?.totalBid || 14043;
   const takeNumberOneAmount = kingBid + 5;
+
+  const detectAndScrapeUrl = async (inputUrl: string) => {
+    const trimmed = inputUrl.trim();
+    if (!trimmed) {
+      setFaviconUrl(null);
+      setIsXHandle(false);
+      setIsInstagram(false);
+      setTitle('');
+      return;
+    }
+
+    // 1. Social Handle Detection
+    if (trimmed.startsWith('@') || trimmed.includes('x.com/') || trimmed.includes('twitter.com/')) {
+      setIsXHandle(true);
+      setIsInstagram(false);
+      const cleanHandle = trimmed.replace(/^@/, '').replace(/^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\//, '').split('/')[0].split('?')[0];
+      setTitle(`@${cleanHandle}`);
+      setFaviconUrl(`https://unavatar.io/twitter/${cleanHandle}`);
+      return;
+    }
+
+    if (trimmed.includes('instagram.com/')) {
+      setIsInstagram(true);
+      setIsXHandle(false);
+      const cleanHandle = trimmed.replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').split('/')[0].split('?')[0].replace(/^@/, '');
+      setTitle(`@${cleanHandle}`);
+      setFaviconUrl('https://www.google.com/s2/favicons?domain=instagram.com&sz=128');
+      return;
+    }
+
+    setIsXHandle(false);
+    setIsInstagram(false);
+
+    // 2. Standard Website URL Detection
+    const domain = trimmed.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+    setTitle(domain);
+    setFaviconUrl(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
+
+    // 3. Auto-scrape high-res metadata
+    if (trimmed.includes('.')) {
+      try {
+        setIsScraping(true);
+        const res = await fetch('/api/scrape-meta', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: trimmed }),
+        });
+        if (res.ok) {
+          const meta = await res.json();
+          if (meta.title) setTitle(meta.title);
+          if (meta.description) setDescription(meta.description);
+          if (meta.logoUrl) setFaviconUrl(meta.logoUrl);
+        }
+      } catch {
+        // keep fallback
+      } finally {
+        setIsScraping(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (initialUrl) {
       setUrl(initialUrl);
-      const trimmed = initialUrl.trim();
-      if (trimmed.startsWith('@') || trimmed.includes('x.com/') || trimmed.includes('twitter.com/')) {
-        setIsXHandle(true);
-        const cleanHandle = trimmed.replace(/^@/, '').replace(/^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\//, '').split('/')[0];
-        setFaviconUrl(`https://unavatar.io/twitter/${cleanHandle}`);
-      } else {
-        setIsXHandle(false);
-        const clean = trimmed.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-        setFaviconUrl(`https://www.google.com/s2/favicons?domain=${clean}&sz=128`);
-      }
+      detectAndScrapeUrl(initialUrl);
     }
     if (initialBidAmount) {
       setBidAmount(initialBidAmount);
@@ -67,15 +122,25 @@ export function BidModal({
     const trimmed = val.trim();
     if (trimmed.startsWith('@') || trimmed.includes('x.com/') || trimmed.includes('twitter.com/')) {
       setIsXHandle(true);
+      setIsInstagram(false);
       const cleanHandle = trimmed.replace(/^@/, '').replace(/^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\//, '').split('/')[0];
+      setTitle(`@${cleanHandle}`);
       setFaviconUrl(`https://unavatar.io/twitter/${cleanHandle}`);
+    } else if (trimmed.includes('instagram.com/')) {
+      setIsInstagram(true);
+      setIsXHandle(false);
+      const cleanHandle = trimmed.replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').split('/')[0].split('?')[0].replace(/^@/, '');
+      setTitle(`@${cleanHandle}`);
     } else if (trimmed.includes('.')) {
       setIsXHandle(false);
-      const clean = trimmed.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-      setFaviconUrl(`https://www.google.com/s2/favicons?domain=${clean}&sz=128`);
+      setIsInstagram(false);
+      const domain = trimmed.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+      setTitle(domain);
+      setFaviconUrl(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
     } else {
       setFaviconUrl(null);
       setIsXHandle(false);
+      setIsInstagram(false);
     }
   };
 
@@ -101,6 +166,11 @@ export function BidModal({
       setIsLoading(true);
       setErrorMessage('');
 
+      let finalTitle = title.trim();
+      if (!finalTitle) {
+        finalTitle = isXHandle || isInstagram ? url.trim() : url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+      }
+
       // If Stripe
       if (selectedMethod === 'stripe') {
         const res = await fetch('/api/stripe', {
@@ -108,7 +178,8 @@ export function BidModal({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             url: url.trim(),
-            title: url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0],
+            title: finalTitle,
+            description,
             category,
             bidAmount,
             logoUrl: faviconUrl,
@@ -131,7 +202,8 @@ export function BidModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: url.trim(),
-          title: url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0],
+          title: finalTitle,
+          description,
           category,
           bidAmount,
           logoUrl: faviconUrl,
@@ -189,7 +261,7 @@ export function BidModal({
           </h2>
         </div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
-          Non-consumable bid. Enter any amount to claim your live rank.
+          Non-consumable bid. Enter any website URL or social handle to claim your live rank.
         </p>
 
         {errorMessage && (
@@ -199,21 +271,29 @@ export function BidModal({
         )}
 
         <form onSubmit={(e) => { e.preventDefault(); handleSubmitBid(paymentMethod); }} className="space-y-4">
-          {/* URL / Handle Input */}
+          {/* URL / Handle Input with Live Detection */}
           <div>
-            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
-              Website URL or X @handle <span className="text-[#ea6c52]">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                Website URL or X @handle <span className="text-[#ea6c52]">*</span>
+              </label>
+              {isScraping && (
+                <span className="text-[10px] text-amber-500 flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Detecting site...
+                </span>
+              )}
+            </div>
+
             <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-[#12100e] border border-zinc-200 dark:border-[#2e2a24] shadow-xs focus-within:border-[#4ade80] transition-colors">
               {isXHandle ? (
-                <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
+                <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
                   𝕏
                 </div>
-              ) : url.toLowerCase().includes('instagram.com') ? (
-                <div className="w-5 h-5 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
+              ) : isInstagram ? (
+                <div className="w-6 h-6 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
                   <svg viewBox="0 0 24 24" className="w-full h-full" fill="none">
                     <defs>
-                      <radialGradient id="ig-modal-grad" cx="25%" cy="110%" r="130%">
+                      <radialGradient id="ig-modal-grad-2" cx="25%" cy="110%" r="130%">
                         <stop offset="0%" stopColor="#fdf497" />
                         <stop offset="10%" stopColor="#fdf497" />
                         <stop offset="45%" stopColor="#fd5949" />
@@ -221,10 +301,10 @@ export function BidModal({
                         <stop offset="95%" stopColor="#285AEB" />
                       </radialGradient>
                     </defs>
-                    <rect width="24" height="24" rx="5" fill="url(#ig-modal-grad)" />
+                    <rect width="24" height="24" rx="5" fill="url(#ig-modal-grad-2)" />
                     <rect x="4" y="4" width="16" height="16" rx="4" stroke="#ffffff" strokeWidth="2" fill="none" />
                     <circle cx="12" cy="12" r="3.5" stroke="#ffffff" strokeWidth="2" fill="none" />
-                    <circle cx="16.5" cy="7.5" r="1.1" fill="#ffffff" />
+                    <circle cx="16.5" cy="7.5" r="1" fill="#ffffff" />
                   </svg>
                 </div>
               ) : faviconUrl ? (
@@ -232,22 +312,39 @@ export function BidModal({
                 <img
                   src={faviconUrl}
                   alt=""
-                  className="w-5 h-5 rounded-md object-contain flex-shrink-0"
+                  className="w-6 h-6 rounded-md object-contain flex-shrink-0 bg-white p-0.5"
                   onError={() => setFaviconUrl(null)}
                 />
               ) : (
-                <Globe className="w-4 h-4 text-zinc-400 flex-shrink-0" />
+                <Globe className="w-5 h-5 text-zinc-400 flex-shrink-0" />
               )}
               <input
                 type="text"
                 required
                 value={url}
                 onChange={(e) => handleUrlChange(e.target.value)}
-                placeholder="Your product URL or @handle"
+                onBlur={() => detectAndScrapeUrl(url)}
+                placeholder="e.g. https://myproduct.com or @handle"
                 className="w-full bg-transparent text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none font-medium"
               />
             </div>
           </div>
+
+          {/* Product Title / Display Name */}
+          {title && (
+            <div>
+              <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+                Display Title
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Product or brand name"
+                className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-[#12100e] border border-zinc-200 dark:border-[#2e2a24] text-xs font-semibold text-zinc-900 dark:text-white focus:outline-none focus:border-[#ea6c52]"
+              />
+            </div>
+          )}
 
           {/* Category Dropdown */}
           <div>
