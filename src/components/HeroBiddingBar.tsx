@@ -126,14 +126,14 @@ export function HeroBiddingBar({
         <span>Grab</span>
 
         {/* 3D #1 Pill Badge */}
-        <div className="inline-flex items-center px-3 sm:px-4 py-0.5 rounded-2xl border-2 border-zinc-400/80 dark:border-zinc-500 bg-white dark:bg-[#181613] text-zinc-900 dark:text-white font-mono text-xl xs:text-2xl sm:text-4xl font-black shadow-[0_3px_0_0_#cbd5e1] dark:shadow-[0_3px_0_0_#4a453e] sm:shadow-[0_4px_0_0_#cbd5e1] sm:dark:shadow-[0_4px_0_0_#4a453e]">
+        <div className="inline-flex items-center px-3.5 sm:px-4.5 py-0.5 sm:py-1 rounded-2xl border-2 border-zinc-400/80 dark:border-zinc-500 bg-white dark:bg-[#181613] text-zinc-900 dark:text-white font-mono text-xl xs:text-2xl sm:text-4xl font-black shadow-[0_3px_0_0_#cbd5e1] dark:shadow-[0_3px_0_0_#4a453e] sm:shadow-[0_4px_0_0_#cbd5e1] sm:dark:shadow-[0_4px_0_0_#4a453e]">
           #{targetRank}
         </div>
 
         <span>for</span>
 
         {/* Oval Stepper Container with direct editable typing */}
-        <div className="inline-flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-zinc-100 dark:bg-[#1a1815] border border-zinc-200 dark:border-[#2e2a24] shadow-inner group">
+        <div className="inline-flex items-center gap-2 sm:gap-3 px-3.5 sm:px-5 py-1 sm:py-1.5 rounded-full bg-zinc-100 dark:bg-[#1a1815] border border-zinc-200 dark:border-[#2e2a24] shadow-inner group">
           <button
             type="button"
             onClick={handleDecrement}
@@ -155,7 +155,7 @@ export function HeroBiddingBar({
                 onBidAmountChange(isNaN(val) ? 0 : val);
               }}
               placeholder="0"
-              className="w-20 xs:w-24 sm:w-36 bg-transparent text-center font-mono font-black outline-none border-b-2 border-transparent focus:border-amber-400 dark:focus:border-amber-400 transition-colors"
+              className="w-24 xs:w-28 sm:w-40 bg-transparent text-center font-mono font-black outline-none border-b-2 border-transparent focus:border-amber-400 dark:focus:border-amber-400 transition-colors"
             />
           </div>
 
@@ -176,13 +176,13 @@ export function HeroBiddingBar({
         New spots start at $5. Paying less than the #1 price still puts you on the board at whatever place that bid can take.
       </p>
 
-      {/* Main Responsive Input Form matching media_1787458001988.png */}
+      {/* Main Responsive Input Form stretched to full max-w-4xl navbar alignment */}
       <form
         onSubmit={handleSubmit}
-        className="mt-5 sm:mt-6 w-full max-w-2xl flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3"
+        className="mt-6 sm:mt-7 w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3"
       >
-        {/* URL Input with rounded-full pill styling */}
-        <div className="flex-1 flex items-center gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs focus-within:border-[#f87171] transition-colors">
+        {/* URL Input with rounded-full pill styling and matching navbar width */}
+        <div className="flex-1 flex items-center gap-3 px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs focus-within:border-[#f87171] transition-colors">
           {isXHandle ? (
             <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
               𝕏
@@ -191,7 +191,7 @@ export function HeroBiddingBar({
             <div className="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
               <svg viewBox="0 0 24 24" className="w-full h-full" fill="none">
                 <defs>
-                  <radialGradient id="ig-input-bar-grad" cx="25%" cy="110%" r="130%">
+                  <radialGradient id="ig-hero-full-grad" cx="25%" cy="110%" r="130%">
                     <stop offset="0%" stopColor="#fdf497" />
                     <stop offset="10%" stopColor="#fdf497" />
                     <stop offset="45%" stopColor="#fd5949" />
@@ -199,7 +199,7 @@ export function HeroBiddingBar({
                     <stop offset="95%" stopColor="#285AEB" />
                   </radialGradient>
                 </defs>
-                <rect width="24" height="24" rx="5" fill="url(#ig-input-bar-grad)" />
+                <rect width="24" height="24" rx="5" fill="url(#ig-hero-full-grad)" />
                 <rect x="4" y="4" width="16" height="16" rx="4" stroke="#ffffff" strokeWidth="2" fill="none" />
                 <circle cx="12" cy="12" r="3.5" stroke="#ffffff" strokeWidth="2" fill="none" />
                 <circle cx="16.5" cy="7.5" r="1" fill="#ffffff" />
@@ -229,14 +229,14 @@ export function HeroBiddingBar({
         </div>
 
         {/* Category Dropdown with rounded-full pill styling */}
-        <div className="relative w-full sm:w-auto flex items-center">
-          <div className="absolute left-3.5 pointer-events-none z-10">
+        <div className="relative w-full sm:w-72 flex items-center">
+          <div className="absolute left-4 pointer-events-none z-10">
             <CategoryIcon slug={category || 'ai-agents-infrastructure'} size="sm" />
           </div>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full sm:w-56 py-2.5 sm:py-3 pl-11 pr-8 rounded-full bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium focus:outline-none cursor-pointer appearance-none shadow-xs"
+            className="w-full py-3 sm:py-3.5 pl-12 pr-9 rounded-full bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium focus:outline-none cursor-pointer appearance-none shadow-xs"
           >
             {CATEGORIES.filter((c) => c.slug !== 'all').map((c) => (
               <option key={c.slug} value={c.slug} className="dark:bg-[#181613] text-zinc-900 dark:text-zinc-200">
@@ -244,20 +244,20 @@ export function HeroBiddingBar({
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
         </div>
 
-        {/* Peach / Terracotta "Outbid" Button matching media_1787458001988.png */}
+        {/* Peach / Terracotta "Outbid" Button */}
         <button
           type="submit"
-          className="w-full sm:w-auto px-7 py-2.5 sm:py-3 rounded-full font-bold text-sm sm:text-base tracking-tight text-white bg-[#f4a28c] hover:bg-[#ea6c52] active:scale-95 transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center cursor-pointer shadow-xs"
+          className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight text-white bg-[#f4a28c] hover:bg-[#ea6c52] active:scale-95 transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center cursor-pointer shadow-xs"
         >
           Outbid
         </button>
       </form>
 
       {/* Subtext matching media_1787458001988.png */}
-      <p className="mt-3 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-normal">
+      <p className="mt-3.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-normal">
         Already on the list? Enter the same URL or @handle and up your bid.
       </p>
     </section>
