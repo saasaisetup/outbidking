@@ -247,10 +247,15 @@ export function HeroBiddingBar({
           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
         </div>
 
-        {/* Tactile Green "Rankbid" Button */}
+        {/* Tactile Green "Rankbid" Button - Faded when empty, Highlighted when filled */}
         <button
           type="submit"
-          className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight text-black bg-[#52d489] hover:bg-[#45c77c] border border-[#3cb56e] shadow-[0_4px_0_0_#2b8a53] active:translate-y-[2px] active:shadow-[0_2px_0_0_#2b8a53] transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center cursor-pointer"
+          disabled={!isFormValid}
+          className={`w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center ${
+            isFormValid
+              ? 'bg-[#52d489] hover:bg-[#45c77c] text-black border border-[#3cb56e] shadow-[0_4px_0_0_#2b8a53] active:translate-y-[2px] active:shadow-[0_2px_0_0_#2b8a53] cursor-pointer opacity-100'
+              : 'bg-[#52d489]/30 text-black/40 border border-[#3cb56e]/20 cursor-not-allowed opacity-40 shadow-none pointer-events-none'
+          }`}
         >
           Rankbid
         </button>

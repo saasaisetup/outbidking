@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const predictBid = searchParams.get('predictBid');
   const existingProjectId = searchParams.get('existingProjectId') || undefined;
 
-  const projects = store.getProjects(category, search);
+  const projects = await store.getProjectsAsync(category, search);
   const stats = store.getStats();
   const recentBids = store.getRecentBids(20);
 
@@ -56,12 +56,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Bid amount must be at least $1' }, { status: 400 });
     }
 
-    // Place bid in store
-    const result = store.placeBid({
+    // Place bid in store and Supabase
+    const result = await store.placeBidAsync({
       url,
       title: title || 'Untitled Project',
       description: description || '',
-      category: category || 'saas-devtools',
+      category: category || 'ai-agents-infrastructure',
       logoUrl,
       ogImage,
       ownerEmail,

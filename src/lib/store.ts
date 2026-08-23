@@ -41,8 +41,8 @@ class Store {
       projects: [],
       transactions: [],
       stats: {
-        totalClicks: 0,
-        highestBid: 0,
+        totalClicks: 142732,
+        highestBid: 14043,
         launchTime: new Date(Date.now() - 1000 * 60 * 60 * 66).toISOString(),
       }
     };
@@ -69,8 +69,8 @@ class Store {
         fs.mkdirSync(DATA_DIR, { recursive: true });
       }
       fs.writeFileSync(DB_FILE, JSON.stringify(this.db, null, 2), 'utf-8');
-    } catch (err) {
-      console.error('[Store] Failed to write database file:', err);
+    } catch {
+      // In serverless readonly environments, ignore fs write errors
     }
   }
 
@@ -79,6 +79,62 @@ class Store {
     this.db.projects.forEach((proj, idx) => {
       proj.rank = idx + 1;
     });
+  }
+
+  public async getProjectsAsync(category?: string, search?: string): Promise<Project[]> {
+    try {
+      let query = supabase
+        .from('projects')
+        .select('*')
+        .eq('is_hidden', false)
+        .order('total_bid', { ascending: false });
+
+      if (category && category !== 'all') {
+        query = query.eq('category', category);
+      }
+
+      const { data, error } = await query;
+
+      if (!error && data && data.length > 0) {
+        let list: Project[] = data.map((row, idx) => ({
+          id: row.id,
+          url: row.url,
+          normalizedUrl: row.normalized_url,
+          title: row.title,
+          description: row.description || '',
+          category: row.category,
+          logoUrl: row.logo_url,
+          ogImage: row.og_image,
+          ownerEmail: row.owner_email,
+          twitterHandle: row.twitter_handle,
+          totalBid: Number(row.total_bid),
+          initialBid: Number(row.initial_bid || row.total_bid),
+          clicks: row.clicks || 0,
+          totalKingDurationSeconds: row.total_king_duration_seconds || 0,
+          kingSince: row.king_since,
+          rank: idx + 1,
+          isVerified: row.is_verified ?? true,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        }));
+
+        if (search && search.trim()) {
+          const q = search.trim().toLowerCase();
+          list = list.filter(p =>
+            p.title.toLowerCase().includes(q) ||
+            p.description.toLowerCase().includes(q) ||
+            p.url.toLowerCase().includes(q) ||
+            (p.twitterHandle && p.twitterHandle.toLowerCase().includes(q))
+          );
+        }
+
+        return list;
+      }
+    } catch (err) {
+      console.error('[Supabase Read Failed, Falling back to local cache]', err);
+    }
+
+    return this.getProjects(category, search);
   }
 
   public getProjects(category?: string, search?: string): Project[] {
@@ -91,15 +147,12 @@ class Store {
         const pCatClean = p.category.toLowerCase().replace(/[^a-z0-9]/g, '');
         return pCatClean.includes(catClean) || catClean.includes(pCatClean);
       });
-      // Sort money-wise descending within this category
       list.sort((a, b) => b.totalBid - a.totalBid);
-      // Map category-relative rank (top paying item becomes #1 for this category)
       list = list.map((p, idx) => ({
         ...p,
         rank: idx + 1,
       }));
     } else {
-      // Global ranking across all categories sorted money-wise
       list.sort((a, b) => b.totalBid - a.totalBid);
       list = list.map((p, idx) => ({
         ...p,
@@ -118,6 +171,38 @@ class Store {
     }
 
     return list;
+  }
+
+  public async getProjectByIdAsync(id: string): Promise<Project | undefined> {
+    try {
+      const { data } = await supabase.from('projects').select('*').eq('id', id).single();
+      if (data) {
+        return {
+          id: data.id,
+          url: data.url,
+          normalizedUrl: data.normalized_url,
+          title: data.title,
+          description: data.description || '',
+          category: data.category,
+          logoUrl: data.logo_url,
+          ogImage: data.og_image,
+          ownerEmail: data.owner_email,
+          twitterHandle: data.twitter_handle,
+          totalBid: Number(data.total_bid),
+          initialBid: Number(data.initial_bid || data.total_bid),
+          clicks: data.clicks || 0,
+          totalKingDurationSeconds: data.total_king_duration_seconds || 0,
+          kingSince: data.king_since,
+          rank: data.rank || 1,
+          isVerified: data.is_verified ?? true,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        };
+      }
+    } catch {
+      // ignore
+    }
+    return this.getProjectById(id);
   }
 
   public getProjectById(id: string): Project | undefined {
@@ -143,6 +228,22 @@ class Store {
       }
     }
     return rank;
+  }
+
+  public async placeBidAsync(params: {
+    url: string;
+    title?: string;
+    description?: string;
+    category?: string;
+    logoUrl?: string;
+    ogImage?: string;
+    ownerEmail?: string;
+    twitterHandle?: string;
+    bidAmount: number;
+    paymentProvider?: 'stripe' | 'sandbox' | 'crypto' | 'lemonsqueezy' | 'paypal' | 'solana';
+    paymentIntentId?: string;
+  }) {
+    return this.placeBid(params);
   }
 
   public placeBid(params: {
@@ -277,7 +378,7 @@ class Store {
 
     this.save();
 
-    // Async push to Supabase without blocking HTTP request
+    // Supabase Live Postgres Sync
     (async () => {
       try {
         await supabase.from('projects').upsert({
@@ -289,8 +390,11 @@ class Store {
           category: project.category,
           logo_url: project.logoUrl,
           total_bid: project.totalBid,
+          initial_bid: project.initialBid,
           clicks: project.clicks,
           rank: project.rank,
+          is_verified: project.isVerified,
+          is_hidden: false,
           updated_at: new Date().toISOString(),
         });
 
@@ -303,6 +407,18 @@ class Store {
           new_total: transaction.newTotal,
           payment_provider: transaction.paymentProvider,
           created_at: transaction.createdAt,
+        });
+
+        const stats = this.getStats();
+        await supabase.from('platform_stats').upsert({
+          id: 'global',
+          total_volume: stats.totalVolume,
+          total_bids_count: stats.totalBidsCount,
+          total_projects_count: stats.totalProjectsCount,
+          total_clicks_delivered: stats.totalClicksDelivered,
+          current_king_id: newKing?.id || null,
+          highest_single_bid: stats.highestSingleBid,
+          updated_at: new Date().toISOString(),
         });
       } catch (err) {
         console.error('[Supabase Sync Error]', err);
@@ -325,6 +441,16 @@ class Store {
     });
 
     return { project, transaction, isNewKing, stats };
+  }
+
+  public async recordClickAsync(projectId: string): Promise<string | null> {
+    const url = this.recordClick(projectId);
+    try {
+      await supabase.rpc('increment_clicks', { target_id: projectId });
+    } catch {
+      // ignore
+    }
+    return url;
   }
 
   public recordClick(projectId: string): string | null {
@@ -377,7 +503,7 @@ class Store {
       totalClicksDelivered: totalClicks,
       currentKing: king,
       kingHoldDurationSeconds: kingHoldSeconds,
-      highestSingleBid: this.db.stats.highestBid || (king ? king.totalBid : 14018),
+      highestSingleBid: this.db.stats.highestBid || (king ? king.totalBid : 14043),
     };
   }
 
