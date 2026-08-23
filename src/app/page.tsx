@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { HeroBiddingBar } from '@/components/HeroBiddingBar';
 import { CategoryFilters } from '@/components/CategoryFilters';
@@ -15,7 +16,6 @@ import { WorldWarMap } from '@/components/WorldWarMap';
 import { WorldPowersDrawer } from '@/components/WorldPowersDrawer';
 import { UnclaimedLandDrawer } from '@/components/UnclaimedLandDrawer';
 import { CommandSideDrawer } from '@/components/CommandSideDrawer';
-import { HowWarWorksModal } from '@/components/HowWarWorksModal';
 
 import { BidModal } from '@/components/BidModal';
 import { RulesModal } from '@/components/RulesModal';
@@ -27,11 +27,13 @@ import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug, Ter
 import { soundManager } from '@/lib/sound';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
-import { Globe, Layers } from 'lucide-react';
+import { subscribeToLivePresence } from '@/lib/presence';
+import { Globe, Layers, ExternalLink } from 'lucide-react';
 
 export default function HomePage() {
   const [viewMode, setViewMode] = useState<'board' | 'map'>('board');
   const [projects, setProjects] = useState<Project[]>([]);
+  const [liveVisitors, setLiveVisitors] = useState<number>(134);
   const [stats, setStats] = useState<PlatformStats>({
     totalVolume: 62750,
     totalBidsCount: 500,
@@ -50,10 +52,10 @@ export default function HomePage() {
   const [powers, setPowers] = useState<WorldPower[]>([]);
   const [warEvents, setWarEvents] = useState<WarEvent[]>([]);
   const [mapStats, setMapStats] = useState<MapStats>({
-    onlineCount: 132,
-    totalVisitors: 13008,
+    onlineCount: 134,
+    totalVisitors: 13029,
     totalPlundered: 2709,
-    totalClicks: 14692,
+    totalClicks: 14722,
     claimedCount: 132,
     totalCountries: 194,
   });
@@ -109,16 +111,26 @@ export default function HomePage() {
         if (data.territories) setTerritories(data.territories);
         if (data.powers) setPowers(data.powers);
         if (data.warEvents) setWarEvents(data.warEvents);
-        if (data.stats) setMapStats(data.stats);
+        if (data.stats) {
+          setMapStats({
+            ...data.stats,
+            onlineCount: liveVisitors || data.stats.onlineCount,
+          });
+        }
       }
     } catch (err) {
       console.error('[Outbid] Fetch territories error:', err);
     }
-  }, []);
+  }, [liveVisitors]);
 
   useEffect(() => {
     fetchData(selectedCategory);
     fetchTerritories();
+
+    const unsubscribePresence = subscribeToLivePresence((onlineCount) => {
+      setLiveVisitors(onlineCount);
+      setMapStats((prev) => ({ ...prev, onlineCount }));
+    });
 
     const channel = supabase
       .channel('realtime-global-feed')
@@ -152,6 +164,7 @@ export default function HomePage() {
     }, 4000);
 
     return () => {
+      unsubscribePresence();
       supabase.removeChannel(channel);
       clearInterval(pollTimer);
     };
@@ -195,11 +208,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen selection:bg-[#e05d44] selection:text-white font-sans transition-colors duration-200">
-      {/* Top Header with working Light/Dark theme toggle & World Map link */}
+      {/* Top Header */}
       <Header />
 
-      {/* Main View Mode Selector (Map vs Board) */}
-      <div className="w-full max-w-4xl mx-auto px-4 pt-3 flex items-center justify-center">
+      {/* Main View Mode Selector (Map vs Board) with Direct VISIT Button */}
+      <div className="w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex items-center justify-between">
         <div className="inline-flex p-1 rounded-2xl bg-zinc-100 dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs">
           <button
             type="button"
@@ -230,6 +243,15 @@ export default function HomePage() {
             </span>
           </button>
         </div>
+
+        {/* VISIT Fullscreen Map Link */}
+        <Link
+          href="/map"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-zinc-900 border border-zinc-700 hover:border-[#ea6c52] text-xs font-mono font-black text-zinc-300 hover:text-white transition-all shadow-xs group"
+        >
+          <span>FULLSCREEN MAP</span>
+          <ExternalLink className="w-3.5 h-3.5 text-[#ea6c52] group-hover:translate-x-0.5 transition-transform" />
+        </Link>
       </div>
 
       {viewMode === 'board' ? (
@@ -249,7 +271,7 @@ export default function HomePage() {
             onSelectCategory={(slug) => setSelectedCategory(slug)}
           />
 
-          {/* Top 3 Tinted Cards with Hover-Only Action */}
+          {/* Top 3 Tinted Cards */}
           <TopThreeCards
             topProjects={projects}
             onSelectProject={handleSelectCardToOutbid}
@@ -271,7 +293,7 @@ export default function HomePage() {
             onRefresh={() => fetchData()}
           />
 
-          {/* Bottom Revenue Counter Banner */}
+          {/* Bottom Revenue Counter */}
           <BottomRevenueCounter
             stats={stats}
           />
@@ -283,23 +305,24 @@ export default function HomePage() {
           />
         </main>
       ) : (
-        <main className="w-full pb-12 pt-4">
-          <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
-            {/* Interactive World War Map Canvas Container */}
-            <div className="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-[#070709]">
+        <main className="w-full pb-12 pt-3">
+          <div className="w-full px-2 sm:px-6">
+            {/* Full-Sized Interactive World War Map Container */}
+            <div className="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-[#070709] h-[78vh] min-h-[580px]">
               <WorldWarMap
                 territories={territories}
+                selectedTerritory={selectedTerritory}
                 onSelectTerritory={handleSelectTerritory}
               />
 
-              {/* Left HUD Panel: Live War Stream & World Powers */}
+              {/* Left HUD Panel */}
               <WorldPowersDrawer
                 powers={powers}
                 warEvents={warEvents}
                 onSelectCountry={handleSelectCountryByCode}
               />
 
-              {/* Right HUD Panel: Unclaimed Territories */}
+              {/* Right HUD Panel */}
               <UnclaimedLandDrawer
                 territories={territories}
                 onSelectCountry={handleSelectCountryByCode}

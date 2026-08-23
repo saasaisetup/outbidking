@@ -9,6 +9,7 @@ import { CommandSideDrawer } from '@/components/CommandSideDrawer';
 import { HowWarWorksModal } from '@/components/HowWarWorksModal';
 import { TerritoryState, WorldPower, WarEvent, MapStats } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
+import { subscribeToLivePresence } from '@/lib/presence';
 import { soundManager } from '@/lib/sound';
 import confetti from 'canvas-confetti';
 
@@ -16,11 +17,12 @@ export default function WorldMapPage() {
   const [territories, setTerritories] = useState<TerritoryState[]>([]);
   const [powers, setPowers] = useState<WorldPower[]>([]);
   const [warEvents, setWarEvents] = useState<WarEvent[]>([]);
+  const [liveVisitors, setLiveVisitors] = useState<number>(134);
   const [stats, setStats] = useState<MapStats>({
-    onlineCount: 132,
-    totalVisitors: 13008,
+    onlineCount: 134,
+    totalVisitors: 13029,
     totalPlundered: 2709,
-    totalClicks: 14692,
+    totalClicks: 14722,
     claimedCount: 132,
     totalCountries: 194,
   });
@@ -37,16 +39,28 @@ export default function WorldMapPage() {
         if (data.territories) setTerritories(data.territories);
         if (data.powers) setPowers(data.powers);
         if (data.warEvents) setWarEvents(data.warEvents);
-        if (data.stats) setStats(data.stats);
+        if (data.stats) {
+          setStats((prev) => ({
+            ...data.stats,
+            onlineCount: liveVisitors || data.stats.onlineCount,
+          }));
+        }
       }
     } catch (err) {
       console.error('[Map] Fetch error:', err);
     }
-  }, []);
+  }, [liveVisitors]);
 
   useEffect(() => {
     fetchTerritoryData();
 
+    // Realtime Presence Tracker for live visitors
+    const unsubscribePresence = subscribeToLivePresence((onlineCount) => {
+      setLiveVisitors(onlineCount);
+      setStats((prev) => ({ ...prev, onlineCount }));
+    });
+
+    // Supabase Realtime Channel
     const channel = supabase
       .channel('realtime-territories-live')
       .on(
@@ -72,6 +86,7 @@ export default function WorldMapPage() {
     }, 4000);
 
     return () => {
+      unsubscribePresence();
       supabase.removeChannel(channel);
       clearInterval(pollTimer);
     };
@@ -98,7 +113,7 @@ export default function WorldMapPage() {
 
   return (
     <div className="h-screen w-screen bg-[#070709] text-white flex flex-col overflow-hidden font-sans select-none">
-      {/* Tactical Top Bar */}
+      {/* Tactical Top Bar with Live Realtime Presence */}
       <WarHeader
         stats={stats}
         onOpenConquerWorld={handleConquerTheWorld}
@@ -106,10 +121,11 @@ export default function WorldMapPage() {
         isMapPage={true}
       />
 
-      {/* Main World War Map Canvas */}
+      {/* Main Full-Bleed World War Map Canvas */}
       <main className="relative flex-1 w-full h-[calc(100vh-56px)] overflow-hidden">
         <WorldWarMap
           territories={territories}
+          selectedTerritory={selectedTerritory}
           onSelectTerritory={handleSelectTerritory}
         />
 

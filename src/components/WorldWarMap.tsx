@@ -1,19 +1,21 @@
 'use client';
 
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { geoEqualEarth, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import worldData from 'world-atlas/countries-110m.json';
 import { TerritoryState } from '@/lib/types';
-import { Plus, Minus, RotateCcw } from 'lucide-react';
+import { Plus, Minus, RotateCcw, Crosshair } from 'lucide-react';
 
 interface WorldWarMapProps {
   territories: TerritoryState[];
+  selectedTerritory?: TerritoryState | null;
   onSelectTerritory: (territory: TerritoryState) => void;
 }
 
 export function WorldWarMap({
   territories,
+  selectedTerritory,
   onSelectTerritory,
 }: WorldWarMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -27,7 +29,7 @@ export function WorldWarMap({
   const width = 1000;
   const height = 540;
 
-  // Compute D3 Geo Projection & SVG Paths once
+  // 1. Compute D3 Geo Projection & SVG Paths
   const { countriesGeo, projection, pathGenerator } = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const countriesFeature = feature(worldData as any, worldData.objects.countries as any) as any;
@@ -41,7 +43,7 @@ export function WorldWarMap({
     };
   }, []);
 
-  // Map territories by code, numericId, and numeric strings
+  // 2. Map territories by code, numericId, and numeric strings
   const territoryMap = useMemo(() => {
     const map: Record<string, TerritoryState> = {};
     territories.forEach((t) => {
@@ -57,7 +59,7 @@ export function WorldWarMap({
     return map;
   }, [territories]);
 
-  // Projected Centroid Pins for Claimed Territories
+  // 3. Projected Centroid Pins for Claimed Territories
   const countryPins = useMemo(() => {
     return territories.map((t) => {
       let xy: [number, number] | null = null;
@@ -73,7 +75,6 @@ export function WorldWarMap({
     }).filter((p) => p.hasXY);
   }, [territories, projection]);
 
-  // Separate land territories and Ocean Fleet spots
   const oceanFleets = useMemo(() => {
     return countryPins.filter((p) => p.isOceanFleet);
   }, [countryPins]);
@@ -83,15 +84,45 @@ export function WorldWarMap({
   }, [countryPins]);
 
   // -------------------------------------------------------------
-  // Smooth Pan & Zoom Handlers (with click vs drag protection)
+  // TRAP NATIVE MOUSE WHEEL & PINCH GESTURES (Strict Map Zoom ONLY)
   // -------------------------------------------------------------
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
-    setZoom((prev) => Math.min(Math.max(prev * zoomFactor, 0.85), 8));
+    const handleNativeWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
+      setZoom((prev) => Math.min(Math.max(prev * zoomFactor, 0.8), 8));
+    };
+
+    const handleNativeTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    const handleGesture = (e: Event) => {
+      e.preventDefault();
+    };
+
+    container.addEventListener('wheel', handleNativeWheel, { passive: false });
+    container.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
+    container.addEventListener('gesturestart', handleGesture, { passive: false });
+    container.addEventListener('gesturechange', handleGesture, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', handleNativeWheel);
+      container.removeEventListener('touchmove', handleNativeTouchMove);
+      container.removeEventListener('gesturestart', handleGesture);
+      container.removeEventListener('gesturechange', handleGesture);
+    };
   }, []);
 
+  // -------------------------------------------------------------
+  // Mouse Drag & Pan Handlers
+  // -------------------------------------------------------------
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     setIsDragging(true);
@@ -130,19 +161,18 @@ export function WorldWarMap({
     setIsDragging(false);
   };
 
-  // Touch Pinch & Pan Gestures
-  const touchState = useRef<{ dist: number; startPan: { x: number; y: number }; startTouch: { x: number; y: number }; hasMoved: boolean }>({
+  // Touch Handlers
+  const touchState = useRef<{ dist: number; startPan: { x: number; y: number }; startTouch: { x: number; y: number } }>({
     dist: 0,
     startPan: { x: 0, y: 0 },
     startTouch: { x: 0, y: 0 },
-    hasMoved: false,
   });
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       touchState.current.startPan = { ...pan };
       touchState.current.startTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      touchState.current.hasMoved = false;
+      dragStartRef.current.hasMoved = false;
     } else if (e.touches.length === 2) {
       touchState.current.dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
@@ -156,7 +186,7 @@ export function WorldWarMap({
       const dx = e.touches[0].clientX - touchState.current.startTouch.x;
       const dy = e.touches[0].clientY - touchState.current.startTouch.y;
       if (Math.hypot(dx, dy) > 4) {
-        touchState.current.hasMoved = true;
+        dragStartRef.current.hasMoved = true;
       }
       setPan({
         x: touchState.current.startPan.x + dx,
@@ -169,14 +199,14 @@ export function WorldWarMap({
       );
       if (touchState.current.dist > 0) {
         const factor = dist / touchState.current.dist;
-        setZoom((prev) => Math.min(Math.max(prev * factor, 0.85), 8));
+        setZoom((prev) => Math.min(Math.max(prev * factor, 0.8), 8));
       }
       touchState.current.dist = dist;
     }
   };
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev * 1.25, 8));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev * 0.8, 0.85));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev * 0.8, 0.8));
   const handleReset = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -197,16 +227,15 @@ export function WorldWarMap({
   return (
     <div
       ref={containerRef}
-      onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
-      className="relative w-full h-[85vh] min-h-[540px] max-h-[920px] bg-[#070709] overflow-hidden select-none cursor-grab active:cursor-grabbing border-b border-zinc-900"
+      className="relative w-full h-full min-h-[580px] bg-[#070709] overflow-hidden select-none cursor-grab active:cursor-grabbing border-b border-zinc-900"
     >
-      {/* Background Radar Grid Overlay */}
+      {/* Background Radar Grid */}
       <div
         className="absolute inset-0 opacity-15 pointer-events-none"
         style={{
@@ -215,7 +244,7 @@ export function WorldWarMap({
         }}
       />
 
-      {/* Hardware-Accelerated Map Canvas Transform Layer */}
+      {/* Hardware-Accelerated SVG Map Canvas */}
       <div
         className="w-full h-full flex items-center justify-center will-change-transform origin-center"
         style={{
@@ -225,31 +254,32 @@ export function WorldWarMap({
       >
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-full max-w-[1200px] overflow-visible"
+          className="w-full h-full max-w-[1300px] overflow-visible"
         >
           <defs>
-            {/* Country hover glow filter */}
-            <filter id="glow-country" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#ffffff" floodOpacity="0.9" />
+            {/* Highlight selection glow */}
+            <filter id="glow-selection" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#ffffff" floodOpacity="1" />
+              <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#ea6c52" floodOpacity="0.8" />
             </filter>
-            <filter id="glow-orange-pin" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#ea6c52" floodOpacity="0.8" />
+            <filter id="glow-hover" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#ffffff" floodOpacity="0.9" />
             </filter>
           </defs>
 
-          {/* Oceans / Base Background */}
+          {/* Oceans / Dark Base */}
           <rect width={width} height={height} fill="#070709" />
 
-          {/* Layer 1: All 194 Country Territory Polygons with Rich Vibrant Colors */}
+          {/* Layer 1: All 194 Country Territory Polygons with Rich Geographic Colors */}
           <g className="countries-layer">
             {countriesGeo.map((feat: any, idx: number) => {
               const featId = feat.id;
               const territory = getTerritoryForFeature(featId);
-              const isClaimed = !!territory?.currentRuler;
+              const isSelected = selectedTerritory?.countryCode === territory?.countryCode;
               const isHovered = hoveredCountry?.countryCode === territory?.countryCode;
 
-              // Rich territory fill color (either ruler's empire color, or default country palette color)
-              let fillColor = territory?.currentRuler?.color || territory?.defaultColor || '#2dd4bf';
+              // Rich territory fill color (either ruler's empire color, or country default palette color)
+              let fillColor = territory?.currentRuler?.color || territory?.defaultColor || '#06b6d4';
 
               const pathD = pathGenerator(feat);
               if (!pathD) return null;
@@ -259,11 +289,11 @@ export function WorldWarMap({
                   key={featId || idx}
                   d={pathD}
                   fill={fillColor}
-                  stroke={isHovered ? '#ffffff' : '#0e0e12'}
-                  strokeWidth={isHovered ? 1.8 / zoom : 0.65 / zoom}
-                  className="transition-colors duration-75 cursor-pointer hover:brightness-115"
+                  stroke={isSelected ? '#ffffff' : (isHovered ? '#ffffff' : '#0e0e12')}
+                  strokeWidth={isSelected ? 3 / zoom : (isHovered ? 1.8 / zoom : 0.65 / zoom)}
+                  className="transition-colors duration-75 cursor-pointer hover:brightness-120"
                   style={{
-                    filter: isHovered ? 'url(#glow-country)' : undefined,
+                    filter: isSelected ? 'url(#glow-selection)' : (isHovered ? 'url(#glow-hover)' : undefined),
                   }}
                   onMouseEnter={() => territory && setHoveredCountry(territory)}
                   onMouseLeave={() => setHoveredCountry(null)}
@@ -278,10 +308,11 @@ export function WorldWarMap({
             })}
           </g>
 
-          {/* Layer 2: 6 Strategic Ocean Routes & Fleet Patrols */}
+          {/* Layer 2: 6 Strategic Ocean Fleet Patrol Corridors */}
           <g className="ocean-fleets-layer">
             {oceanFleets.map((fleet) => {
               const isClaimed = !!fleet.currentRuler;
+              const isSelected = selectedTerritory?.countryCode === fleet.countryCode;
               const isHovered = hoveredCountry?.countryCode === fleet.countryCode;
               const ringColor = isClaimed ? fleet.currentRuler?.color : '#10b981';
               const cleanDomain = fleet.currentRuler?.url.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
@@ -301,18 +332,21 @@ export function WorldWarMap({
                 >
                   {/* Outer Dashed Radar Ring */}
                   <circle
-                    r="18"
+                    r="19"
                     fill="rgba(16, 185, 129, 0.08)"
-                    stroke={ringColor || '#10b981'}
-                    strokeWidth="1.5"
+                    stroke={isSelected ? '#ffffff' : (ringColor || '#10b981')}
+                    strokeWidth={isSelected ? '2.5' : '1.5'}
                     strokeDasharray="4 3"
                     className="group-hover:scale-110 transition-transform"
+                    style={{
+                      filter: isSelected ? 'url(#glow-selection)' : undefined,
+                    }}
                   />
                   {/* Center Naval Insignia */}
                   <circle
                     r="11"
                     fill="#0e0e12"
-                    stroke={ringColor || '#10b981'}
+                    stroke={isSelected ? '#ffffff' : (ringColor || '#10b981')}
                     strokeWidth="1.5"
                   />
                   <text
@@ -324,8 +358,8 @@ export function WorldWarMap({
                     {fleet.flag}
                   </text>
 
-                  {/* Domain or Unclaimed Label Pill */}
-                  <g transform="translate(0, 22)">
+                  {/* Label Pill */}
+                  <g transform="translate(0, 23)">
                     <rect
                       x="-38"
                       y="-7"
@@ -359,6 +393,7 @@ export function WorldWarMap({
             {claimedLandPins.map((pin) => {
               if (!pin.currentRuler) return null;
               const ruler = pin.currentRuler;
+              const isSelected = selectedTerritory?.countryCode === pin.countryCode;
               const cleanDomain = ruler.url.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
               const pinScale = Math.max(0.65, Math.min(1.35, 1 / Math.sqrt(zoom)));
 
@@ -381,9 +416,12 @@ export function WorldWarMap({
                       height="32"
                       rx="8"
                       fill="#0e0e12"
-                      stroke={ruler.color || '#ea6c52'}
-                      strokeWidth="2"
+                      stroke={isSelected ? '#ffffff' : (ruler.color || '#ea6c52')}
+                      strokeWidth={isSelected ? '3' : '2'}
                       className="filter drop-shadow-md group-hover:scale-105 transition-transform"
+                      style={{
+                        filter: isSelected ? 'url(#glow-selection)' : undefined,
+                      }}
                     />
 
                     {ruler.logoUrl ? (
@@ -444,7 +482,7 @@ export function WorldWarMap({
         </svg>
       </div>
 
-      {/* Floating Tactical Tooltip */}
+      {/* Hover Country Tooltip */}
       {hoveredCountry && (
         <div
           className="absolute pointer-events-none z-30 px-3 py-2 rounded-xl bg-[#0f0f14]/95 backdrop-blur-md border border-zinc-700/80 shadow-2xl text-white font-mono text-xs animate-in fade-in duration-75"

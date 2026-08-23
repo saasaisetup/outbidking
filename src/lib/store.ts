@@ -69,22 +69,32 @@ class Store {
   }
 
   private initTerritories() {
+    let savedTerritories: Record<string, TerritoryState> = {};
     try {
       if (fs.existsSync(TERRITORIES_FILE)) {
         const raw = fs.readFileSync(TERRITORIES_FILE, 'utf-8');
         const parsed = JSON.parse(raw);
-        this.territoriesCache = parsed.territories || {};
+        savedTerritories = parsed.territories || {};
         this.warEventsCache = parsed.warEvents || [];
-        return;
       }
     } catch {
       // ignore
     }
 
     WORLD_COUNTRIES.forEach((c) => {
+      const saved = savedTerritories[c.code];
       const seed = SEED_TERRITORIES[c.code];
-      const curBid = seed?.currentBid || (seed?.currentRuler ? seed.currentRuler.totalBid : 0) || c.startingPrice || 3;
-      const minPrice = seed?.minOutbidPrice || calcMinOutbid(curBid);
+      const curRuler = saved?.currentRuler || (seed?.currentRuler ? {
+        title: seed.currentRuler.title,
+        url: seed.currentRuler.url,
+        warCry: seed.currentRuler.warCry,
+        logoUrl: seed.currentRuler.logoUrl,
+        color: seed.currentRuler.color || c.defaultColor,
+        totalBid: seed.currentRuler.totalBid || seed.currentBid || c.startingPrice || 3,
+      } : null);
+
+      const curBid = saved?.currentBid || seed?.currentBid || c.startingPrice || 3;
+      const minPrice = saved?.minOutbidPrice || seed?.minOutbidPrice || calcMinOutbid(curBid);
 
       this.territoriesCache[c.code] = {
         countryCode: c.code,
@@ -96,19 +106,12 @@ class Store {
         tier: c.tier,
         defaultColor: c.defaultColor,
         isOceanFleet: c.isOceanFleet,
-        currentRuler: seed?.currentRuler ? {
-          title: seed.currentRuler.title,
-          url: seed.currentRuler.url,
-          warCry: seed.currentRuler.warCry,
-          logoUrl: seed.currentRuler.logoUrl,
-          color: seed.currentRuler.color || c.defaultColor,
-          totalBid: curBid,
-        } : null,
+        currentRuler: curRuler,
         currentBid: curBid,
         minOutbidPrice: minPrice,
-        totalPlunder: seed?.totalPlunder || (seed?.currentRuler ? curBid : 0),
-        clicks: seed?.clicks || 0,
-        conqueredAt: seed?.currentRuler ? new Date(Date.now() - 86400000).toISOString() : undefined,
+        totalPlunder: saved?.totalPlunder || (curRuler ? curBid : 0),
+        clicks: saved?.clicks || 0,
+        conqueredAt: saved?.conqueredAt || (curRuler ? new Date(Date.now() - 86400000).toISOString() : undefined),
       };
     });
 
