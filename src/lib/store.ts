@@ -270,20 +270,28 @@ class Store {
         project_title: project.title,
         project_url: project.url,
         amount: transaction.amount,
+        previous_total: transaction.previousTotal,
         new_total: transaction.newTotal,
+        is_top_up: transaction.isTopUp,
+        new_rank: transaction.newRank,
+        previous_rank: transaction.previousRank,
+        payment_status: 'completed',
         payment_provider: transaction.paymentProvider,
+        payment_intent_id: transaction.paymentIntentId,
+        owner_email: transaction.ownerEmail,
+        twitter_handle: transaction.twitterHandle,
         created_at: transaction.createdAt,
       });
 
       const stats = this.getStats();
       await supabase.from('platform_stats').upsert({
-        id: 'global',
+        id: 'global_stats',
         total_volume: stats.totalVolume,
         total_bids_count: stats.totalBidsCount,
         total_projects_count: stats.totalProjectsCount,
         total_clicks_delivered: stats.totalClicksDelivered,
-        current_king_id: this.db.projects[0]?.id || null,
         highest_single_bid: stats.highestSingleBid,
+        king_hold_duration_seconds: stats.kingHoldDurationSeconds,
         updated_at: new Date().toISOString(),
       });
     } catch (err) {
