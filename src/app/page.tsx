@@ -10,18 +10,26 @@ import { RankedList } from '@/components/RankedList';
 import { BottomRevenueCounter } from '@/components/BottomRevenueCounter';
 import { Footer } from '@/components/Footer';
 
+// World War Map Components
+import { WorldWarMap } from '@/components/WorldWarMap';
+import { WorldPowersDrawer } from '@/components/WorldPowersDrawer';
+import { UnclaimedLandDrawer } from '@/components/UnclaimedLandDrawer';
+import { ConquerTerritoryModal } from '@/components/ConquerTerritoryModal';
+
 import { BidModal } from '@/components/BidModal';
 import { RulesModal } from '@/components/RulesModal';
 import { AboutModal } from '@/components/AboutModal';
 import { StatsModal } from '@/components/StatsModal';
 import { OutbidToast } from '@/components/OutbidToast';
 
-import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug } from '@/lib/types';
+import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug, TerritoryState, WorldPower, WarEvent, MapStats } from '@/lib/types';
 import { soundManager } from '@/lib/sound';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
+import { Globe, Layers } from 'lucide-react';
 
 export default function HomePage() {
+  const [viewMode, setViewMode] = useState<'board' | 'map'>('board');
   const [projects, setProjects] = useState<Project[]>([]);
   const [stats, setStats] = useState<PlatformStats>({
     totalVolume: 62750,
@@ -35,6 +43,21 @@ export default function HomePage() {
   const [recentBids, setRecentBids] = useState<BidTransaction[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategorySlug>('all');
   const [currentBidAmount, setCurrentBidAmount] = useState<number>(14023);
+
+  // World War Map State
+  const [territories, setTerritories] = useState<TerritoryState[]>([]);
+  const [powers, setPowers] = useState<WorldPower[]>([]);
+  const [warEvents, setWarEvents] = useState<WarEvent[]>([]);
+  const [mapStats, setMapStats] = useState<MapStats>({
+    onlineCount: 119,
+    totalVisitors: 12759,
+    totalPlundered: 2709,
+    totalClicks: 14426,
+    claimedCount: 132,
+    totalCountries: 194,
+  });
+  const [selectedTerritory, setSelectedTerritory] = useState<TerritoryState | null>(null);
+  const [isConquerModalOpen, setIsConquerModalOpen] = useState(false);
 
   // Modals state
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
@@ -55,7 +78,6 @@ export default function HomePage() {
 
       if (data.projects) {
         setProjects(data.projects);
-        // If viewing a specific category, calculate category price to take #1 in that category
         if (cat !== 'all') {
           if (data.projects.length > 0) {
             setCurrentBidAmount(data.projects[0].totalBid + 5);
@@ -78,12 +100,28 @@ export default function HomePage() {
     }
   }, [selectedCategory]);
 
+  const fetchTerritories = useCallback(async () => {
+    try {
+      const res = await fetch('/api/territories');
+      const data = await res.json();
+      if (data.success) {
+        if (data.territories) setTerritories(data.territories);
+        if (data.powers) setPowers(data.powers);
+        if (data.warEvents) setWarEvents(data.warEvents);
+        if (data.stats) setMapStats(data.stats);
+      }
+    } catch (err) {
+      console.error('[Outbid] Fetch territories error:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchData(selectedCategory);
+    fetchTerritories();
 
     // 1. Supabase Realtime Postgres Changes Listener
     const channel = supabase
-      .channel('realtime-feed')
+      .channel('realtime-global-feed')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'projects' },
@@ -94,9 +132,16 @@ export default function HomePage() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'bid_transactions' },
-        (payload) => {
+        () => {
           soundManager.playCashChing();
           fetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'territories' },
+        () => {
+          fetchTerritories();
         }
       )
       .subscribe();
@@ -104,51 +149,19 @@ export default function HomePage() {
     // 2. Fast 4-second background auto-poll sync
     const pollTimer = setInterval(() => {
       fetchData();
+      fetchTerritories();
     }, 4000);
-
-    // 3. SSE Fallback
-    let es: EventSource | null = null;
-    try {
-      es = new EventSource('/api/events');
-      es.onmessage = (e) => {
-        try {
-          const parsed = JSON.parse(e.data) as SSEEventData;
-          if (!parsed || !parsed.type) return;
-
-          if (parsed.type === 'NEW_KING' || parsed.type === 'NEW_BID' || parsed.type === 'RANK_SHIFT') {
-            setToastEvent(parsed);
-            if (parsed.type === 'NEW_KING') {
-              soundManager.playKingGong();
-              confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 } });
-            } else {
-              soundManager.playCashChing();
-            }
-            fetchData();
-          } else if (parsed.type === 'CLICK_UPDATE') {
-            if (parsed.data?.stats) {
-              setStats(parsed.data.stats);
-            }
-          }
-        } catch {
-          // ignore
-        }
-      };
-    } catch {
-      // ignore
-    }
 
     return () => {
       supabase.removeChannel(channel);
       clearInterval(pollTimer);
-      if (es) es.close();
     };
-  }, [selectedCategory, fetchData]);
+  }, [selectedCategory, fetchData, fetchTerritories]);
 
   const handleHeroSubmitBid = ({
     url,
     category,
     bidAmount,
-    logoUrl,
   }: {
     url: string;
     category: string;
@@ -169,85 +182,179 @@ export default function HomePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleSelectTerritory = (t: TerritoryState) => {
+    setSelectedTerritory(t);
+    setIsConquerModalOpen(true);
+  };
+
+  const handleSelectCountryByCode = (code: string) => {
+    const t = territories.find((item) => item.countryCode === code);
+    if (t) {
+      handleSelectTerritory(t);
+    }
+  };
+
   return (
     <div className="min-h-screen selection:bg-[#e05d44] selection:text-white font-sans transition-colors duration-200">
-      {/* Top Header with working Light/Dark theme toggle */}
+      {/* Top Header with working Light/Dark theme toggle & World Map link */}
       <Header />
 
-      <main className="w-full pb-12">
-        {/* Hero Section with Favicon Grabber and Category Dropdown */}
-        <HeroBiddingBar
-          stats={stats}
-          currentBidAmount={currentBidAmount}
-          onBidAmountChange={(amt) => setCurrentBidAmount(amt)}
-          onSubmitBid={handleHeroSubmitBid}
-          onOpenStats={() => setIsStatsOpen(true)}
-        />
+      {/* Main View Mode Selector (Map vs Board) */}
+      <div className="w-full max-w-4xl mx-auto px-4 pt-3 flex items-center justify-center">
+        <div className="inline-flex p-1 rounded-2xl bg-zinc-100 dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs">
+          <button
+            type="button"
+            onClick={() => setViewMode('board')}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer select-none ${
+              viewMode === 'board'
+                ? 'bg-white dark:bg-[#25221d] text-zinc-900 dark:text-white shadow-xs'
+                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+            }`}
+          >
+            <Layers className="w-4 h-4 text-[#ea6c52]" />
+            <span>Classic Board</span>
+          </button>
 
-        {/* Category Pills Bar matching media_1787414703339.png */}
-        <CategoryFilters
-          selectedCategory={selectedCategory}
-          onSelectCategory={(slug) => setSelectedCategory(slug)}
-        />
+          <button
+            type="button"
+            onClick={() => setViewMode('map')}
+            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer select-none ${
+              viewMode === 'map'
+                ? 'bg-[#ea6c52] text-white shadow-xs'
+                : 'text-zinc-500 hover:text-[#ea6c52]'
+            }`}
+          >
+            <span>🗺️</span>
+            <span>World War Map</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-black/20 text-white">
+              WAR
+            </span>
+          </button>
+        </div>
+      </div>
 
-        {/* Top 3 Tinted Cards with Hover-Only Action */}
-        <TopThreeCards
-          topProjects={projects}
-          onSelectProject={handleSelectCardToOutbid}
-        />
+      {viewMode === 'board' ? (
+        <main className="w-full pb-12">
+          {/* Hero Section with Favicon Grabber and Category Dropdown */}
+          <HeroBiddingBar
+            stats={stats}
+            currentBidAmount={currentBidAmount}
+            onBidAmountChange={(amt) => setCurrentBidAmount(amt)}
+            onSubmitBid={handleHeroSubmitBid}
+            onOpenStats={() => setIsStatsOpen(true)}
+          />
 
-        {/* Latest Activity Ticker */}
-        <LatestActivityTicker
-          recentBids={recentBids}
-          onSelectBid={(tx) => {
-            setPrefillUrl(tx.projectUrl);
-            setPrefillBid(tx.amount + 5);
-            setIsBidModalOpen(true);
-          }}
-        />
+          {/* Category Pills Bar */}
+          <CategoryFilters
+            selectedCategory={selectedCategory}
+            onSelectCategory={(slug) => setSelectedCategory(slug)}
+          />
 
-        {/* Ranked List (Rows #4 to #50+) with Top 10 / Top 20 Dividers */}
-        <RankedList
-          projects={projects}
-          onSelectProject={handleSelectCardToOutbid}
-          onRefresh={() => fetchData()}
-        />
+          {/* Top 3 Tinted Cards with Hover-Only Action */}
+          <TopThreeCards
+            topProjects={projects}
+            onSelectProject={handleSelectCardToOutbid}
+          />
 
-        {/* Bottom Giant Monospace Revenue Counter */}
-        <BottomRevenueCounter stats={stats} />
+          {/* Latest Activity Ticker */}
+          <LatestActivityTicker
+            recentBids={recentBids}
+            onSelectBid={(bid) => {
+              const proj = projects.find((p) => p.id === bid.projectId);
+              if (proj) handleSelectCardToOutbid(proj, proj.totalBid + 5);
+            }}
+          />
 
-        {/* Footer */}
-        <Footer
-          onOpenRules={() => setIsRulesOpen(true)}
-          onOpenStats={() => setIsStatsOpen(true)}
-        />
-      </main>
+          {/* Complete Paginated Leaderboard */}
+          <RankedList
+            projects={projects}
+            onSelectProject={handleSelectCardToOutbid}
+            onRefresh={() => fetchData()}
+          />
 
-      {/* Interactive Checkout Modal */}
+          {/* Bottom Revenue Counter Banner */}
+          <BottomRevenueCounter
+            stats={stats}
+          />
+
+          {/* Footer */}
+          <Footer
+            onOpenRules={() => setIsRulesOpen(true)}
+            onOpenStats={() => setIsStatsOpen(true)}
+          />
+        </main>
+      ) : (
+        <main className="w-full pb-12 pt-4">
+          <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
+            {/* Interactive World War Map Canvas Container */}
+            <div className="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-[#070709]">
+              <WorldWarMap
+                territories={territories}
+                onSelectTerritory={handleSelectTerritory}
+              />
+
+              {/* Left HUD Panel: Live War Stream & World Powers */}
+              <WorldPowersDrawer
+                powers={powers}
+                warEvents={warEvents}
+                onSelectCountry={handleSelectCountryByCode}
+              />
+
+              {/* Right HUD Panel: Unclaimed Territories */}
+              <UnclaimedLandDrawer
+                territories={territories}
+                onSelectCountry={handleSelectCountryByCode}
+              />
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* Conquer Territory Modal */}
+      <ConquerTerritoryModal
+        territory={selectedTerritory}
+        isOpen={isConquerModalOpen}
+        onClose={() => {
+          setIsConquerModalOpen(false);
+          setSelectedTerritory(null);
+        }}
+        onConquerSuccess={() => {
+          fetchTerritories();
+          fetchData();
+        }}
+      />
+
+      {/* Interactive Modals */}
       <BidModal
         isOpen={isBidModalOpen}
         onClose={() => setIsBidModalOpen(false)}
         initialUrl={prefillUrl}
-        initialBidAmount={prefillBid || currentBidAmount}
+        initialBidAmount={prefillBid}
         initialCategory={prefillCategory}
         stats={stats}
         onBidSuccess={() => fetchData()}
       />
 
-      {/* Modals */}
-      <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} />
-      <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
-      <StatsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} stats={stats} />
+      <RulesModal
+        isOpen={isRulesOpen}
+        onClose={() => setIsRulesOpen(false)}
+      />
 
-      {/* Live Outbid Toast */}
+      <AboutModal
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
+      />
+
+      <StatsModal
+        isOpen={isStatsOpen}
+        onClose={() => setIsStatsOpen(false)}
+        stats={stats}
+      />
+
       <OutbidToast
         event={toastEvent}
         onClose={() => setToastEvent(null)}
-        onOutbid={(p, min) => {
-          setPrefillUrl(p.url);
-          setPrefillBid(min);
-          setIsBidModalOpen(true);
-        }}
+        onOutbid={(proj, nextAmt) => handleSelectCardToOutbid(proj, nextAmt)}
       />
     </div>
   );

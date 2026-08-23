@@ -89,12 +89,67 @@ export interface PlatformStats {
 }
 
 export interface SSEEventData {
-  type: 'NEW_BID' | 'NEW_KING' | 'RANK_SHIFT' | 'CLICK_UPDATE' | 'INIT';
+  type: 'NEW_BID' | 'NEW_KING' | 'RANK_SHIFT' | 'CLICK_UPDATE' | 'TERRITORY_CONQUERED' | 'INIT';
   data: {
     transaction?: BidTransaction;
     project?: Project;
     stats?: PlatformStats;
+    territory?: any;
     message?: string;
   };
   timestamp: number;
+}
+
+export interface TerritoryState {
+  countryCode: string;
+  countryName: string;
+  numericId: string;
+  flag: string;
+  coordinates: [number, number];
+  population: string;
+  currentRuler?: {
+    projectId?: string;
+    title: string;
+    url: string;
+    logoUrl?: string;
+    color: string;
+    totalBid: number;
+  } | null;
+  currentBid: number;
+  minOutbidPrice: number;
+  totalPlunder: number;
+  clicks: number;
+  conqueredAt?: string;
+}
+
+export interface WorldPower {
+  rank: number;
+  title: string;
+  url: string;
+  logoUrl?: string;
+  color: string;
+  territoriesCount: number;
+  totalPlunder: number;
+  countries: string[];
+}
+
+export interface WarEvent {
+  id: string;
+  countryCode: string;
+  countryName: string;
+  flag: string;
+  rulerTitle: string;
+  rulerUrl: string;
+  amount: number;
+  type: 'conquered' | 'claimed' | 'outbid';
+  timestamp: string;
+}
+
+export interface MapStats {
+  onlineCount: number;
+  totalVisitors: number;
+  totalPlundered: number;
+  totalClicks: number;
+  claimedCount: number;
+  totalCountries: number;
 }

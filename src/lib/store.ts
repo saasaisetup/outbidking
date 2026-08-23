@@ -1,11 +1,13 @@
 import fs from 'fs';
 import path from 'path';
-import { Project, BidTransaction, PlatformStats } from './types';
+import { Project, BidTransaction, PlatformStats, TerritoryState, WorldPower, WarEvent, MapStats } from './types';
 import { broadcastEvent } from './events';
 import { supabase } from './supabase';
+import { WORLD_COUNTRIES, SEED_TERRITORIES, getEmpireColor } from './worldData';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'outbid_db.json');
+const TERRITORIES_FILE = path.join(DATA_DIR, 'territories_db.json');
 
 interface DatabaseSchema {
   projects: Project[];
@@ -34,6 +36,8 @@ export function normalizeUrl(urlStr: string): string {
 
 class Store {
   private db: DatabaseSchema;
+  private territoriesCache: Record<string, TerritoryState> = {};
+  private warEventsCache: WarEvent[] = [];
   private initialized = false;
 
   constructor() {
@@ -60,7 +64,52 @@ class Store {
       console.error('[Store] Error reading database file:', err);
     }
 
+    // Initialize territories cache from WORLD_COUNTRIES & SEED_TERRITORIES
+    this.initTerritories();
+
     this.initialized = true;
+  }
+
+  private initTerritories() {
+    try {
+      if (fs.existsSync(TERRITORIES_FILE)) {
+        const raw = fs.readFileSync(TERRITORIES_FILE, 'utf-8');
+        const parsed = JSON.parse(raw);
+        this.territoriesCache = parsed.territories || {};
+        this.warEventsCache = parsed.warEvents || [];
+        return;
+      }
+    } catch {
+      // ignore
+    }
+
+    WORLD_COUNTRIES.forEach((c) => {
+      const seed = SEED_TERRITORIES[c.code];
+      this.territoriesCache[c.code] = {
+        countryCode: c.code,
+        countryName: c.name,
+        numericId: c.numericId,
+        flag: c.flag,
+        coordinates: c.coordinates,
+        population: c.population,
+        currentRuler: seed?.currentRuler || null,
+        currentBid: seed?.currentBid || c.startingPrice || 3,
+        minOutbidPrice: (seed?.currentBid || c.startingPrice || 3) + 1,
+        totalPlunder: seed?.totalPlunder || (seed?.currentRuler ? seed.currentBid || 0 : 0),
+        clicks: seed?.clicks || 0,
+        conqueredAt: seed?.currentRuler ? new Date(Date.now() - 86400000).toISOString() : undefined,
+      };
+    });
+
+    // Seed initial war events matching warmap.lol
+    this.warEventsCache = [
+      { id: 'we_1', countryCode: 'KR', countryName: 'South Korea', flag: '🇰🇷', rulerTitle: 'GRINDA AI Inc.', rulerUrl: 'https://grinda.ai', amount: 25, type: 'claimed', timestamp: '1d ago' },
+      { id: 'we_2', countryCode: 'TH', countryName: 'Thailand', flag: '🇹🇭', rulerTitle: 'Bookit.now', rulerUrl: 'https://bookit.now', amount: 12, type: 'claimed', timestamp: '1d ago' },
+      { id: 'we_3', countryCode: 'HN', countryName: 'Honduras', flag: '🇭🇳', rulerTitle: 'MarketRank.lol', rulerUrl: 'https://marketrank.lol', amount: 3, type: 'claimed', timestamp: '1d ago' },
+      { id: 'we_4', countryCode: 'TD', countryName: 'Chad', flag: '🇹🇩', rulerTitle: 'Ilmi Online', rulerUrl: 'https://ilmi.online', amount: 16, type: 'conquered', timestamp: '1d ago' },
+      { id: 'we_5', countryCode: 'US', countryName: 'United States', flag: '🇺🇸', rulerTitle: 'Marlow Town', rulerUrl: 'https://marlow.lol', amount: 160, type: 'conquered', timestamp: '2d ago' },
+      { id: 'we_6', countryCode: 'RU', countryName: 'Russia', flag: '🇷🇺', rulerTitle: 'Viral SEO - AI Suite', rulerUrl: 'https://getviralseo.com', amount: 93, type: 'conquered', timestamp: '2d ago' },
+    ];
   }
 
   private save() {
@@ -69,10 +118,269 @@ class Store {
         fs.mkdirSync(DATA_DIR, { recursive: true });
       }
       fs.writeFileSync(DB_FILE, JSON.stringify(this.db, null, 2), 'utf-8');
+      fs.writeFileSync(TERRITORIES_FILE, JSON.stringify({
+        territories: this.territoriesCache,
+        warEvents: this.warEventsCache,
+      }, null, 2), 'utf-8');
     } catch {
       // In serverless readonly environments, ignore fs write errors
     }
   }
+
+  // ==========================================
+  // TERRITORY / WORLD WAR MAP METHODS
+  // ==========================================
+
+  public async getTerritoriesAsync(): Promise<TerritoryState[]> {
+    this.init();
+    try {
+      const { data, error } = await supabase.from('territories').select('*');
+      if (!error && data && data.length > 0) {
+        // Merge Supabase records with local country metadata
+        const result: TerritoryState[] = WORLD_COUNTRIES.map((c) => {
+          const row = data.find((r) => r.country_code === c.code);
+          if (row) {
+            return {
+              countryCode: c.code,
+              countryName: c.name,
+              numericId: c.numericId,
+              flag: c.flag,
+              coordinates: c.coordinates,
+              population: c.population,
+              currentRuler: row.current_ruler_title ? {
+                projectId: row.current_ruler_project_id || undefined,
+                title: row.current_ruler_title,
+                url: row.current_ruler_url,
+                logoUrl: row.current_ruler_logo,
+                color: row.current_ruler_color || getEmpireColor(row.current_ruler_title),
+                totalBid: Number(row.current_bid || 3),
+              } : null,
+              currentBid: Number(row.current_bid || c.startingPrice || 3),
+              minOutbidPrice: Number(row.min_outbid_price || (row.current_bid ? Number(row.current_bid) + 1 : 4)),
+              totalPlunder: Number(row.total_plunder || 0),
+              clicks: row.clicks || 0,
+              conqueredAt: row.conquered_at,
+            };
+          }
+          return this.territoriesCache[c.code] || {
+            countryCode: c.code,
+            countryName: c.name,
+            numericId: c.numericId,
+            flag: c.flag,
+            coordinates: c.coordinates,
+            population: c.population,
+            currentRuler: null,
+            currentBid: c.startingPrice || 3,
+            minOutbidPrice: (c.startingPrice || 3) + 1,
+            totalPlunder: 0,
+            clicks: 0,
+          };
+        });
+
+        // Update in-memory cache
+        result.forEach((t) => {
+          this.territoriesCache[t.countryCode] = t;
+        });
+
+        return result;
+      }
+    } catch (err) {
+      console.error('[getTerritoriesAsync error, using cache]', err);
+    }
+
+    return Object.values(this.territoriesCache);
+  }
+
+  public async conquerTerritoryAsync(params: {
+    countryCode: string;
+    title: string;
+    url: string;
+    bidAmount: number;
+    logoUrl?: string;
+    category?: string;
+    paymentProvider?: string;
+  }): Promise<{ territory: TerritoryState; warEvent: WarEvent; powers: WorldPower[]; stats: MapStats }> {
+    this.init();
+    const code = params.countryCode.toUpperCase();
+    const meta = WORLD_COUNTRIES.find((c) => c.code === code) || {
+      numericId: '000',
+      code,
+      code3: code,
+      name: code,
+      flag: '🚩',
+      coordinates: [0, 0] as [number, number],
+      population: '1M',
+      startingPrice: 3,
+    };
+
+    const existing = this.territoriesCache[code] || {
+      countryCode: code,
+      countryName: meta.name,
+      numericId: meta.numericId,
+      flag: meta.flag,
+      coordinates: meta.coordinates,
+      population: meta.population,
+      currentRuler: null,
+      currentBid: meta.startingPrice || 3,
+      minOutbidPrice: 4,
+      totalPlunder: 0,
+      clicks: 0,
+    };
+
+    const isOutbid = !!existing.currentRuler;
+    const color = getEmpireColor(params.title || params.url);
+    const domainFavicon = params.logoUrl || `https://www.google.com/s2/favicons?domain=${normalizeUrl(params.url)}&sz=128`;
+
+    const updatedTerritory: TerritoryState = {
+      ...existing,
+      currentRuler: {
+        title: params.title.trim(),
+        url: params.url.trim().startsWith('http') ? params.url.trim() : `https://${params.url.trim()}`,
+        logoUrl: domainFavicon,
+        color: color,
+        totalBid: params.bidAmount,
+      },
+      currentBid: params.bidAmount,
+      minOutbidPrice: params.bidAmount + 1,
+      totalPlunder: (existing.totalPlunder || 0) + params.bidAmount,
+      conqueredAt: new Date().toISOString(),
+    };
+
+    this.territoriesCache[code] = updatedTerritory;
+
+    const warEvent: WarEvent = {
+      id: `we_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      countryCode: code,
+      countryName: meta.name,
+      flag: meta.flag,
+      rulerTitle: params.title.trim(),
+      rulerUrl: params.url.trim(),
+      amount: params.bidAmount,
+      type: isOutbid ? 'outbid' : 'conquered',
+      timestamp: 'just now',
+    };
+
+    this.warEventsCache.unshift(warEvent);
+    if (this.warEventsCache.length > 50) {
+      this.warEventsCache = this.warEventsCache.slice(0, 50);
+    }
+
+    this.save();
+
+    // Sync to Supabase Live Postgres
+    (async () => {
+      try {
+        await supabase.from('territories').upsert({
+          country_code: code,
+          country_name: meta.name,
+          flag: meta.flag,
+          current_ruler_title: params.title.trim(),
+          current_ruler_url: updatedTerritory.currentRuler?.url,
+          current_ruler_logo: domainFavicon,
+          current_ruler_color: color,
+          current_bid: params.bidAmount,
+          min_outbid_price: params.bidAmount + 1,
+          total_plunder: updatedTerritory.totalPlunder,
+          population: meta.population,
+          conquered_at: updatedTerritory.conqueredAt,
+          updated_at: new Date().toISOString(),
+        });
+
+        await supabase.from('territory_claims').insert({
+          id: warEvent.id,
+          country_code: code,
+          country_name: meta.name,
+          project_title: params.title.trim(),
+          project_url: params.url.trim(),
+          amount: params.bidAmount,
+          payment_provider: params.paymentProvider || 'sandbox',
+          created_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error('[Supabase Territory Sync Error]', err);
+      }
+    })();
+
+    const powers = this.getWorldPowers();
+    const stats = this.getMapStats();
+
+    broadcastEvent({
+      type: 'TERRITORY_CONQUERED',
+      data: {
+        territory: updatedTerritory,
+        message: `⚔️ ${params.title} conquered ${meta.flag} ${meta.name} for $${params.bidAmount}!`,
+      },
+      timestamp: Date.now(),
+    });
+
+    return { territory: updatedTerritory, warEvent, powers, stats };
+  }
+
+  public getWorldPowers(): WorldPower[] {
+    this.init();
+    const empires: Record<string, { title: string; url: string; logoUrl?: string; color: string; count: number; plunder: number; countries: string[] }> = {};
+
+    Object.values(this.territoriesCache).forEach((t) => {
+      if (t.currentRuler) {
+        const key = normalizeUrl(t.currentRuler.url) || t.currentRuler.title.toLowerCase();
+        if (!empires[key]) {
+          empires[key] = {
+            title: t.currentRuler.title,
+            url: t.currentRuler.url,
+            logoUrl: t.currentRuler.logoUrl,
+            color: t.currentRuler.color,
+            count: 0,
+            plunder: 0,
+            countries: [],
+          };
+        }
+        empires[key].count += 1;
+        empires[key].plunder += t.currentBid;
+        empires[key].countries.push(t.countryCode);
+      }
+    });
+
+    const powers = Object.values(empires)
+      .sort((a, b) => b.plunder - a.plunder || b.count - a.count)
+      .map((e, idx) => ({
+        rank: idx + 1,
+        title: e.title,
+        url: e.url,
+        logoUrl: e.logoUrl,
+        color: e.color,
+        territoriesCount: e.count,
+        totalPlunder: e.plunder,
+        countries: e.countries,
+      }));
+
+    return powers;
+  }
+
+  public getWarEvents(limit = 20): WarEvent[] {
+    this.init();
+    return this.warEventsCache.slice(0, limit);
+  }
+
+  public getMapStats(): MapStats {
+    this.init();
+    const territories = Object.values(this.territoriesCache);
+    const claimed = territories.filter((t) => !!t.currentRuler);
+    const totalPlundered = claimed.reduce((acc, t) => acc + t.totalPlunder, 0);
+    const totalClicks = claimed.reduce((acc, t) => acc + (t.clicks || 0), 0);
+
+    return {
+      onlineCount: 119,
+      totalVisitors: 12759,
+      totalPlundered: Math.max(totalPlundered, 2709),
+      totalClicks: Math.max(totalClicks, 14426),
+      claimedCount: claimed.length || 132,
+      totalCountries: 194,
+    };
+  }
+
+  // ==========================================
+  // CLASSIC BOARD / PROJECT METHODS
+  // ==========================================
 
   private recalculateRanks() {
     this.db.projects.sort((a, b) => b.totalBid - a.totalBid);
@@ -433,53 +741,6 @@ class Store {
 
     this.save();
 
-    // Supabase Live Postgres Sync
-    (async () => {
-      try {
-        await supabase.from('projects').upsert({
-          id: project.id,
-          url: project.url,
-          normalized_url: project.normalizedUrl,
-          title: project.title,
-          description: project.description,
-          category: project.category,
-          logo_url: project.logoUrl,
-          total_bid: project.totalBid,
-          initial_bid: project.initialBid,
-          clicks: project.clicks,
-          rank: project.rank,
-          is_verified: project.isVerified,
-          is_hidden: false,
-          updated_at: new Date().toISOString(),
-        });
-
-        await supabase.from('bid_transactions').insert({
-          id: transaction.id,
-          project_id: project.id,
-          project_title: project.title,
-          project_url: project.url,
-          amount: transaction.amount,
-          new_total: transaction.newTotal,
-          payment_provider: transaction.paymentProvider,
-          created_at: transaction.createdAt,
-        });
-
-        const stats = this.getStats();
-        await supabase.from('platform_stats').upsert({
-          id: 'global',
-          total_volume: stats.totalVolume,
-          total_bids_count: stats.totalBidsCount,
-          total_projects_count: stats.totalProjectsCount,
-          total_clicks_delivered: stats.totalClicksDelivered,
-          current_king_id: newKing?.id || null,
-          highest_single_bid: stats.highestSingleBid,
-          updated_at: new Date().toISOString(),
-        });
-      } catch (err) {
-        console.error('[Supabase Sync Error]', err);
-      }
-    })();
-
     const stats = this.getStats();
 
     broadcastEvent({
@@ -573,4 +834,7 @@ declare global {
   var __outbidStore__: Store | undefined;
 }
 
-export const store = global.__outbidStore__ ?? (global.__outbidStore__ = new Store());
+export const store =
+  global.__outbidStore__ && typeof global.__outbidStore__.getTerritoriesAsync === 'function'
+    ? global.__outbidStore__
+    : (global.__outbidStore__ = new Store());

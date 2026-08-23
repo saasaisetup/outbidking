@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Globe } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 
 interface HeaderProps {
@@ -35,8 +35,16 @@ export function Header({
         </span>
       </Link>
 
-      {/* Nav Links with Leaderboard explicitly displayed and responsive spacing */}
-      <nav className="flex items-center gap-1.5 sm:gap-5 text-[11px] sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 flex-shrink-0">
+      {/* Nav Links with World Map explicitly displayed */}
+      <nav className="flex items-center gap-1.5 sm:gap-4 text-[11px] sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 flex-shrink-0">
+        <Link
+          href="/map"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#ea6c52]/10 text-[#ea6c52] border border-[#ea6c52]/30 hover:bg-[#ea6c52]/20 font-bold transition-all"
+        >
+          <span className="text-xs">🗺️</span>
+          <span>World Map</span>
+        </Link>
+
         <Link
           href="/"
           className="hover:text-zinc-950 dark:hover:text-white transition-colors"
@@ -69,7 +77,11 @@ export function Header({
           title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           className="p-1 sm:p-2 rounded-xl bg-zinc-100 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer flex-shrink-0"
         >
-          {darkMode ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-700" />}
+          {darkMode ? (
+            <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
+          ) : (
+            <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-700" />
+          )}
         </button>
       </nav>
     </header>
