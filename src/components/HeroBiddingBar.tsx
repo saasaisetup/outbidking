@@ -247,12 +247,12 @@ export function HeroBiddingBar({
           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
         </div>
 
-        {/* Peach / Terracotta "Outbid" Button */}
+        {/* Tactile Green "Rankbid" Button */}
         <button
           type="submit"
-          className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight text-white bg-[#f4a28c] hover:bg-[#ea6c52] active:scale-95 transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center cursor-pointer shadow-xs"
+          className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight text-black bg-[#52d489] hover:bg-[#45c77c] border border-[#3cb56e] shadow-[0_4px_0_0_#2b8a53] active:translate-y-[2px] active:shadow-[0_2px_0_0_#2b8a53] transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center cursor-pointer"
         >
-          Outbid
+          Rankbid
         </button>
       </form>
 
