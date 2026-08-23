@@ -5,7 +5,7 @@ import { geoEqualEarth, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import worldData from 'world-atlas/countries-110m.json';
 import { TerritoryState } from '@/lib/types';
-import { Plus, Minus, RotateCcw, Crosshair } from 'lucide-react';
+import { Plus, Minus, RotateCcw } from 'lucide-react';
 
 interface WorldWarMapProps {
   territories: TerritoryState[];
@@ -121,7 +121,7 @@ export function WorldWarMap({
   }, []);
 
   // -------------------------------------------------------------
-  // Mouse Drag & Pan Handlers
+  // Mouse Drag & Pan Handlers (Click threshold isolation)
   // -------------------------------------------------------------
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -233,7 +233,7 @@ export function WorldWarMap({
       onMouseLeave={handleMouseUp}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
-      className="relative w-full h-full min-h-[580px] bg-[#070709] overflow-hidden select-none cursor-grab active:cursor-grabbing border-b border-zinc-900"
+      className="relative w-full h-full min-h-[600px] bg-[#070709] overflow-hidden select-none cursor-grab active:cursor-grabbing"
     >
       {/* Background Radar Grid */}
       <div
@@ -254,23 +254,23 @@ export function WorldWarMap({
       >
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-full max-w-[1300px] overflow-visible"
+          className="w-full h-full max-w-[1400px] overflow-visible"
         >
           <defs>
-            {/* Highlight selection glow */}
-            <filter id="glow-selection" x="-30%" y="-30%" width="160%" height="160%">
-              <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#ffffff" floodOpacity="1" />
-              <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#ea6c52" floodOpacity="0.8" />
-            </filter>
-            <filter id="glow-hover" x="-20%" y="-20%" width="140%" height="140%">
+            {/* Country hover glow filter: Only active on hover/selection */}
+            <filter id="glow-country-hover" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#ffffff" floodOpacity="0.9" />
+            </filter>
+            <filter id="glow-country-select" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#ffffff" floodOpacity="1" />
+              <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#ea6c52" floodOpacity="0.8" />
             </filter>
           </defs>
 
-          {/* Oceans / Dark Base */}
+          {/* Oceans Base */}
           <rect width={width} height={height} fill="#070709" />
 
-          {/* Layer 1: All 194 Country Territory Polygons with Rich Geographic Colors */}
+          {/* Layer 1: All 194 Country Territory Polygons (Crisp, clean dark hairline borders without initial glow) */}
           <g className="countries-layer">
             {countriesGeo.map((feat: any, idx: number) => {
               const featId = feat.id;
@@ -278,7 +278,7 @@ export function WorldWarMap({
               const isSelected = selectedTerritory?.countryCode === territory?.countryCode;
               const isHovered = hoveredCountry?.countryCode === territory?.countryCode;
 
-              // Rich territory fill color (either ruler's empire color, or country default palette color)
+              // Rich territory fill color (either ruler's empire color, or default country palette color)
               let fillColor = territory?.currentRuler?.color || territory?.defaultColor || '#06b6d4';
 
               const pathD = pathGenerator(feat);
@@ -289,11 +289,11 @@ export function WorldWarMap({
                   key={featId || idx}
                   d={pathD}
                   fill={fillColor}
-                  stroke={isSelected ? '#ffffff' : (isHovered ? '#ffffff' : '#0e0e12')}
-                  strokeWidth={isSelected ? 3 / zoom : (isHovered ? 1.8 / zoom : 0.65 / zoom)}
+                  stroke={isSelected ? '#ffffff' : (isHovered ? '#ffffff' : '#141418')}
+                  strokeWidth={isSelected ? 2.5 / zoom : (isHovered ? 1.5 / zoom : 0.45 / zoom)}
                   className="transition-colors duration-75 cursor-pointer hover:brightness-120"
                   style={{
-                    filter: isSelected ? 'url(#glow-selection)' : (isHovered ? 'url(#glow-hover)' : undefined),
+                    filter: isSelected ? 'url(#glow-country-select)' : (isHovered ? 'url(#glow-country-hover)' : undefined),
                   }}
                   onMouseEnter={() => territory && setHoveredCountry(territory)}
                   onMouseLeave={() => setHoveredCountry(null)}
@@ -308,7 +308,7 @@ export function WorldWarMap({
             })}
           </g>
 
-          {/* Layer 2: 6 Strategic Ocean Fleet Patrol Corridors */}
+          {/* Layer 2: 6 Strategic Ocean Routes & Fleet Patrols ($25 Unclaimed Spots) */}
           <g className="ocean-fleets-layer">
             {oceanFleets.map((fleet) => {
               const isClaimed = !!fleet.currentRuler;
@@ -330,16 +330,16 @@ export function WorldWarMap({
                     handleCountryClick(fleet);
                   }}
                 >
-                  {/* Outer Dashed Radar Ring */}
+                  {/* Dashed Radar Ring */}
                   <circle
-                    r="19"
-                    fill="rgba(16, 185, 129, 0.08)"
+                    r="18"
+                    fill="rgba(16, 185, 129, 0.06)"
                     stroke={isSelected ? '#ffffff' : (ringColor || '#10b981')}
                     strokeWidth={isSelected ? '2.5' : '1.5'}
                     strokeDasharray="4 3"
                     className="group-hover:scale-110 transition-transform"
                     style={{
-                      filter: isSelected ? 'url(#glow-selection)' : undefined,
+                      filter: isSelected ? 'url(#glow-country-select)' : undefined,
                     }}
                   />
                   {/* Center Naval Insignia */}
@@ -359,7 +359,7 @@ export function WorldWarMap({
                   </text>
 
                   {/* Label Pill */}
-                  <g transform="translate(0, 23)">
+                  <g transform="translate(0, 22)">
                     <rect
                       x="-38"
                       y="-7"
@@ -420,7 +420,7 @@ export function WorldWarMap({
                       strokeWidth={isSelected ? '3' : '2'}
                       className="filter drop-shadow-md group-hover:scale-105 transition-transform"
                       style={{
-                        filter: isSelected ? 'url(#glow-selection)' : undefined,
+                        filter: isSelected ? 'url(#glow-country-select)' : undefined,
                       }}
                     />
 
@@ -482,7 +482,7 @@ export function WorldWarMap({
         </svg>
       </div>
 
-      {/* Hover Country Tooltip */}
+      {/* Hover Tooltip */}
       {hoveredCountry && (
         <div
           className="absolute pointer-events-none z-30 px-3 py-2 rounded-xl bg-[#0f0f14]/95 backdrop-blur-md border border-zinc-700/80 shadow-2xl text-white font-mono text-xs animate-in fade-in duration-75"
@@ -549,7 +549,7 @@ export function WorldWarMap({
         </button>
       </div>
 
-      {/* Bottom Tactical Status Bar */}
+      {/* Bottom Status Bar */}
       <div className="absolute bottom-3 inset-x-0 flex justify-center pointer-events-none z-10 px-4">
         <div className="px-4 py-1.5 rounded-full bg-[#0a0a0d]/90 backdrop-blur-md border border-zinc-800/80 text-[10px] sm:text-xs font-mono font-bold tracking-wider text-emerald-400/90 flex items-center gap-2 shadow-lg">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

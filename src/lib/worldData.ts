@@ -67,20 +67,19 @@ export function calcMinOutbid(currentBid: number): number {
   return Math.ceil(currentBid * 1.5);
 }
 
-// 12 Exact Selectable Empire Colors
 export const EMPIRE_COLORS = [
-  '#ea580c', // 1. Orange
-  '#f59e0b', // 2. Amber
-  '#facc15', // 3. Yellow
-  '#4ade80', // 4. Green
-  '#2dd4bf', // 5. Cyan / Mint
-  '#3b82f6', // 6. Blue
-  '#8b5cf6', // 7. Violet / Purple
-  '#ec4899', // 8. Pink
-  '#84cc16', // 9. Lime
-  '#fb923c', // 10. Coral
-  '#38bdf8', // 11. Sky Blue
-  '#f43f5e', // 12. Rose / Crimson
+  '#ea580c', // Orange
+  '#f59e0b', // Amber
+  '#facc15', // Yellow
+  '#4ade80', // Green
+  '#2dd4bf', // Cyan
+  '#3b82f6', // Blue
+  '#8b5cf6', // Violet
+  '#ec4899', // Pink
+  '#84cc16', // Lime
+  '#fb923c', // Coral
+  '#38bdf8', // Sky Blue
+  '#f43f5e', // Rose
 ];
 
 export function getEmpireColor(titleOrUrl: string): string {
@@ -93,7 +92,7 @@ export function getEmpireColor(titleOrUrl: string): string {
   return EMPIRE_COLORS[index];
 }
 
-// Rich, Diverse Geographic Color Palette for all 194 countries (No monotone green!)
+// Complete 194 Sovereign Countries Dataset matching warmap.lol palette
 export const WORLD_COUNTRIES: CountryMeta[] = [
   // --- NORTH AMERICA ---
   { numericId: "840", code: "US", code3: "USA", name: "United States", flag: "🇺🇸", coordinates: [-98.5795, 39.8283], population: "335M", tier: "TIER S", defaultColor: "#ecc849", startingPrice: 160 },
@@ -248,7 +247,7 @@ export const WORLD_COUNTRIES: CountryMeta[] = [
   { numericId: "242", code: "FJ", code3: "FJI", name: "Fiji", flag: "🇫🇯", coordinates: [178.0650, -17.7134], population: "930K", tier: "TIER C", defaultColor: "#38bdf8", startingPrice: 3 },
   { numericId: "090", code: "SB", code3: "SLB", name: "Solomon Islands", flag: "🇸🇧", coordinates: [160.1562, -9.6457], population: "720K", tier: "TIER C", defaultColor: "#16a34a", startingPrice: 3 },
 
-  // --- 6 STRATEGIC OCEAN ROUTES & PATROLS ---
+  // --- 6 STRATEGIC OCEAN ROUTES & FLEETS ($25 UNCLAIMED SPOTS) ---
   {
     numericId: "901",
     code: "IO",
@@ -329,11 +328,11 @@ export const WORLD_COUNTRIES: CountryMeta[] = [
   },
 ];
 
-// Initial seeded territory rulers
+// Seeded Sovereign Rulers matching media_1787490476646.png
 export const SEED_TERRITORIES: Record<string, Partial<TerritoryState>> = {
   US: {
     currentRuler: {
-      title: "Marlow Town",
+      title: "marlow.lol",
       url: "https://marlow.lol",
       warCry: "Building the king of towns",
       logoUrl: "https://www.google.com/s2/favicons?domain=marlow.lol&sz=128",
@@ -344,6 +343,48 @@ export const SEED_TERRITORIES: Record<string, Partial<TerritoryState>> = {
     minOutbidPrice: 240,
     totalPlunder: 160,
     clicks: 142,
+  },
+  CA: {
+    currentRuler: {
+      title: "swaybox.click",
+      url: "https://swaybox.click",
+      warCry: "Automate your feedback loop",
+      logoUrl: "https://www.google.com/s2/favicons?domain=swaybox.click&sz=128",
+      color: "#d84c37",
+      totalBid: 86,
+    },
+    currentBid: 86,
+    minOutbidPrice: 129,
+    totalPlunder: 86,
+    clicks: 64,
+  },
+  GL: {
+    currentRuler: {
+      title: "formyourllc.com",
+      url: "https://formyourllc.com",
+      warCry: "Start your US LLC",
+      logoUrl: "https://www.google.com/s2/favicons?domain=formyourllc.com&sz=128",
+      color: "#4ade80",
+      totalBid: 25,
+    },
+    currentBid: 25,
+    minOutbidPrice: 38,
+    totalPlunder: 25,
+    clicks: 44,
+  },
+  RU: {
+    currentRuler: {
+      title: "getviralseo.com",
+      url: "https://getviralseo.com",
+      warCry: "Rank #1 with AI",
+      logoUrl: "https://www.google.com/s2/favicons?domain=getviralseo.com&sz=128",
+      color: "#84cc16",
+      totalBid: 93,
+    },
+    currentBid: 93,
+    minOutbidPrice: 140,
+    totalPlunder: 93,
+    clicks: 88,
   },
   CN: {
     currentRuler: {
@@ -359,61 +400,47 @@ export const SEED_TERRITORIES: Record<string, Partial<TerritoryState>> = {
     totalPlunder: 27,
     clicks: 375,
   },
-  RU: {
+  KR: {
     currentRuler: {
-      title: "Viral SEO - AI Suite",
-      url: "https://getviralseo.com",
-      warCry: "Rank #1 with AI",
-      logoUrl: "https://www.google.com/s2/favicons?domain=getviralseo.com&sz=128",
-      color: "#84cc16",
-      totalBid: 93,
+      title: "grinda.ai",
+      url: "https://grinda.ai",
+      warCry: "Korean AI Innovations",
+      logoUrl: "https://www.google.com/s2/favicons?domain=grinda.ai&sz=128",
+      color: "#f97316",
+      totalBid: 25,
     },
-    currentBid: 93,
-    minOutbidPrice: 140,
-    totalPlunder: 93,
-    clicks: 88,
+    currentBid: 25,
+    minOutbidPrice: 38,
+    totalPlunder: 25,
+    clicks: 22,
   },
-  CA: {
+  IN: {
     currentRuler: {
-      title: "SwayBox",
-      url: "https://swaybox.click",
-      warCry: "Automate your feedback loop",
-      logoUrl: "https://www.google.com/s2/favicons?domain=swaybox.click&sz=128",
-      color: "#d84c37",
-      totalBid: 86,
+      title: "formyourllc.com",
+      url: "https://formyourllc.com",
+      warCry: "Start your US LLC in 24h",
+      logoUrl: "https://www.google.com/s2/favicons?domain=formyourllc.com&sz=128",
+      color: "#f97316",
+      totalBid: 75,
     },
-    currentBid: 86,
-    minOutbidPrice: 129,
-    totalPlunder: 86,
-    clicks: 64,
+    currentBid: 75,
+    minOutbidPrice: 113,
+    totalPlunder: 75,
+    clicks: 110,
   },
-  GB: {
+  TH: {
     currentRuler: {
-      title: "carillon.dev",
-      url: "https://carillon.dev",
-      warCry: "Ship faster software",
-      logoUrl: "https://www.google.com/s2/favicons?domain=carillon.dev&sz=128",
-      color: "#facc15",
-      totalBid: 57,
+      title: "bookit.now",
+      url: "https://bookit.now",
+      warCry: "Instant booking everywhere",
+      logoUrl: "https://www.google.com/s2/favicons?domain=bookit.now&sz=128",
+      color: "#3b82f6",
+      totalBid: 12,
     },
-    currentBid: 57,
-    minOutbidPrice: 86,
-    totalPlunder: 57,
-    clicks: 51,
-  },
-  AU: {
-    currentRuler: {
-      title: "topx.lol",
-      url: "https://topx.lol",
-      warCry: "The leaderboard standard",
-      logoUrl: "https://www.google.com/s2/favicons?domain=topx.lol&sz=128",
-      color: "#eab308",
-      totalBid: 55,
-    },
-    currentBid: 55,
-    minOutbidPrice: 83,
-    totalPlunder: 55,
-    clicks: 42,
+    currentBid: 12,
+    minOutbidPrice: 18,
+    totalPlunder: 12,
+    clicks: 18,
   },
   BR: {
     currentRuler: {
@@ -429,19 +456,47 @@ export const SEED_TERRITORIES: Record<string, Partial<TerritoryState>> = {
     totalPlunder: 50,
     clicks: 39,
   },
-  IN: {
+  AR: {
     currentRuler: {
-      title: "formyourllc.com",
-      url: "https://formyourllc.com",
-      warCry: "Start your US LLC in 24h",
-      logoUrl: "https://www.google.com/s2/favicons?domain=formyourllc.com&sz=128",
-      color: "#f97316",
-      totalBid: 75,
+      title: "swiperank.lol",
+      url: "https://swiperank.lol",
+      warCry: "Swipe to rank",
+      logoUrl: "https://www.google.com/s2/favicons?domain=swiperank.lol&sz=128",
+      color: "#27272a",
+      totalBid: 20,
     },
-    currentBid: 75,
-    minOutbidPrice: 113,
-    totalPlunder: 75,
-    clicks: 110,
+    currentBid: 20,
+    minOutbidPrice: 30,
+    totalPlunder: 20,
+    clicks: 28,
+  },
+  AU: {
+    currentRuler: {
+      title: "topx.lol",
+      url: "https://topx.lol",
+      warCry: "The leaderboard standard",
+      logoUrl: "https://www.google.com/s2/favicons?domain=topx.lol&sz=128",
+      color: "#eab308",
+      totalBid: 55,
+    },
+    currentBid: 55,
+    minOutbidPrice: 83,
+    totalPlunder: 55,
+    clicks: 42,
+  },
+  GB: {
+    currentRuler: {
+      title: "carillon.dev",
+      url: "https://carillon.dev",
+      warCry: "Ship faster software",
+      logoUrl: "https://www.google.com/s2/favicons?domain=carillon.dev&sz=128",
+      color: "#facc15",
+      totalBid: 57,
+    },
+    currentBid: 57,
+    minOutbidPrice: 86,
+    totalPlunder: 57,
+    clicks: 51,
   },
   DE: {
     currentRuler: {
@@ -470,34 +525,6 @@ export const SEED_TERRITORIES: Record<string, Partial<TerritoryState>> = {
     minOutbidPrice: 63,
     totalPlunder: 42,
     clicks: 29,
-  },
-  KR: {
-    currentRuler: {
-      title: "grinda.ai",
-      url: "https://grinda.ai",
-      warCry: "Korean AI Innovations",
-      logoUrl: "https://www.google.com/s2/favicons?domain=grinda.ai&sz=128",
-      color: "#f97316",
-      totalBid: 25,
-    },
-    currentBid: 25,
-    minOutbidPrice: 38,
-    totalPlunder: 25,
-    clicks: 22,
-  },
-  TH: {
-    currentRuler: {
-      title: "bookit.now",
-      url: "https://bookit.now",
-      warCry: "Instant booking everywhere",
-      logoUrl: "https://www.google.com/s2/favicons?domain=bookit.now&sz=128",
-      color: "#3b82f6",
-      totalBid: 12,
-    },
-    currentBid: 12,
-    minOutbidPrice: 18,
-    totalPlunder: 12,
-    clicks: 18,
   },
   TD: {
     currentRuler: {
