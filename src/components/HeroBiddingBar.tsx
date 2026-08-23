@@ -5,6 +5,7 @@ import { Minus, Plus, ChevronDown, Globe } from 'lucide-react';
 import { CATEGORIES } from '@/lib/categories';
 import { PlatformStats } from '@/lib/types';
 import { CategoryIcon } from './CategoryIcon';
+import { StatsPill } from './StatsPill';
 
 interface HeroBiddingBarProps {
   stats: PlatformStats;
@@ -101,25 +102,10 @@ export function HeroBiddingBar({
     });
   };
 
-  const totalVisitorsFormatted = (stats?.totalClicksDelivered || 142732).toLocaleString();
-
   return (
     <section className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-5 sm:pt-7 pb-4 flex flex-col items-center text-center">
-      {/* Visitor Pill displaying 1,081 online and visitors */}
-      <button
-        type="button"
-        onClick={onOpenStats}
-        className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors mb-5 sm:mb-6 shadow-2xs cursor-pointer max-w-full"
-      >
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-        <span className="font-semibold text-zinc-800 dark:text-zinc-200">1,081 online</span>
-        <span>·</span>
-        <span className="font-medium text-zinc-600 dark:text-zinc-400">{totalVisitorsFormatted} visitors</span>
-        <span>·</span>
-        <span className="text-[#ea6c52] font-semibold flex items-center">
-          stats <span className="ml-0.5">→</span>
-        </span>
-      </button>
+      {/* Realtime StatsPill: Live Online Presence + Cumulative Visitors */}
+      <StatsPill onOpenStats={onOpenStats} className="mb-5 sm:mb-6" />
 
       {/* Upscaled Headline: Grab [ #1 ] for ( - $14028 + ) ? */}
       <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-2xl xs:text-3xl sm:text-5xl font-extrabold text-zinc-900 dark:text-white leading-tight">
