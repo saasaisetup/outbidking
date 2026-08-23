@@ -107,10 +107,14 @@ export interface TerritoryState {
   flag: string;
   coordinates: [number, number];
   population: string;
+  tier: 'TIER S' | 'TIER A' | 'TIER B' | 'TIER C';
+  defaultColor: string;
+  isOceanFleet?: boolean;
   currentRuler?: {
     projectId?: string;
     title: string;
     url: string;
+    warCry?: string;
     logoUrl?: string;
     color: string;
     totalBid: number;
@@ -140,6 +144,7 @@ export interface WarEvent {
   flag: string;
   rulerTitle: string;
   rulerUrl: string;
+  warCry?: string;
   amount: number;
   type: 'conquered' | 'claimed' | 'outbid';
   timestamp: string;

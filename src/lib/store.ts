@@ -3,7 +3,7 @@ import path from 'path';
 import { Project, BidTransaction, PlatformStats, TerritoryState, WorldPower, WarEvent, MapStats } from './types';
 import { broadcastEvent } from './events';
 import { supabase } from './supabase';
-import { WORLD_COUNTRIES, SEED_TERRITORIES, getEmpireColor } from './worldData';
+import { WORLD_COUNTRIES, SEED_TERRITORIES, getEmpireColor, calcMinOutbid } from './worldData';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'outbid_db.json');
@@ -64,9 +64,7 @@ class Store {
       console.error('[Store] Error reading database file:', err);
     }
 
-    // Initialize territories cache from WORLD_COUNTRIES & SEED_TERRITORIES
     this.initTerritories();
-
     this.initialized = true;
   }
 
@@ -85,6 +83,9 @@ class Store {
 
     WORLD_COUNTRIES.forEach((c) => {
       const seed = SEED_TERRITORIES[c.code];
+      const curBid = seed?.currentBid || (seed?.currentRuler ? seed.currentRuler.totalBid : 0) || c.startingPrice || 3;
+      const minPrice = seed?.minOutbidPrice || calcMinOutbid(curBid);
+
       this.territoriesCache[c.code] = {
         countryCode: c.code,
         countryName: c.name,
@@ -92,23 +93,32 @@ class Store {
         flag: c.flag,
         coordinates: c.coordinates,
         population: c.population,
-        currentRuler: seed?.currentRuler || null,
-        currentBid: seed?.currentBid || c.startingPrice || 3,
-        minOutbidPrice: (seed?.currentBid || c.startingPrice || 3) + 1,
-        totalPlunder: seed?.totalPlunder || (seed?.currentRuler ? seed.currentBid || 0 : 0),
+        tier: c.tier,
+        defaultColor: c.defaultColor,
+        isOceanFleet: c.isOceanFleet,
+        currentRuler: seed?.currentRuler ? {
+          title: seed.currentRuler.title,
+          url: seed.currentRuler.url,
+          warCry: seed.currentRuler.warCry,
+          logoUrl: seed.currentRuler.logoUrl,
+          color: seed.currentRuler.color || c.defaultColor,
+          totalBid: curBid,
+        } : null,
+        currentBid: curBid,
+        minOutbidPrice: minPrice,
+        totalPlunder: seed?.totalPlunder || (seed?.currentRuler ? curBid : 0),
         clicks: seed?.clicks || 0,
         conqueredAt: seed?.currentRuler ? new Date(Date.now() - 86400000).toISOString() : undefined,
       };
     });
 
-    // Seed initial war events matching warmap.lol
     this.warEventsCache = [
-      { id: 'we_1', countryCode: 'KR', countryName: 'South Korea', flag: '🇰🇷', rulerTitle: 'GRINDA AI Inc.', rulerUrl: 'https://grinda.ai', amount: 25, type: 'claimed', timestamp: '1d ago' },
-      { id: 'we_2', countryCode: 'TH', countryName: 'Thailand', flag: '🇹🇭', rulerTitle: 'Bookit.now', rulerUrl: 'https://bookit.now', amount: 12, type: 'claimed', timestamp: '1d ago' },
-      { id: 'we_3', countryCode: 'HN', countryName: 'Honduras', flag: '🇭🇳', rulerTitle: 'MarketRank.lol', rulerUrl: 'https://marketrank.lol', amount: 3, type: 'claimed', timestamp: '1d ago' },
-      { id: 'we_4', countryCode: 'TD', countryName: 'Chad', flag: '🇹🇩', rulerTitle: 'Ilmi Online', rulerUrl: 'https://ilmi.online', amount: 16, type: 'conquered', timestamp: '1d ago' },
-      { id: 'we_5', countryCode: 'US', countryName: 'United States', flag: '🇺🇸', rulerTitle: 'Marlow Town', rulerUrl: 'https://marlow.lol', amount: 160, type: 'conquered', timestamp: '2d ago' },
-      { id: 'we_6', countryCode: 'RU', countryName: 'Russia', flag: '🇷🇺', rulerTitle: 'Viral SEO - AI Suite', rulerUrl: 'https://getviralseo.com', amount: 93, type: 'conquered', timestamp: '2d ago' },
+      { id: 'we_1', countryCode: 'KR', countryName: 'South Korea', flag: '🇰🇷', rulerTitle: 'grinda.ai', rulerUrl: 'https://grinda.ai', warCry: 'Korean AI Innovations', amount: 25, type: 'claimed', timestamp: '1d ago' },
+      { id: 'we_2', countryCode: 'TH', countryName: 'Thailand', flag: '🇹🇭', rulerTitle: 'bookit.now', rulerUrl: 'https://bookit.now', warCry: 'Instant booking everywhere', amount: 12, type: 'claimed', timestamp: '1d ago' },
+      { id: 'we_3', countryCode: 'CN', countryName: 'China', flag: '🇨🇳', rulerTitle: 'xme.lol', rulerUrl: 'https://xme.lol', warCry: 'Scale your presence', amount: 27, type: 'conquered', timestamp: '1d ago' },
+      { id: 'we_4', countryCode: 'TD', countryName: 'Chad', flag: '🇹🇩', rulerTitle: 'ilmi.online', rulerUrl: 'https://ilmi.online', warCry: 'Online learning for all', amount: 16, type: 'conquered', timestamp: '1d ago' },
+      { id: 'we_5', countryCode: 'US', countryName: 'United States', flag: '🇺🇸', rulerTitle: 'Marlow Town', rulerUrl: 'https://marlow.lol', warCry: 'Building the king of towns', amount: 160, type: 'conquered', timestamp: '2d ago' },
+      { id: 'we_6', countryCode: 'RU', countryName: 'Russia', flag: '🇷🇺', rulerTitle: 'Viral SEO - AI Suite', rulerUrl: 'https://getviralseo.com', warCry: 'Rank #1 with AI', amount: 93, type: 'conquered', timestamp: '2d ago' },
     ];
   }
 
@@ -123,7 +133,7 @@ class Store {
         warEvents: this.warEventsCache,
       }, null, 2), 'utf-8');
     } catch {
-      // In serverless readonly environments, ignore fs write errors
+      // ignore
     }
   }
 
@@ -136,10 +146,11 @@ class Store {
     try {
       const { data, error } = await supabase.from('territories').select('*');
       if (!error && data && data.length > 0) {
-        // Merge Supabase records with local country metadata
         const result: TerritoryState[] = WORLD_COUNTRIES.map((c) => {
           const row = data.find((r) => r.country_code === c.code);
           if (row) {
+            const curBid = Number(row.current_bid || c.startingPrice || 3);
+            const minPrice = Number(row.min_outbid_price || calcMinOutbid(curBid));
             return {
               countryCode: c.code,
               countryName: c.name,
@@ -147,17 +158,21 @@ class Store {
               flag: c.flag,
               coordinates: c.coordinates,
               population: c.population,
+              tier: c.tier,
+              defaultColor: c.defaultColor,
+              isOceanFleet: c.isOceanFleet,
               currentRuler: row.current_ruler_title ? {
                 projectId: row.current_ruler_project_id || undefined,
                 title: row.current_ruler_title,
                 url: row.current_ruler_url,
+                warCry: row.war_cry || undefined,
                 logoUrl: row.current_ruler_logo,
-                color: row.current_ruler_color || getEmpireColor(row.current_ruler_title),
-                totalBid: Number(row.current_bid || 3),
+                color: row.current_ruler_color || c.defaultColor,
+                totalBid: curBid,
               } : null,
-              currentBid: Number(row.current_bid || c.startingPrice || 3),
-              minOutbidPrice: Number(row.min_outbid_price || (row.current_bid ? Number(row.current_bid) + 1 : 4)),
-              totalPlunder: Number(row.total_plunder || 0),
+              currentBid: curBid,
+              minOutbidPrice: minPrice,
+              totalPlunder: Number(row.total_plunder || (row.current_ruler_title ? curBid : 0)),
               clicks: row.clicks || 0,
               conqueredAt: row.conquered_at,
             };
@@ -169,15 +184,17 @@ class Store {
             flag: c.flag,
             coordinates: c.coordinates,
             population: c.population,
+            tier: c.tier,
+            defaultColor: c.defaultColor,
+            isOceanFleet: c.isOceanFleet,
             currentRuler: null,
             currentBid: c.startingPrice || 3,
-            minOutbidPrice: (c.startingPrice || 3) + 1,
+            minOutbidPrice: calcMinOutbid(c.startingPrice || 3),
             totalPlunder: 0,
             clicks: 0,
           };
         });
 
-        // Update in-memory cache
         result.forEach((t) => {
           this.territoriesCache[t.countryCode] = t;
         });
@@ -185,7 +202,7 @@ class Store {
         return result;
       }
     } catch (err) {
-      console.error('[getTerritoriesAsync error, using cache]', err);
+      console.error('[getTerritoriesAsync error]', err);
     }
 
     return Object.values(this.territoriesCache);
@@ -195,7 +212,9 @@ class Store {
     countryCode: string;
     title: string;
     url: string;
+    warCry?: string;
     bidAmount: number;
+    customColor?: string;
     logoUrl?: string;
     category?: string;
     paymentProvider?: string;
@@ -210,6 +229,8 @@ class Store {
       flag: '🚩',
       coordinates: [0, 0] as [number, number],
       population: '1M',
+      tier: 'TIER B' as const,
+      defaultColor: '#f97316',
       startingPrice: 3,
     };
 
@@ -220,28 +241,33 @@ class Store {
       flag: meta.flag,
       coordinates: meta.coordinates,
       population: meta.population,
+      tier: meta.tier,
+      defaultColor: meta.defaultColor,
+      isOceanFleet: meta.isOceanFleet,
       currentRuler: null,
       currentBid: meta.startingPrice || 3,
-      minOutbidPrice: 4,
+      minOutbidPrice: calcMinOutbid(meta.startingPrice || 3),
       totalPlunder: 0,
       clicks: 0,
     };
 
     const isOutbid = !!existing.currentRuler;
-    const color = getEmpireColor(params.title || params.url);
+    const color = params.customColor || getEmpireColor(params.title || params.url);
     const domainFavicon = params.logoUrl || `https://www.google.com/s2/favicons?domain=${normalizeUrl(params.url)}&sz=128`;
+    const nextOutbidPrice = calcMinOutbid(params.bidAmount);
 
     const updatedTerritory: TerritoryState = {
       ...existing,
       currentRuler: {
         title: params.title.trim(),
         url: params.url.trim().startsWith('http') ? params.url.trim() : `https://${params.url.trim()}`,
+        warCry: params.warCry?.trim() || undefined,
         logoUrl: domainFavicon,
         color: color,
         totalBid: params.bidAmount,
       },
       currentBid: params.bidAmount,
-      minOutbidPrice: params.bidAmount + 1,
+      minOutbidPrice: nextOutbidPrice,
       totalPlunder: (existing.totalPlunder || 0) + params.bidAmount,
       conqueredAt: new Date().toISOString(),
     };
@@ -255,6 +281,7 @@ class Store {
       flag: meta.flag,
       rulerTitle: params.title.trim(),
       rulerUrl: params.url.trim(),
+      warCry: params.warCry?.trim(),
       amount: params.bidAmount,
       type: isOutbid ? 'outbid' : 'conquered',
       timestamp: 'just now',
@@ -267,7 +294,6 @@ class Store {
 
     this.save();
 
-    // Sync to Supabase Live Postgres
     (async () => {
       try {
         await supabase.from('territories').upsert({
@@ -279,7 +305,7 @@ class Store {
           current_ruler_logo: domainFavicon,
           current_ruler_color: color,
           current_bid: params.bidAmount,
-          min_outbid_price: params.bidAmount + 1,
+          min_outbid_price: nextOutbidPrice,
           total_plunder: updatedTerritory.totalPlunder,
           population: meta.population,
           conquered_at: updatedTerritory.conqueredAt,
@@ -314,6 +340,28 @@ class Store {
     });
 
     return { territory: updatedTerritory, warEvent, powers, stats };
+  }
+
+  public async recordTerritoryClickAsync(countryCode: string): Promise<string | null> {
+    this.init();
+    const t = this.territoriesCache[countryCode.toUpperCase()];
+    if (!t || !t.currentRuler) return null;
+
+    t.clicks = (t.clicks || 0) + 1;
+    this.save();
+
+    (async () => {
+      try {
+        await supabase
+          .from('territories')
+          .update({ clicks: t.clicks })
+          .eq('country_code', countryCode.toUpperCase());
+      } catch {
+        // ignore
+      }
+    })();
+
+    return t.currentRuler.url;
   }
 
   public getWorldPowers(): WorldPower[] {
@@ -369,10 +417,10 @@ class Store {
     const totalClicks = claimed.reduce((acc, t) => acc + (t.clicks || 0), 0);
 
     return {
-      onlineCount: 119,
-      totalVisitors: 12759,
+      onlineCount: 132,
+      totalVisitors: 13008,
       totalPlundered: Math.max(totalPlundered, 2709),
-      totalClicks: Math.max(totalClicks, 14426),
+      totalClicks: Math.max(totalClicks, 14692),
       claimedCount: claimed.length || 132,
       totalCountries: 194,
     };
@@ -637,7 +685,6 @@ class Store {
 
     const domainFavicon = `https://www.google.com/s2/favicons?domain=${normalized}&sz=128`;
 
-    // Auto-extract clean display title for social media items
     let finalTitle = params.title;
     const cleanUrl = params.url.trim().toLowerCase();
     if (cleanUrl.startsWith('@')) {

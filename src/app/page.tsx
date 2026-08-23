@@ -14,7 +14,8 @@ import { Footer } from '@/components/Footer';
 import { WorldWarMap } from '@/components/WorldWarMap';
 import { WorldPowersDrawer } from '@/components/WorldPowersDrawer';
 import { UnclaimedLandDrawer } from '@/components/UnclaimedLandDrawer';
-import { ConquerTerritoryModal } from '@/components/ConquerTerritoryModal';
+import { CommandSideDrawer } from '@/components/CommandSideDrawer';
+import { HowWarWorksModal } from '@/components/HowWarWorksModal';
 
 import { BidModal } from '@/components/BidModal';
 import { RulesModal } from '@/components/RulesModal';
@@ -49,15 +50,15 @@ export default function HomePage() {
   const [powers, setPowers] = useState<WorldPower[]>([]);
   const [warEvents, setWarEvents] = useState<WarEvent[]>([]);
   const [mapStats, setMapStats] = useState<MapStats>({
-    onlineCount: 119,
-    totalVisitors: 12759,
+    onlineCount: 132,
+    totalVisitors: 13008,
     totalPlundered: 2709,
-    totalClicks: 14426,
+    totalClicks: 14692,
     claimedCount: 132,
     totalCountries: 194,
   });
   const [selectedTerritory, setSelectedTerritory] = useState<TerritoryState | null>(null);
-  const [isConquerModalOpen, setIsConquerModalOpen] = useState(false);
+  const [isCommandDrawerOpen, setIsCommandDrawerOpen] = useState(false);
 
   // Modals state
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
@@ -119,7 +120,6 @@ export default function HomePage() {
     fetchData(selectedCategory);
     fetchTerritories();
 
-    // 1. Supabase Realtime Postgres Changes Listener
     const channel = supabase
       .channel('realtime-global-feed')
       .on(
@@ -146,7 +146,6 @@ export default function HomePage() {
       )
       .subscribe();
 
-    // 2. Fast 4-second background auto-poll sync
     const pollTimer = setInterval(() => {
       fetchData();
       fetchTerritories();
@@ -184,7 +183,7 @@ export default function HomePage() {
 
   const handleSelectTerritory = (t: TerritoryState) => {
     setSelectedTerritory(t);
-    setIsConquerModalOpen(true);
+    setIsCommandDrawerOpen(true);
   };
 
   const handleSelectCountryByCode = (code: string) => {
@@ -310,12 +309,12 @@ export default function HomePage() {
         </main>
       )}
 
-      {/* Conquer Territory Modal */}
-      <ConquerTerritoryModal
+      {/* Right Slide-in Command Side Drawer */}
+      <CommandSideDrawer
         territory={selectedTerritory}
-        isOpen={isConquerModalOpen}
+        isOpen={isCommandDrawerOpen}
         onClose={() => {
-          setIsConquerModalOpen(false);
+          setIsCommandDrawerOpen(false);
           setSelectedTerritory(null);
         }}
         onConquerSuccess={() => {
