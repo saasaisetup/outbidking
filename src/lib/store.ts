@@ -243,7 +243,54 @@ class Store {
     paymentProvider?: 'stripe' | 'sandbox' | 'crypto' | 'lemonsqueezy' | 'paypal' | 'solana';
     paymentIntentId?: string;
   }) {
-    return this.placeBid(params);
+    const result = this.placeBid(params);
+    const { project, transaction } = result;
+
+    try {
+      await supabase.from('projects').upsert({
+        id: project.id,
+        url: project.url,
+        normalized_url: project.normalizedUrl,
+        title: project.title,
+        description: project.description,
+        category: project.category,
+        logo_url: project.logoUrl,
+        total_bid: project.totalBid,
+        initial_bid: project.initialBid,
+        clicks: project.clicks,
+        rank: project.rank,
+        is_verified: project.isVerified,
+        is_hidden: false,
+        updated_at: new Date().toISOString(),
+      });
+
+      await supabase.from('bid_transactions').insert({
+        id: transaction.id,
+        project_id: project.id,
+        project_title: project.title,
+        project_url: project.url,
+        amount: transaction.amount,
+        new_total: transaction.newTotal,
+        payment_provider: transaction.paymentProvider,
+        created_at: transaction.createdAt,
+      });
+
+      const stats = this.getStats();
+      await supabase.from('platform_stats').upsert({
+        id: 'global',
+        total_volume: stats.totalVolume,
+        total_bids_count: stats.totalBidsCount,
+        total_projects_count: stats.totalProjectsCount,
+        total_clicks_delivered: stats.totalClicksDelivered,
+        current_king_id: this.db.projects[0]?.id || null,
+        highest_single_bid: stats.highestSingleBid,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.error('[Supabase placeBidAsync Error]', err);
+    }
+
+    return result;
   }
 
   public placeBid(params: {

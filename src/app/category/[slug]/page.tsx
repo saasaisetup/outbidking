@@ -22,6 +22,7 @@ import { CATEGORIES } from '@/lib/categories';
 import { soundManager } from '@/lib/sound';
 import { ArrowLeft } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { supabase } from '@/lib/supabase';
 
 export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -76,7 +77,37 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+
+    // 1. Supabase Realtime Postgres Changes Listener
+    const channel = supabase
+      .channel(`realtime-cat-${slug}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects' },
+        () => {
+          fetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bid_transactions' },
+        () => {
+          soundManager.playCashChing();
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    // 2. Fast 4-second background auto-poll sync
+    const pollTimer = setInterval(() => {
+      fetchData();
+    }, 4000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollTimer);
+    };
+  }, [slug, fetchData]);
 
   const handleHeroSubmitBid = ({
     url,

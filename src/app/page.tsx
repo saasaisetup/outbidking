@@ -19,6 +19,7 @@ import { OutbidToast } from '@/components/OutbidToast';
 import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug } from '@/lib/types';
 import { soundManager } from '@/lib/sound';
 import confetti from 'canvas-confetti';
+import { supabase } from '@/lib/supabase';
 
 export default function HomePage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -79,9 +80,33 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchData(selectedCategory);
-  }, [selectedCategory, fetchData]);
 
-  useEffect(() => {
+    // 1. Supabase Realtime Postgres Changes Listener
+    const channel = supabase
+      .channel('realtime-feed')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects' },
+        () => {
+          fetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bid_transactions' },
+        (payload) => {
+          soundManager.playCashChing();
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    // 2. Fast 4-second background auto-poll sync
+    const pollTimer = setInterval(() => {
+      fetchData();
+    }, 4000);
+
+    // 3. SSE Fallback
     let es: EventSource | null = null;
     try {
       es = new EventSource('/api/events');
@@ -113,9 +138,11 @@ export default function HomePage() {
     }
 
     return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollTimer);
       if (es) es.close();
     };
-  }, [fetchData]);
+  }, [selectedCategory, fetchData]);
 
   const handleHeroSubmitBid = ({
     url,
