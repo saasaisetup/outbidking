@@ -599,7 +599,7 @@ class Store {
     ownerEmail?: string;
     twitterHandle?: string;
     bidAmount: number;
-    paymentProvider?: 'stripe' | 'sandbox' | 'crypto' | 'lemonsqueezy' | 'paypal' | 'solana';
+    paymentProvider?: 'dodo' | 'stripe' | 'sandbox' | 'crypto' | 'lemonsqueezy' | 'paypal' | 'solana';
     paymentIntentId?: string;
   }) {
     const result = this.placeBid(params);
@@ -670,7 +670,7 @@ class Store {
     ownerEmail?: string;
     twitterHandle?: string;
     bidAmount: number;
-    paymentProvider?: 'stripe' | 'sandbox' | 'crypto' | 'lemonsqueezy' | 'paypal' | 'solana';
+    paymentProvider?: 'dodo' | 'stripe' | 'sandbox' | 'crypto' | 'lemonsqueezy' | 'paypal' | 'solana';
     paymentIntentId?: string;
   }): { project: Project; transaction: BidTransaction; isNewKing: boolean; stats: PlatformStats } {
     this.init();

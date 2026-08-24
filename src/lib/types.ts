@@ -71,7 +71,7 @@ export interface BidTransaction {
   newRank?: number;
   previousRank?: number;
   paymentStatus: 'pending' | 'completed' | 'failed';
-  paymentProvider: 'stripe' | 'sandbox' | 'crypto' | 'lemonsqueezy' | 'paypal' | 'solana';
+  paymentProvider: 'dodo' | 'stripe' | 'sandbox' | 'crypto' | 'lemonsqueezy' | 'paypal' | 'solana';
   paymentIntentId?: string;
   ownerEmail?: string;
   twitterHandle?: string;

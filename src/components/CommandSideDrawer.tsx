@@ -89,10 +89,11 @@ export function CommandSideDrawer({
         finalTitle = url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
       }
 
-      const res = await fetch('/api/territories', {
+      const res = await fetch('/api/dodo/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          isTerritory: true,
           countryCode: territory.countryCode,
           title: finalTitle,
           url: url.trim(),
@@ -100,22 +101,19 @@ export function CommandSideDrawer({
           customColor: selectedColor,
           bidAmount,
           logoUrl: faviconUrl,
-          paymentProvider: 'sandbox',
+          returnUrl: `${window.location.origin}/map`,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        setErrorMessage(data.error || 'Failed to conquer territory');
+      if (!res.ok || !data.success || !data.paymentLink) {
+        setErrorMessage(data.error || 'Failed to create Dodo Payments checkout');
         setIsLoading(false);
         return;
       }
 
-      soundManager.playKingGong();
-      confetti({ particleCount: 120, spread: 80, origin: { y: 0.4 } });
-
-      onConquerSuccess();
-      onClose();
+      // Redirect directly to Dodo Payments checkout
+      window.location.href = data.paymentLink;
     } catch (err: any) {
       setErrorMessage(err.message || 'Error processing conquest');
     } finally {

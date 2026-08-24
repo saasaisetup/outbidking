@@ -1,11 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Loader2, ShieldCheck, Zap, CreditCard, Wallet, Globe, Swords, Crown, Sparkles } from 'lucide-react';
+import { X, Loader2, ShieldCheck, Globe, Swords, Lock, ExternalLink } from 'lucide-react';
 import { TerritoryState } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
-import confetti from 'canvas-confetti';
-import { soundManager } from '@/lib/sound';
 
 interface ConquerTerritoryModalProps {
   territory: TerritoryState | null;
@@ -26,7 +24,7 @@ export function ConquerTerritoryModal({
   const [bidAmount, setBidAmount] = useState(4);
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [isXHandle, setIsXHandle] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'sandbox' | 'crypto' | 'lemonsqueezy' | 'stripe'>('sandbox');
+  const [customerEmail, setCustomerEmail] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -81,35 +79,33 @@ export function ConquerTerritoryModal({
         finalTitle = url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
       }
 
-      const res = await fetch('/api/territories', {
+      const res = await fetch('/api/dodo/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          isTerritory: true,
           countryCode: territory.countryCode,
           title: finalTitle,
           url: url.trim(),
+          category,
           bidAmount,
           logoUrl: faviconUrl,
-          category,
-          paymentProvider: paymentMethod,
+          email: customerEmail.trim() || undefined,
+          returnUrl: `${window.location.origin}/map`,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        setErrorMessage(data.error || 'Failed to conquer territory');
+      if (!res.ok || !data.success || !data.paymentLink) {
+        setErrorMessage(data.error || 'Failed to create Dodo Payments checkout');
         setIsLoading(false);
         return;
       }
 
-      soundManager.playKingGong();
-      confetti({ particleCount: 120, spread: 80, origin: { y: 0.4 } });
-
-      onConquerSuccess();
-      onClose();
+      // Redirect to Dodo checkout
+      window.location.href = data.paymentLink;
     } catch (err: any) {
       setErrorMessage(err.message || 'Error processing conquest');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -138,54 +134,76 @@ export function ConquerTerritoryModal({
               </span>
             </h2>
             <p className="text-xs font-mono text-zinc-400">
-              Population: {territory.population} · Total Plunder: ${territory.totalPlunder.toLocaleString()}
+              {territory.tier} · Population: {territory.population}
             </p>
           </div>
         </div>
 
-        {/* Territory Status Box */}
-        <div className="my-4 p-3.5 rounded-2xl bg-[#17171d] border border-zinc-800/80 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-mono text-zinc-400 uppercase">Current Territory Status</p>
-            {territory.currentRuler ? (
-              <div className="flex items-center gap-2 mt-1">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: territory.currentRuler.color }}
-                />
-                <span className="text-sm font-bold text-zinc-100">{territory.currentRuler.title}</span>
-                <span className="text-xs font-mono text-amber-400 font-bold">(${territory.currentBid})</span>
+        {/* Current Ruler Status */}
+        {territory.currentRuler ? (
+          <div className="my-4 p-3 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-4 h-4 rounded-full border border-white/20"
+                style={{ backgroundColor: territory.currentRuler.color }}
+              />
+              <div>
+                <p className="text-xs font-mono font-bold text-zinc-200">
+                  Ruled by: <span className="text-amber-400">{territory.currentRuler.title}</span>
+                </p>
+                <p className="text-[10px] font-mono text-zinc-500">
+                  Bid: ${territory.currentBid} · Clicks: {territory.clicks}
+                </p>
               </div>
-            ) : (
-              <span className="text-sm font-bold text-emerald-400 mt-1 inline-block">
-                🌱 Unclaimed Land (Open for conquest)
+            </div>
+            <span className="px-2 py-1 rounded-lg text-[10px] font-mono font-black bg-red-500/10 text-red-400 border border-red-500/20">
+              UNDER OCCUPATION
+            </span>
+          </div>
+        ) : (
+          <div className="my-4 p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="text-xs font-mono font-bold text-emerald-300">
+                {territory.isOceanFleet ? 'Strategic Naval Corridor' : 'Unclaimed Sovereign Land'}
               </span>
-            )}
+            </div>
+            <span className="text-xs font-mono font-black text-emerald-400">
+              Starting ${minPrice}
+            </span>
           </div>
-
-          <div className="text-right">
-            <p className="text-[11px] font-mono text-zinc-400 uppercase">Price to Rule</p>
-            <p className="text-xl font-mono font-black text-[#ea6c52] mt-0.5">
-              ${minPrice}
-            </p>
-          </div>
-        </div>
+        )}
 
         {errorMessage && (
-          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold">
+          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono">
             {errorMessage}
           </div>
         )}
 
         <form onSubmit={handleConquer} className="space-y-4">
-          {/* Website / Handle Input */}
+          {/* Empire Name / Title */}
           <div>
-            <label className="text-xs font-bold text-zinc-300 block mb-1">
-              Your Product URL or @handle <span className="text-[#ea6c52]">*</span>
+            <label className="text-xs font-mono font-bold text-zinc-400 block mb-1">
+              EMPIRE NAME <span className="text-[#ea6c52]">*</span>
             </label>
-            <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-[#0d0d11] border border-zinc-800 shadow-inner focus-within:border-[#ea6c52] transition-colors">
+            <input
+              type="text"
+              required
+              placeholder="e.g. OpenAI or @sama"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#09090c] border border-zinc-800 focus:border-[#ea6c52] text-sm text-white placeholder-zinc-600 outline-none font-medium"
+            />
+          </div>
+
+          {/* URL / Handle Input */}
+          <div>
+            <label className="text-xs font-mono font-bold text-zinc-400 block mb-1">
+              DOMAIN URL OR @HANDLE <span className="text-[#ea6c52]">*</span>
+            </label>
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-[#09090c] border border-zinc-800 focus-within:border-[#ea6c52]">
               {isXHandle ? (
-                <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
+                <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
                   𝕏
                 </div>
               ) : faviconUrl ? (
@@ -193,46 +211,53 @@ export function ConquerTerritoryModal({
                 <img
                   src={faviconUrl}
                   alt=""
-                  className="w-5 h-5 rounded-md object-contain flex-shrink-0 bg-white p-0.5"
+                  className="w-5 h-5 rounded object-contain flex-shrink-0 bg-white p-0.5"
                   onError={() => setFaviconUrl(null)}
                 />
               ) : (
-                <Globe className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+                <Globe className="w-4 h-4 text-zinc-600 flex-shrink-0" />
               )}
               <input
                 type="text"
                 required
+                placeholder="e.g. https://myproject.com or @handle"
                 value={url}
                 onChange={(e) => handleUrlChange(e.target.value)}
-                placeholder="e.g. https://myproduct.com or @handle"
-                className="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none font-medium"
+                className="w-full bg-transparent text-sm text-white placeholder-zinc-600 outline-none font-medium"
               />
             </div>
           </div>
 
-          {/* Product Title */}
-          {title && (
-            <div>
-              <label className="text-xs font-bold text-zinc-300 block mb-1">
-                Display Brand / Name
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl bg-[#0d0d11] border border-zinc-800 text-xs font-semibold text-white focus:outline-none focus:border-[#ea6c52]"
-              />
-            </div>
-          )}
+          {/* Category Dropdown */}
+          <div>
+            <label className="text-xs font-mono font-bold text-zinc-400 block mb-1">
+              SECTOR / CATEGORY
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#09090c] border border-zinc-800 focus:border-[#ea6c52] text-xs text-zinc-200 outline-none cursor-pointer"
+            >
+              {CATEGORIES.filter((c) => c.slug !== 'all').map((c) => (
+                <option key={c.slug} value={c.slug} className="bg-[#111116]">
+                  {c.icon} {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {/* Amount Stepper & Custom Price */}
-          <div className="p-3.5 rounded-2xl bg-[#17171d] border border-zinc-800 space-y-2.5">
+          {/* Bid Customizer */}
+          <div className="p-3.5 rounded-2xl bg-[#09090c] border border-zinc-800 space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-300">Conquest Bid Amount</span>
-              <span className="text-[11px] font-mono text-zinc-400">Min ${minPrice}</span>
+              <span className="text-xs font-mono font-bold text-zinc-400">
+                CONQUEST BID (MIN ${minPrice})
+              </span>
+              <span className="text-xs font-mono text-[#ea6c52]">
+                Min outbid: ${minPrice}
+              </span>
             </div>
 
-            <div className="relative flex items-center px-4 py-2 rounded-xl bg-[#0d0d11] border border-zinc-800">
+            <div className="relative flex items-center px-4 py-2 rounded-xl bg-[#111116] border border-zinc-700">
               <span className="text-xl font-black text-zinc-500 mr-2 font-mono">$</span>
               <input
                 type="number"
@@ -248,7 +273,7 @@ export function ConquerTerritoryModal({
             </div>
 
             <div className="flex items-center justify-between gap-1.5 pt-1">
-              <span className="text-[11px] text-zinc-500">Quick add:</span>
+              <span className="text-[11px] font-mono text-zinc-500">Quick add:</span>
               <div className="flex items-center gap-1.5">
                 {[1, 5, 25, 50, 100].map((inc) => (
                   <button
@@ -264,51 +289,17 @@ export function ConquerTerritoryModal({
             </div>
           </div>
 
-          {/* Payment Method Selector */}
-          <div>
-            <label className="text-xs font-bold text-zinc-300 block mb-1.5">
-              Payment Method
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('sandbox')}
-                className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                  paymentMethod === 'sandbox'
-                    ? 'border-[#ea6c52] bg-[#ea6c52]/15 text-white shadow-xs'
-                    : 'border-zinc-800 bg-[#0d0d11] text-zinc-400 hover:border-zinc-700'
-                }`}
-              >
-                <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
-                <span>Instant Test</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('crypto')}
-                className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                  paymentMethod === 'crypto'
-                    ? 'border-[#ea6c52] bg-[#ea6c52]/15 text-white shadow-xs'
-                    : 'border-zinc-800 bg-[#0d0d11] text-zinc-400 hover:border-zinc-700'
-                }`}
-              >
-                <Wallet className="w-3.5 h-3.5 text-purple-400" />
-                <span>Crypto (USDT)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('lemonsqueezy')}
-                className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                  paymentMethod === 'lemonsqueezy'
-                    ? 'border-[#ea6c52] bg-[#ea6c52]/15 text-white shadow-xs'
-                    : 'border-zinc-800 bg-[#0d0d11] text-zinc-400 hover:border-zinc-700'
-                }`}
-              >
-                <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Card / Apple Pay</span>
-              </button>
+          {/* Dodo Payments Badge */}
+          <div className="p-3 rounded-xl bg-[#ea6c52]/10 border border-[#ea6c52]/20 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-[#ea6c52]" />
+              <span className="text-xs font-mono font-bold text-zinc-200">
+                Dodo Payments Checkout
+              </span>
             </div>
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#ea6c52] text-white">
+              TEST MODE
+            </span>
           </div>
 
           {/* Confirm Button */}
@@ -316,7 +307,7 @@ export function ConquerTerritoryModal({
             <button
               type="submit"
               disabled={isLoading || !url.trim() || bidAmount < minPrice}
-              className="w-full py-3.5 rounded-2xl bg-[#ea6c52] hover:bg-[#d95b41] border border-[#d95b41] shadow-[0_4px_0_0_#b8452e] active:translate-y-[2px] active:shadow-[0_2px_0_0_#b8452e] text-white font-black text-sm flex items-center justify-center gap-2 cursor-pointer select-none transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full py-3.5 rounded-2xl bg-[#ea6c52] hover:bg-[#d95b41] text-white font-black text-sm flex items-center justify-center gap-2 cursor-pointer select-none transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(234,108,82,0.35)]"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -324,13 +315,14 @@ export function ConquerTerritoryModal({
                 <>
                   <Swords className="w-4 h-4" />
                   <span>Conquer {territory.countryName} for ${bidAmount.toLocaleString()}</span>
+                  <ExternalLink className="w-3.5 h-3.5 ml-0.5" />
                 </>
               )}
             </button>
           </div>
 
           <p className="text-center text-[10px] font-mono text-zinc-500">
-            Instantly paints {territory.flag} {territory.countryName} with your brand color on the world map.
+            Secure checkout via Dodo Payments. Paints {territory.flag} {territory.countryName} instantly.
           </p>
         </form>
       </div>

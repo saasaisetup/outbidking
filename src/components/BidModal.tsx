@@ -1,11 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Loader2, ShieldCheck, Zap, CreditCard, Wallet, Globe, Crown, Sparkles } from 'lucide-react';
+import { X, Loader2, ShieldCheck, Globe, Crown, Sparkles, ExternalLink, Lock } from 'lucide-react';
 import { PlatformStats } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
-import confetti from 'canvas-confetti';
-import { soundManager } from '@/lib/sound';
 
 interface BidModalProps {
   isOpen: boolean;
@@ -34,7 +32,7 @@ export function BidModal({
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [isXHandle, setIsXHandle] = useState(false);
   const [isInstagram, setIsInstagram] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'sandbox' | 'crypto' | 'lemonsqueezy' | 'stripe'>('sandbox');
+  const [customerEmail, setCustomerEmail] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
@@ -152,7 +150,8 @@ export function BidModal({
     setBidAmount(takeNumberOneAmount);
   };
 
-  const handleSubmitBid = async (selectedMethod: 'sandbox' | 'crypto' | 'lemonsqueezy' | 'stripe') => {
+  const handleSubmitDodoBid = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!url.trim()) {
       setErrorMessage('Please provide a valid website URL or @handle');
       return;
@@ -171,67 +170,31 @@ export function BidModal({
         finalTitle = isXHandle || isInstagram ? url.trim() : url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
       }
 
-      // If Stripe
-      if (selectedMethod === 'stripe') {
-        const res = await fetch('/api/stripe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            url: url.trim(),
-            title: finalTitle,
-            description,
-            category,
-            bidAmount,
-            logoUrl: faviconUrl,
-          }),
-        });
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-          return;
-        } else {
-          setErrorMessage(data.error || 'Stripe keys not configured. Use Instant Test or Crypto payment.');
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      // If Sandbox or Crypto or LemonSqueezy Demo
-      const res = await fetch('/api/bids', {
+      const res = await fetch('/api/dodo/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url: url.trim(),
           title: finalTitle,
-          description,
+          description: description?.trim() || '',
           category,
           bidAmount,
           logoUrl: faviconUrl,
-          paymentProvider: selectedMethod,
+          email: customerEmail.trim() || undefined,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        setErrorMessage(data.error || 'Failed to place bid');
+      if (!res.ok || !data.success || !data.paymentLink) {
+        setErrorMessage(data.error || 'Failed to create Dodo Payments checkout');
         setIsLoading(false);
         return;
       }
 
-      // Success
-      if (data.isNewKing) {
-        soundManager.playKingGong();
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.4 } });
-      } else {
-        soundManager.playCashChing();
-        confetti({ particleCount: 60, spread: 50, origin: { y: 0.6 } });
-      }
-
-      onBidSuccess();
-      onClose();
+      // Redirect immediately to official Dodo Payments checkout page
+      window.location.href = data.paymentLink;
     } catch (err: any) {
-      setErrorMessage(err.message || 'An error occurred while submitting');
-    } finally {
+      setErrorMessage(err.message || 'An error occurred while initiating payment');
       setIsLoading(false);
     }
   };
@@ -261,7 +224,7 @@ export function BidModal({
           </h2>
         </div>
         <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
-          Non-consumable bid. Enter any website URL or social handle to claim your live rank.
+          Powered exclusively by <span className="font-bold text-[#ea6c52]">Dodo Payments</span>. Enter your product URL or social handle to claim your rank.
         </p>
 
         {errorMessage && (
@@ -270,7 +233,7 @@ export function BidModal({
           </div>
         )}
 
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmitBid(paymentMethod); }} className="space-y-4">
+        <form onSubmit={handleSubmitDodoBid} className="space-y-4">
           {/* URL / Handle Input with Live Detection */}
           <div>
             <div className="flex items-center justify-between mb-1">
@@ -284,7 +247,7 @@ export function BidModal({
               )}
             </div>
 
-            <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-[#12100e] border border-zinc-200 dark:border-[#2e2a24] shadow-xs focus-within:border-[#4ade80] transition-colors">
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-[#12100e] border border-zinc-200 dark:border-[#2e2a24] shadow-xs focus-within:border-[#ea6c52] transition-colors">
               {isXHandle ? (
                 <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
                   𝕏
@@ -364,6 +327,20 @@ export function BidModal({
             </select>
           </div>
 
+          {/* Optional Billing Email */}
+          <div>
+            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+              Receipt Email (Optional)
+            </label>
+            <input
+              type="email"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              placeholder="you@company.com"
+              className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-[#12100e] border border-zinc-200 dark:border-[#2e2a24] text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:border-[#ea6c52]"
+            />
+          </div>
+
           {/* Direct Amount Customizer & "Take #1" Action */}
           <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-[#12100e] border border-zinc-200 dark:border-[#2e2a24] space-y-3">
             <div className="flex items-center justify-between">
@@ -429,51 +406,17 @@ export function BidModal({
             </div>
           </div>
 
-          {/* Payment Method Selector */}
-          <div>
-            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1.5">
-              Select Payment Method
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('sandbox')}
-                className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                  paymentMethod === 'sandbox'
-                    ? 'border-[#ea6c52] bg-[#ea6c52]/10 text-zinc-900 dark:text-white shadow-xs'
-                    : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:border-zinc-400'
-                }`}
-              >
-                <Zap className="w-4 h-4 text-amber-500 fill-current" />
-                <span>Instant Test</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('crypto')}
-                className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                  paymentMethod === 'crypto'
-                    ? 'border-[#ea6c52] bg-[#ea6c52]/10 text-zinc-900 dark:text-white shadow-xs'
-                    : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:border-zinc-400'
-                }`}
-              >
-                <Wallet className="w-4 h-4 text-purple-400" />
-                <span>Crypto (USDT)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('lemonsqueezy')}
-                className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                  paymentMethod === 'lemonsqueezy'
-                    ? 'border-[#ea6c52] bg-[#ea6c52]/10 text-zinc-900 dark:text-white shadow-xs'
-                    : 'border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:border-zinc-400'
-                }`}
-              >
-                <CreditCard className="w-4 h-4 text-emerald-400" />
-                <span>Card / Apple Pay</span>
-              </button>
+          {/* Dodo Payments Trust Badge */}
+          <div className="p-3 rounded-2xl bg-[#ea6c52]/10 border border-[#ea6c52]/20 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-[#ea6c52]" />
+              <span className="text-xs font-mono font-bold text-zinc-800 dark:text-zinc-200">
+                Dodo Payments Checkout
+              </span>
             </div>
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#ea6c52] text-white">
+              TEST MODE
+            </span>
           </div>
 
           {/* Tactile Big Confirm Button */}
@@ -481,21 +424,22 @@ export function BidModal({
             <button
               type="submit"
               disabled={isLoading || !url.trim() || bidAmount < 5}
-              className="w-full py-3.5 rounded-2xl bg-[#52d489] hover:bg-[#45c77c] border border-[#3cb56e] shadow-[0_4px_0_0_#2b8a53] active:translate-y-[2px] active:shadow-[0_2px_0_0_#2b8a53] text-black font-black text-sm flex items-center justify-center gap-2 cursor-pointer select-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 rounded-2xl bg-[#ea6c52] hover:bg-[#d95b41] text-white font-black text-sm flex items-center justify-center gap-2 cursor-pointer select-none transition-all shadow-[0_4px_15px_rgba(234,108,82,0.35)] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Confirm Bid & Pay ${bidAmount.toLocaleString()}</span>
+                  <span>Pay ${bidAmount.toLocaleString()} via Dodo Payments</span>
+                  <ExternalLink className="w-3.5 h-3.5 ml-0.5" />
                 </>
               )}
             </button>
           </div>
 
           <p className="text-center text-[10px] text-zinc-400">
-            Encrypted payment · No subscription · Live on board instantly
+            Redirects to secure Dodo Payments checkout · Instant ranking activation
           </p>
         </form>
       </div>

@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { countryCode, title, url, warCry, customColor, bidAmount, logoUrl, category, paymentProvider = 'sandbox' } = body;
+    const { countryCode, title, url, warCry, customColor, bidAmount, logoUrl, category, paymentProvider = 'dodo' } = body;
 
     if (!countryCode || typeof countryCode !== 'string') {
       return NextResponse.json({ error: 'Country code is required' }, { status: 400 });

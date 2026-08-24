@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       ownerEmail,
       twitterHandle,
       bidAmount,
-      paymentProvider = 'sandbox',
+      paymentProvider = 'dodo',
       paymentIntentId,
     } = body;
 
