@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { geoEqualEarth, geoPath } from 'd3-geo';
 import { feature } from 'topojson-client';
 import worldData from 'world-atlas/countries-110m.json';
 import { TerritoryState } from '@/lib/types';
-import { Plus, Minus, RotateCcw } from 'lucide-react';
+import { Plus, Minus, Crosshair, RotateCcw } from 'lucide-react';
 
 interface WorldWarMapProps {
   territories: TerritoryState[];
@@ -22,14 +22,21 @@ export function WorldWarMap({
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef({ x: 0, y: 0, initialPanX: 0, initialPanY: 0, hasMoved: false });
   const [hoveredCountry, setHoveredCountry] = useState<TerritoryState | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const dragRef = useRef({
+    startX: 0,
+    startY: 0,
+    initialPanX: 0,
+    initialPanY: 0,
+    hasMoved: false,
+    isPointerDown: false,
+  });
 
   const width = 1000;
   const height = 540;
 
-  // 1. Compute D3 Geo Projection & SVG Paths
   const { countriesGeo, projection, pathGenerator } = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const countriesFeature = feature(worldData as any, worldData.objects.countries as any) as any;
@@ -43,7 +50,6 @@ export function WorldWarMap({
     };
   }, []);
 
-  // 2. Map territories by code, numericId, and numeric strings
   const territoryMap = useMemo(() => {
     const map: Record<string, TerritoryState> = {};
     territories.forEach((t) => {
@@ -52,14 +58,11 @@ export function WorldWarMap({
         const padded = String(t.numericId).padStart(3, '0');
         map[padded] = t;
         map[String(t.numericId)] = t;
-        const num = parseInt(t.numericId, 10);
-        if (!isNaN(num)) map[String(num)] = t;
       }
     });
     return map;
   }, [territories]);
 
-  // 3. Projected Centroid Pins for Claimed Territories
   const countryPins = useMemo(() => {
     return territories.map((t) => {
       let xy: [number, number] | null = null;
@@ -75,355 +78,214 @@ export function WorldWarMap({
     }).filter((p) => p.hasXY);
   }, [territories, projection]);
 
-  const oceanFleets = useMemo(() => {
-    return countryPins.filter((p) => p.isOceanFleet);
-  }, [countryPins]);
+  const oceanFleets = useMemo(() => countryPins.filter((p) => p.isOceanFleet), [countryPins]);
+  const claimedLandPins = useMemo(() => countryPins.filter((p) => !p.isOceanFleet && p.currentRuler), [countryPins]);
 
-  const claimedLandPins = useMemo(() => {
-    return countryPins.filter((p) => !p.isOceanFleet && p.currentRuler);
-  }, [countryPins]);
+  const clampPan = useCallback((newX: number, newY: number, currentZoom: number) => {
+    const maxBoundX = (width * currentZoom) / 1.6 + 250;
+    const maxBoundY = (height * currentZoom) / 1.6 + 180;
+    return {
+      x: Math.max(-maxBoundX, Math.min(maxBoundX, newX)),
+      y: Math.max(-maxBoundY, Math.min(maxBoundY, newY)),
+    };
+  }, []);
 
-  // -------------------------------------------------------------
-  // TRAP NATIVE MOUSE WHEEL & PINCH GESTURES (Strict Map Zoom ONLY)
-  // -------------------------------------------------------------
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const handleNativeWheel = (e: WheelEvent) => {
+    const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
-      setZoom((prev) => Math.min(Math.max(prev * zoomFactor, 0.8), 8));
+
+      const rect = container.getBoundingClientRect();
+      const cursorX = e.clientX - rect.left - rect.width / 2;
+      const cursorY = e.clientY - rect.top - rect.height / 2;
+
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+      setZoom((prevZoom) => {
+        const nextZoom = Math.min(Math.max(prevZoom * zoomFactor, 0.8), 9);
+        const scaleChange = nextZoom / prevZoom;
+
+        setPan((prevPan) => {
+          const nextPanX = cursorX - (cursorX - prevPan.x) * scaleChange;
+          const nextPanY = cursorY - (cursorY - prevPan.y) * scaleChange;
+          return clampPan(nextPanX, nextPanY, nextZoom);
+        });
+
+        return nextZoom;
+      });
     };
 
-    const handleNativeTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    };
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, [clampPan]);
 
-    const handleGesture = (e: Event) => {
-      e.preventDefault();
-    };
-
-    container.addEventListener('wheel', handleNativeWheel, { passive: false });
-    container.addEventListener('touchmove', handleNativeTouchMove, { passive: false });
-    container.addEventListener('gesturestart', handleGesture, { passive: false });
-    container.addEventListener('gesturechange', handleGesture, { passive: false });
-
-    return () => {
-      container.removeEventListener('wheel', handleNativeWheel);
-      container.removeEventListener('touchmove', handleNativeTouchMove);
-      container.removeEventListener('gesturestart', handleGesture);
-      container.removeEventListener('gesturechange', handleGesture);
-    };
-  }, []);
-
-  // -------------------------------------------------------------
-  // Mouse Drag & Pan Handlers (Click threshold isolation)
-  // -------------------------------------------------------------
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
-    setIsDragging(true);
-    dragStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
       initialPanX: pan.x,
       initialPanY: pan.y,
       hasMoved: false,
+      isPointerDown: true,
     };
+    setIsDragging(true);
   };
+
+  useEffect(() => {
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      if (!dragRef.current.isPointerDown) return;
+      const dx = e.clientX - dragRef.current.startX;
+      const dy = e.clientY - dragRef.current.startY;
+      if (Math.hypot(dx, dy) > 4) dragRef.current.hasMoved = true;
+      setPan(clampPan(dragRef.current.initialPanX + dx, dragRef.current.initialPanY + dy, zoom));
+    };
+
+    const handleGlobalPointerUp = () => {
+      if (dragRef.current.isPointerDown) {
+        dragRef.current.isPointerDown = false;
+        setIsDragging(false);
+      }
+    };
+
+    window.addEventListener('pointermove', handleGlobalPointerMove);
+    window.addEventListener('pointerup', handleGlobalPointerUp);
+    window.addEventListener('pointercancel', handleGlobalPointerUp);
+    return () => {
+      window.removeEventListener('pointermove', handleGlobalPointerMove);
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('pointercancel', handleGlobalPointerUp);
+    };
+  }, [zoom, clampPan]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      const dx = e.clientX - dragStartRef.current.x;
-      const dy = e.clientY - dragStartRef.current.y;
-      if (Math.hypot(dx, dy) > 4) {
-        dragStartRef.current.hasMoved = true;
-      }
-      setPan({
-        x: dragStartRef.current.initialPanX + dx,
-        y: dragStartRef.current.initialPanY + dy,
-      });
-    }
-
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      setMousePos({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
+      setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     }
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  // Touch Handlers
-  const touchState = useRef<{ dist: number; startPan: { x: number; y: number }; startTouch: { x: number; y: number } }>({
-    dist: 0,
-    startPan: { x: 0, y: 0 },
-    startTouch: { x: 0, y: 0 },
+  const handleZoomIn = () => setZoom((prev) => {
+    const next = Math.min(prev * 1.3, 9);
+    setPan((p) => clampPan(p.x, p.y, next));
+    return next;
   });
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      touchState.current.startPan = { ...pan };
-      touchState.current.startTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      dragStartRef.current.hasMoved = false;
-    } else if (e.touches.length === 2) {
-      touchState.current.dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-    }
-  };
+  const handleZoomOut = () => setZoom((prev) => {
+    const next = Math.max(prev * 0.77, 0.8);
+    setPan((p) => clampPan(p.x, p.y, next));
+    return next;
+  });
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      const dx = e.touches[0].clientX - touchState.current.startTouch.x;
-      const dy = e.touches[0].clientY - touchState.current.startTouch.y;
-      if (Math.hypot(dx, dy) > 4) {
-        dragStartRef.current.hasMoved = true;
-      }
-      setPan({
-        x: touchState.current.startPan.x + dx,
-        y: touchState.current.startPan.y + dy,
-      });
-    } else if (e.touches.length === 2) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      if (touchState.current.dist > 0) {
-        const factor = dist / touchState.current.dist;
-        setZoom((prev) => Math.min(Math.max(prev * factor, 0.8), 8));
-      }
-      touchState.current.dist = dist;
-    }
-  };
-
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev * 1.25, 8));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev * 0.8, 0.8));
-  const handleReset = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  };
+  const handleReset = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
 
   const getTerritoryForFeature = (featureId: string): TerritoryState | undefined => {
     const idStr = String(featureId);
-    const padded = idStr.padStart(3, '0');
-    return territoryMap[padded] || territoryMap[idStr];
-  };
-
-  const handleCountryClick = (territory: TerritoryState) => {
-    if (!dragStartRef.current.hasMoved) {
-      onSelectTerritory(territory);
-    }
+    return territoryMap[idStr.padStart(3, '0')] || territoryMap[idStr];
   };
 
   return (
     <div
       ref={containerRef}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
       onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      className="relative w-full h-full min-h-[600px] bg-[#070709] overflow-hidden select-none cursor-grab active:cursor-grabbing"
+      className="relative w-full h-full min-h-[600px] bg-[#07070b] overflow-hidden select-none cursor-grab active:cursor-grabbing touch-none"
     >
-      {/* Background Radar Grid */}
       <div
         className="absolute inset-0 opacity-15 pointer-events-none"
         style={{
-          backgroundImage: `radial-gradient(#27272a 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(#3f3f46 1px, transparent 1px)`,
           backgroundSize: '24px 24px',
         }}
       />
-
-      {/* Hardware-Accelerated SVG Map Canvas */}
       <div
         className="w-full h-full flex items-center justify-center will-change-transform origin-center"
         style={{
           transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
-          transition: isDragging ? 'none' : 'transform 0.05s ease-out',
+          transition: isDragging ? 'none' : 'transform 0.08s ease-out',
         }}
       >
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-full max-w-[1400px] overflow-visible"
-        >
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full max-w-[1500px] overflow-visible">
           <defs>
-            {/* Country hover glow filter: Only active on hover/selection */}
             <filter id="glow-country-hover" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#ffffff" floodOpacity="0.9" />
+              <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#ffffff" floodOpacity="0.8" />
             </filter>
             <filter id="glow-country-select" x="-30%" y="-30%" width="160%" height="160%">
-              <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#ffffff" floodOpacity="1" />
-              <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#ea6c52" floodOpacity="0.8" />
+              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#ffffff" floodOpacity="1" />
+              <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#ea6c52" floodOpacity="0.9" />
             </filter>
           </defs>
-
-          {/* Oceans Base */}
-          <rect width={width} height={height} fill="#070709" />
-
-          {/* Layer 1: All 194 Country Territory Polygons (Crisp, clean dark hairline borders without initial glow) */}
+          <rect x="-1000" y="-1000" width={width + 2000} height={height + 2000} fill="#07070b" />
           <g className="countries-layer">
             {countriesGeo.map((feat: any, idx: number) => {
               const featId = feat.id;
               const territory = getTerritoryForFeature(featId);
               const isSelected = selectedTerritory?.countryCode === territory?.countryCode;
               const isHovered = hoveredCountry?.countryCode === territory?.countryCode;
-
-              // Rich territory fill color (either ruler's empire color, or default country palette color)
-              let fillColor = territory?.currentRuler?.color || territory?.defaultColor || '#06b6d4';
-
+              const fillColor = territory?.currentRuler?.color || territory?.defaultColor || '#06b6d4';
               const pathD = pathGenerator(feat);
               if (!pathD) return null;
-
               return (
                 <path
                   key={featId || idx}
                   d={pathD}
                   fill={fillColor}
-                  stroke={isSelected ? '#ffffff' : (isHovered ? '#ffffff' : '#141418')}
-                  strokeWidth={isSelected ? 2.5 / zoom : (isHovered ? 1.5 / zoom : 0.45 / zoom)}
-                  className="transition-colors duration-75 cursor-pointer hover:brightness-120"
-                  style={{
-                    filter: isSelected ? 'url(#glow-country-select)' : (isHovered ? 'url(#glow-country-hover)' : undefined),
-                  }}
+                  stroke={isSelected ? '#ffffff' : (isHovered ? '#ffffff' : '#0c0d12')}
+                  strokeWidth={isSelected ? 2.5 / zoom : (isHovered ? 1.6 / zoom : 0.6 / zoom)}
+                  className="transition-colors duration-75 cursor-pointer hover:brightness-125"
+                  style={{ filter: isSelected ? 'url(#glow-country-select)' : (isHovered ? 'url(#glow-country-hover)' : undefined) }}
                   onMouseEnter={() => territory && setHoveredCountry(territory)}
                   onMouseLeave={() => setHoveredCountry(null)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (territory) {
-                      handleCountryClick(territory);
-                    }
-                  }}
+                  onClick={(e) => { e.stopPropagation(); if (territory && !dragRef.current.hasMoved) onSelectTerritory(territory); }}
                 />
               );
             })}
           </g>
-
-          {/* Layer 2: 6 Strategic Ocean Routes & Fleet Patrols ($25 Unclaimed Spots) */}
           <g className="ocean-fleets-layer">
             {oceanFleets.map((fleet) => {
               const isClaimed = !!fleet.currentRuler;
               const isSelected = selectedTerritory?.countryCode === fleet.countryCode;
-              const isHovered = hoveredCountry?.countryCode === fleet.countryCode;
-              const ringColor = isClaimed ? fleet.currentRuler?.color : '#10b981';
-              const cleanDomain = fleet.currentRuler?.url.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-              const scale = Math.max(0.65, Math.min(1.3, 1 / Math.sqrt(zoom)));
-
+              const ringColor = isClaimed ? fleet.currentRuler?.color : fleet.defaultColor || '#10b981';
+              const scale = Math.max(0.65, Math.min(1.2, 1 / Math.sqrt(zoom)));
               return (
-                <g
-                  key={fleet.countryCode}
-                  transform={`translate(${fleet.x}, ${fleet.y}) scale(${scale})`}
-                  className="cursor-pointer group"
-                  onMouseEnter={() => setHoveredCountry(fleet)}
-                  onMouseLeave={() => setHoveredCountry(null)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCountryClick(fleet);
-                  }}
-                >
-                  {/* Dashed Radar Ring */}
-                  <circle
-                    r="18"
-                    fill="rgba(16, 185, 129, 0.06)"
-                    stroke={isSelected ? '#ffffff' : (ringColor || '#10b981')}
-                    strokeWidth={isSelected ? '2.5' : '1.5'}
-                    strokeDasharray="4 3"
-                    className="group-hover:scale-110 transition-transform"
-                    style={{
-                      filter: isSelected ? 'url(#glow-country-select)' : undefined,
-                    }}
-                  />
-                  {/* Center Naval Insignia */}
-                  <circle
-                    r="11"
-                    fill="#0e0e12"
-                    stroke={isSelected ? '#ffffff' : (ringColor || '#10b981')}
-                    strokeWidth="1.5"
-                  />
-                  <text
-                    x="0"
-                    y="4"
-                    textAnchor="middle"
-                    fontSize="10"
-                  >
-                    {fleet.flag}
-                  </text>
-
-                  {/* Label Pill */}
-                  <g transform="translate(0, 22)">
-                    <rect
-                      x="-38"
-                      y="-7"
-                      width="76"
-                      height="14"
-                      rx="4"
-                      fill="#000000"
-                      fillOpacity="0.85"
-                      stroke="#27272a"
-                      strokeWidth="0.75"
-                    />
-                    <text
-                      x="0"
-                      y="3"
-                      textAnchor="middle"
-                      fill={isClaimed ? '#f4f4f5' : '#10b981'}
-                      fontSize="7.5"
-                      fontWeight="bold"
-                      fontFamily="monospace"
-                    >
-                      {isClaimed ? cleanDomain : `Unclaimed · $${fleet.currentBid}`}
-                    </text>
+                <g key={fleet.countryCode} transform={`translate(${fleet.x}, ${fleet.y}) scale(${scale})`} className="cursor-pointer group" onClick={(e) => { e.stopPropagation(); if (!dragRef.current.hasMoved) onSelectTerritory(fleet); }}>
+                  <circle r="18" fill="rgba(16, 185, 129, 0.08)" stroke={isSelected ? '#ffffff' : ringColor} strokeWidth={isSelected ? '2.5' : '1.5'} strokeDasharray="4 3" className="group-hover:scale-110 transition-transform" style={{ filter: isSelected ? 'url(#glow-country-select)' : undefined }} />
+                  <circle r="11" fill="#0a0a0f" stroke={isSelected ? '#ffffff' : ringColor} strokeWidth="1.5" />
+                  <text textAnchor="middle" dominantBaseline="central" fontSize="11" className="select-none pointer-events-none">{fleet.flag || '⚓'}</text>
+                  <g transform="translate(0, 24)">
+                    <rect x="-38" y="-7" width="76" height="14" rx="7" fill="#0e0e13" stroke={isSelected ? '#ffffff' : ringColor} strokeWidth="1" />
+                    <text textAnchor="middle" dominantBaseline="central" fontSize="8" fontFamily="monospace" fontWeight="bold" fill={isClaimed ? '#ffffff' : '#34d399'}>{isClaimed ? `$${fleet.currentBid}` : `$${fleet.currentBid || 25}`}</text>
                   </g>
                 </g>
               );
             })}
           </g>
-
-          {/* Layer 3: Pinned Sovereign Logo Badges & Domain Labels */}
-          <g className="pins-layer pointer-events-none">
+          <g className="claimed-pins-layer pointer-events-none">
             {claimedLandPins.map((pin) => {
-              if (!pin.currentRuler) return null;
               const ruler = pin.currentRuler;
-              const isSelected = selectedTerritory?.countryCode === pin.countryCode;
-              const cleanDomain = ruler.url.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-              const pinScale = Math.max(0.65, Math.min(1.35, 1 / Math.sqrt(zoom)));
+              if (!ruler) return null;
+              const scale = Math.max(0.6, Math.min(1.1, 1 / Math.sqrt(zoom)));
 
               return (
                 <g
-                  key={pin.countryCode}
-                  transform={`translate(${pin.x}, ${pin.y}) scale(${pinScale})`}
-                  className="cursor-pointer pointer-events-auto group"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCountryClick(pin);
-                  }}
+                  key={`pin-${pin.countryCode}`}
+                  transform={`translate(${pin.x}, ${pin.y}) scale(${scale})`}
+                  className="transition-transform duration-100"
                 >
-                  {/* Floating Logo Badge Container */}
-                  <g transform="translate(-16, -24)">
+                  <g transform="translate(-16, -34)">
                     <rect
-                      x="0"
-                      y="0"
                       width="32"
                       height="32"
-                      rx="8"
-                      fill="#0e0e12"
-                      stroke={isSelected ? '#ffffff' : (ruler.color || '#ea6c52')}
-                      strokeWidth={isSelected ? '3' : '2'}
-                      className="filter drop-shadow-md group-hover:scale-105 transition-transform"
+                      rx="9"
+                      fill="#0d0d12"
+                      stroke={ruler.color || '#ea6c52'}
+                      strokeWidth="2"
                       style={{
-                        filter: isSelected ? 'url(#glow-country-select)' : undefined,
+                        filter: `drop-shadow(0 4px 8px ${ruler.color || '#ea6c52'}66)`,
                       }}
                     />
-
                     {ruler.logoUrl ? (
                       <image
                         href={ruler.logoUrl}
@@ -431,49 +293,19 @@ export function WorldWarMap({
                         y="4"
                         width="24"
                         height="24"
-                        preserveAspectRatio="xMidYMid slice"
-                        clipPath="inset(0px round 6px)"
+                        preserveAspectRatio="xMidYMid meet"
                       />
                     ) : (
                       <text
                         x="16"
-                        y="20"
+                        y="17"
                         textAnchor="middle"
-                        fill="#ffffff"
-                        fontSize="11"
-                        fontWeight="900"
-                        fontFamily="monospace"
+                        dominantBaseline="central"
+                        fontSize="13"
                       >
-                        {pin.countryCode}
+                        {pin.flag}
                       </text>
                     )}
-                  </g>
-
-                  {/* Domain Label Underneath */}
-                  <g transform="translate(0, 15)">
-                    <rect
-                      x={-(cleanDomain.length * 3.5 + 8)}
-                      y="-7"
-                      width={cleanDomain.length * 7 + 16}
-                      height="14"
-                      rx="4"
-                      fill="#000000"
-                      fillOpacity="0.85"
-                      stroke="#27272a"
-                      strokeWidth="0.75"
-                    />
-                    <text
-                      x="0"
-                      y="3"
-                      textAnchor="middle"
-                      fill="#f4f4f5"
-                      fontSize="8"
-                      fontWeight="bold"
-                      fontFamily="monospace"
-                      letterSpacing="0.02em"
-                    >
-                      {cleanDomain}
-                    </text>
                   </g>
                 </g>
               );

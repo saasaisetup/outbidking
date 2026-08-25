@@ -7,7 +7,8 @@ import { WorldPowersDrawer } from '@/components/WorldPowersDrawer';
 import { UnclaimedLandDrawer } from '@/components/UnclaimedLandDrawer';
 import { CommandSideDrawer } from '@/components/CommandSideDrawer';
 import { HowWarWorksModal } from '@/components/HowWarWorksModal';
-import { MapSkeletonLoader } from '@/components/MapSkeletonLoader';
+import { HotLandsCard } from '@/components/HotLandsCard';
+import { ConquerWorldModal } from '@/components/ConquerWorldModal';
 import { TerritoryState, WorldPower, WarEvent, MapStats } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { subscribeToLivePresence } from '@/lib/presence';
@@ -20,13 +21,14 @@ export default function WorldMapPage() {
   const [warEvents, setWarEvents] = useState<WarEvent[]>([]);
   const [liveVisitors, setLiveVisitors] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConquerWorldOpen, setIsConquerWorldOpen] = useState(false);
   const [stats, setStats] = useState<MapStats>({
     onlineCount: 1,
     totalVisitors: 0,
     totalPlundered: 0,
     totalClicks: 0,
     claimedCount: 0,
-    totalCountries: 194,
+    totalCountries: 207,
   });
 
   const [selectedTerritory, setSelectedTerritory] = useState<TerritoryState | null>(null);
@@ -132,14 +134,11 @@ export default function WorldMapPage() {
   };
 
   const handleConquerTheWorld = () => {
-    const us = territories.find((t) => t.countryCode === 'US') || territories[0];
-    if (us) {
-      handleSelectTerritory(us);
-    }
+    setIsConquerWorldOpen(true);
   };
 
   return (
-    <div className="h-screen w-screen bg-[#070709] text-white flex flex-col overflow-hidden font-sans select-none">
+    <div className="h-screen w-screen bg-[#07070b] text-white flex flex-col overflow-hidden font-sans select-none">
       {/* Tactical Top Bar with Live Realtime Presence */}
       <WarHeader
         stats={stats}
@@ -150,9 +149,6 @@ export default function WorldMapPage() {
 
       {/* Main Full-Bleed World War Map Canvas */}
       <main className="relative flex-1 w-full h-[calc(100vh-56px)] overflow-hidden">
-        {/* Tactical Skeleton Screen matching uploaded green map placeholder */}
-        <MapSkeletonLoader isLoading={isLoading} />
-
         <WorldWarMap
           territories={territories}
           selectedTerritory={selectedTerritory}
@@ -166,7 +162,13 @@ export default function WorldMapPage() {
           onSelectCountry={handleSelectCountryByCode}
         />
 
-        {/* Right HUD: Unclaimed Land Drawer */}
+        {/* Right HUD: Hot Land Best Value */}
+        <HotLandsCard
+          territories={territories}
+          onSelectTerritory={handleSelectTerritory}
+        />
+
+        {/* Bottom-Right HUD: Unclaimed Land Quick Launcher */}
         <UnclaimedLandDrawer
           territories={territories}
           onSelectCountry={handleSelectCountryByCode}
@@ -184,6 +186,12 @@ export default function WorldMapPage() {
         onConquerSuccess={() => {
           fetchTerritoryData();
         }}
+      />
+
+      {/* Conquer World $5,000 Modal */}
+      <ConquerWorldModal
+        isOpen={isConquerWorldOpen}
+        onClose={() => setIsConquerWorldOpen(false)}
       />
 
       {/* How War Works Modal */}

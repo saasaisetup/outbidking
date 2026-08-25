@@ -65,28 +65,41 @@ export function WorldPowersDrawer({
             </div>
 
             {!isFeedCollapsed && (
-              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 text-xs font-mono scrollbar-thin">
+              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 text-xs font-mono scrollbar-thin">
                 {warEvents.length === 0 ? (
                   <div className="p-3 text-center text-[11px] text-zinc-500 font-mono italic">
-                    ⚡ No active conquests yet. Tap any sovereign country to launch the 1st invasion!
+                    ⚡ No active conquests yet. Tap any country or ocean route to launch the 1st invasion!
                   </div>
                 ) : (
-                  warEvents.slice(0, 4).map((we) => (
+                  warEvents.slice(0, 7).map((we) => (
                     <div
                       key={we.id}
                       onClick={() => onSelectCountry && onSelectCountry(we.countryCode)}
                       className="flex items-center justify-between p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group"
                     >
                       <div className="flex items-center gap-2 truncate">
-                        <span className="text-[11px] font-bold text-zinc-400">{we.countryCode}</span>
-                        <span className="font-bold text-zinc-100 truncate group-hover:text-[#ea6c52]">
-                          {we.rulerTitle}
+                        <span className="text-[11px] font-black text-zinc-400 w-5">{we.countryCode}</span>
+                        <span className="font-bold text-zinc-200 truncate group-hover:text-[#ea6c52]">
+                          {we.rulerTitle} <span className="text-[10px] text-zinc-500 font-normal">conquered {we.countryName}</span>
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
                         <span className="font-extrabold text-[#ea6c52]">${we.amount}</span>
                         <span className="text-[10px] text-zinc-500">{we.timestamp}</span>
-                        <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300" />
+                        {we.rulerUrl && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const targetUrl = we.rulerUrl.startsWith('http') ? we.rulerUrl : `https://${we.rulerUrl}`;
+                              window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                            }}
+                            title={`Visit ${we.rulerTitle}`}
+                            className="p-1 rounded hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+                          >
+                            <ExternalLink className="w-3 h-3 text-[#ea6c52]" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))

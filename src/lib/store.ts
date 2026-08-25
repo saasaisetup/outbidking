@@ -196,7 +196,7 @@ class Store {
     return Object.values(this.territoriesCache);
   }
 
-  public async conquerTerritoryAsync(params: {
+  public  async conquerTerritoryAsync(params: {
     countryCode: string;
     title: string;
     url: string;
@@ -208,6 +208,78 @@ class Store {
     paymentProvider?: string;
   }): Promise<{ territory: TerritoryState; warEvent: WarEvent; powers: WorldPower[]; stats: MapStats }> {
     this.init();
+
+    // GLOBAL HEGEMONY CONQUEST ($5,000 Full Planet Buyout)
+    if (params.countryCode === 'GLOBAL_HEGEMONY' || (params.bidAmount >= 5000 && params.category === 'global-hegemony')) {
+      const color = params.customColor || getEmpireColor(params.title || params.url);
+      const domainFavicon = params.logoUrl || `https://www.google.com/s2/favicons?domain=${normalizeUrl(params.url)}&sz=128`;
+      const now = new Date().toISOString();
+      const ruler = {
+        title: params.title.trim(),
+        url: params.url.trim().startsWith('http') ? params.url.trim() : `https://${params.url.trim()}`,
+        warCry: params.warCry?.trim() || 'Total Planetary Dominion',
+        logoUrl: domainFavicon,
+        color: color,
+        totalBid: params.bidAmount,
+      };
+
+      WORLD_COUNTRIES.forEach((c) => {
+        const existing = this.territoriesCache[c.code] || {
+          countryCode: c.code,
+          countryName: c.name,
+          numericId: c.numericId,
+          flag: c.flag,
+          coordinates: c.coordinates,
+          population: c.population,
+          tier: c.tier,
+          defaultColor: c.defaultColor,
+          isOceanFleet: c.isOceanFleet,
+          currentRuler: null,
+          currentBid: c.startingPrice || 1,
+          minOutbidPrice: calcMinOutbid(c.startingPrice || 1),
+          totalPlunder: 0,
+          clicks: 0,
+        };
+        this.territoriesCache[c.code] = {
+          ...existing,
+          currentRuler: ruler,
+          currentBid: Math.max(existing.currentBid, 25),
+          minOutbidPrice: calcMinOutbid(Math.max(existing.currentBid, 25)),
+          totalPlunder: (existing.totalPlunder || 0) + 25,
+          conqueredAt: now,
+        };
+      });
+
+      const warEvent: WarEvent = {
+        id: `we_hegemony_${Date.now()}`,
+        countryCode: 'GLOBAL',
+        countryName: 'Entire Planet Earth',
+        flag: '🌍',
+        rulerTitle: params.title.trim(),
+        rulerUrl: params.url.trim(),
+        warCry: params.warCry?.trim() || 'Total Planetary Dominion',
+        amount: params.bidAmount,
+        type: 'conquered',
+        timestamp: 'just now',
+      };
+
+      this.warEventsCache.unshift(warEvent);
+      this.save();
+
+      const powers = this.getWorldPowers();
+      const stats = this.getMapStats();
+
+      broadcastEvent({
+        type: 'TERRITORY_CONQUERED',
+        data: {
+          message: `👑 GLOBAL HEGEMONY: ${params.title} conquered the entire planet earth for $${params.bidAmount}!`,
+        },
+        timestamp: Date.now(),
+      });
+
+      return { territory: this.territoriesCache['US'] || Object.values(this.territoriesCache)[0], warEvent, powers, stats };
+    }
+
     const code = params.countryCode.toUpperCase();
     const meta = WORLD_COUNTRIES.find((c) => c.code === code) || {
       numericId: '000',

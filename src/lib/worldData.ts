@@ -3023,21 +3023,37 @@ export const WORLD_COUNTRIES: CountryMeta[] = [
   {
     "numericId": "901",
     "code": "IO_OCEAN",
-    "code3": "IOP",
-    "name": "Indian Ocean Trade Route",
+    "code3": "IOR",
+    "name": "Indian Ocean Ridge",
     "flag": "⚓",
     "coordinates": [
       75,
       -10
     ],
-    "population": "Naval Corridor",
-    "tier": "TIER B",
+    "population": "Naval Ridge",
+    "tier": "TIER S",
     "defaultColor": "#10b981",
-    "startingPrice": 3,
+    "startingPrice": 25,
     "isOceanFleet": true
   },
   {
     "numericId": "902",
+    "code": "SA_OCEAN",
+    "code3": "SAP",
+    "name": "South Australian Plateau",
+    "flag": "🚢",
+    "coordinates": [
+      130,
+      -42
+    ],
+    "population": "Ocean Plateau",
+    "tier": "TIER S",
+    "defaultColor": "#10b981",
+    "startingPrice": 25,
+    "isOceanFleet": true
+  },
+  {
+    "numericId": "903",
     "code": "SO_OCEAN",
     "code3": "SOP",
     "name": "Southern Ocean Patrol",
@@ -3047,73 +3063,153 @@ export const WORLD_COUNTRIES: CountryMeta[] = [
       -58
     ],
     "population": "Polar Fleet",
-    "tier": "TIER B",
+    "tier": "TIER A",
     "defaultColor": "#10b981",
-    "startingPrice": 2,
-    "isOceanFleet": true
-  },
-  {
-    "numericId": "903",
-    "code": "SA_OCEAN",
-    "code3": "SAP",
-    "name": "South Australia Patrol",
-    "flag": "⚓",
-    "coordinates": [
-      130,
-      -42
-    ],
-    "population": "Ocean Fleet",
-    "tier": "TIER B",
-    "defaultColor": "#10b981",
-    "startingPrice": 2,
+    "startingPrice": 25,
     "isOceanFleet": true
   },
   {
     "numericId": "904",
     "code": "SP_OCEAN",
     "code3": "SPF",
-    "name": "South Pacific Fleet",
+    "name": "South Pacific Fleet Armada",
     "flag": "⛵",
     "coordinates": [
       -120,
       -25
     ],
     "population": "Deep Sea Armada",
-    "tier": "TIER B",
+    "tier": "TIER A",
     "defaultColor": "#10b981",
-    "startingPrice": 2,
+    "startingPrice": 25,
     "isOceanFleet": true
   },
   {
     "numericId": "905",
     "code": "NP_OCEAN",
     "code3": "NPF",
-    "name": "North Pacific Fleet",
+    "name": "North Pacific Carrier Fleet",
     "flag": "🛳️",
     "coordinates": [
       -160,
       32
     ],
     "population": "Carrier Fleet",
-    "tier": "TIER B",
+    "tier": "TIER A",
     "defaultColor": "#10b981",
-    "startingPrice": 3,
+    "startingPrice": 25,
     "isOceanFleet": true
   },
   {
     "numericId": "906",
     "code": "AF_OCEAN",
     "code3": "ATF",
-    "name": "Atlantic Fleet Patrol",
+    "name": "Mid-Atlantic Naval Ridge",
     "flag": "⚓",
     "coordinates": [
       -35,
       25
     ],
-    "population": "Naval Corridor",
-    "tier": "TIER B",
+    "population": "Naval Ridge",
+    "tier": "TIER A",
     "defaultColor": "#10b981",
-    "startingPrice": 3,
+    "startingPrice": 25,
+    "isOceanFleet": true
+  },
+  {
+    "numericId": "910",
+    "code": "BM_ISLAND",
+    "code3": "BMU",
+    "name": "Bermuda Oceanic Outpost",
+    "flag": "🏝️",
+    "coordinates": [
+      -64.75,
+      32.3
+    ],
+    "population": "Maritime Outpost",
+    "tier": "TIER S",
+    "defaultColor": "#38bdf8",
+    "startingPrice": 30,
+    "isOceanFleet": true
+  },
+  {
+    "numericId": "911",
+    "code": "HI_ISLAND",
+    "code3": "HAW",
+    "name": "Hawaii Pacific Bastion",
+    "flag": "🌺",
+    "coordinates": [
+      -157.85,
+      21.3
+    ],
+    "population": "Pacific Bastion",
+    "tier": "TIER S",
+    "defaultColor": "#f59e0b",
+    "startingPrice": 30,
+    "isOceanFleet": true
+  },
+  {
+    "numericId": "912",
+    "code": "GP_ISLAND",
+    "code3": "GAL",
+    "name": "Galapagos Marine Sanctuary",
+    "flag": "🐢",
+    "coordinates": [
+      -90.5,
+      -0.6
+    ],
+    "population": "Marine Territory",
+    "tier": "TIER S",
+    "defaultColor": "#10b981",
+    "startingPrice": 30,
+    "isOceanFleet": true
+  },
+  {
+    "numericId": "913",
+    "code": "AZ_ISLAND",
+    "code3": "AZR",
+    "name": "Azores Oceanic Fortress",
+    "flag": "🏰",
+    "coordinates": [
+      -25.66,
+      37.74
+    ],
+    "population": "Oceanic Fortress",
+    "tier": "TIER S",
+    "defaultColor": "#8b5cf6",
+    "startingPrice": 30,
+    "isOceanFleet": true
+  },
+  {
+    "numericId": "914",
+    "code": "CN_ISLAND",
+    "code3": "CNR",
+    "name": "Canary Islands Naval Station",
+    "flag": "⚓",
+    "coordinates": [
+      -15.6,
+      28.1
+    ],
+    "population": "Naval Station",
+    "tier": "TIER S",
+    "defaultColor": "#ec4899",
+    "startingPrice": 30,
+    "isOceanFleet": true
+  },
+  {
+    "numericId": "915",
+    "code": "FK_ISLAND",
+    "code3": "FLK",
+    "name": "Falklands Southern Bastion",
+    "flag": "🐧",
+    "coordinates": [
+      -59.52,
+      -51.79
+    ],
+    "population": "Southern Bastion",
+    "tier": "TIER S",
+    "defaultColor": "#3b82f6",
+    "startingPrice": 30,
     "isOceanFleet": true
   }
 ];
