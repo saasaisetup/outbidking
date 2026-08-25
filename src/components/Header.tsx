@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Moon, Sun, Globe } from 'lucide-react';
+import { Moon, Sun, ArrowUpRight } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 
 interface HeaderProps {
@@ -22,7 +22,7 @@ export function Header({
   const toggleTheme = propToggleTheme || hookToggleTheme;
 
   return (
-    <header className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-2.5 sm:pt-6 pb-2 flex items-center justify-between gap-2">
+    <header className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3 sm:pt-6 pb-2 flex items-center justify-between gap-2">
       {/* Brand Logo with 3 stacked lines */}
       <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
         <div className="w-4 sm:w-6 h-3 sm:h-5 flex flex-col justify-between py-0.5">
@@ -35,31 +35,37 @@ export function Header({
         </span>
       </Link>
 
-      {/* Nav Links (Leaderboard removed per user request) */}
-      <nav className="flex items-center gap-1.5 sm:gap-4 text-[11px] sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 shrink-0">
+      {/* Prominent World Map War CTA + Nav Links */}
+      <nav className="flex items-center gap-1.5 sm:gap-3 text-[11px] sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 shrink-0">
+        {/* Prominent Highlighted World Map Button */}
         <Link
           href="/map"
-          className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-[#ea6c52]/10 text-[#ea6c52] border border-[#ea6c52]/30 hover:bg-[#ea6c52]/20 font-bold transition-all text-[10px] sm:text-xs"
+          className="group relative inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] text-white shadow-md shadow-[#ea6c52]/25 hover:shadow-lg hover:shadow-[#ea6c52]/40 hover:scale-[1.03] active:scale-[0.98] transition-all font-black text-xs sm:text-sm tracking-tight cursor-pointer"
+          title="World Map: Claim Your Country and Rule It"
         >
-          <span>🗺️</span>
+          <span className="text-sm sm:text-base">🗺️</span>
           <span>World Map</span>
+          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black bg-black/30 text-amber-200 border border-white/20 uppercase tracking-widest hidden sm:inline">
+            WAR
+          </span>
+          <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
         </Link>
 
         <Link
           href="/categories"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-[10px] sm:text-xs hidden sm:inline"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-xs sm:text-sm hidden md:inline font-medium"
         >
           Categories
         </Link>
         <Link
           href="/about"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-[10px] sm:text-xs font-semibold"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-xs sm:text-sm font-medium"
         >
           About
         </Link>
         <Link
           href="/rules"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-[10px] sm:text-xs font-semibold"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-xs sm:text-sm font-medium"
         >
           Rules
         </Link>

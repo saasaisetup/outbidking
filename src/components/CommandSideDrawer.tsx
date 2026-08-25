@@ -30,19 +30,25 @@ export function CommandSideDrawer({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const minBid = territory?.minOutbidPrice || (territory?.currentBid ? calcMinOutbid(territory.currentBid) : territory?.isOceanFleet ? 25 : 3);
-  const defenseWallCost = Math.ceil(bidAmount * 1.5);
   const countryMeta = territory ? WORLD_COUNTRIES.find((c) => c.code === territory.countryCode) : null;
-  const displayFlag = countryMeta?.flag || territory?.flag || '🏳️';
+  const startingCost = countryMeta?.startingPrice || territory?.currentBid || (territory?.isOceanFleet ? 2 : 1);
+  const minBid = territory?.currentRuler
+    ? territory.minOutbidPrice || calcMinOutbid(territory.currentBid)
+    : startingCost;
+  const defenseWallCost = Math.ceil(bidAmount * 1.5);
+  const displayFlag = countryMeta?.flag || (territory?.flag && territory.flag.length > 2 ? territory.flag : '🏳️');
 
   useEffect(() => {
     if (territory) {
-      const calculatedMin = territory.minOutbidPrice || (territory.currentBid ? calcMinOutbid(territory.currentBid) : territory.isOceanFleet ? 25 : 3);
+      const startPrice = countryMeta?.startingPrice || territory.currentBid || (territory.isOceanFleet ? 2 : 1);
+      const calculatedMin = territory.currentRuler
+        ? territory.minOutbidPrice || calcMinOutbid(territory.currentBid)
+        : startPrice;
       setBidAmount(calculatedMin);
       setSelectedColor(territory.defaultColor || EMPIRE_COLORS[0]);
       setErrorMessage('');
     }
-  }, [territory]);
+  }, [territory, countryMeta]);
 
   if (!isOpen || !territory) return null;
 

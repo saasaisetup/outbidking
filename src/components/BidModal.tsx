@@ -19,7 +19,7 @@ export function BidModal({
   isOpen,
   onClose,
   initialUrl = '',
-  initialBidAmount = 6,
+  initialBidAmount = 1,
   initialCategory = 'ai-agents-infrastructure',
   stats,
   onBidSuccess,
@@ -39,8 +39,8 @@ export function BidModal({
   const [errorMessage, setErrorMessage] = useState('');
 
   // Top price to grab rank #1
-  const kingBid = stats?.currentKing?.totalBid || 14043;
-  const takeNumberOneAmount = kingBid + 5;
+  const kingBid = stats?.currentKing?.totalBid || 0;
+  const takeNumberOneAmount = kingBid > 0 ? kingBid + 1 : 1;
 
   const detectAndScrapeUrl = async (inputUrl: string) => {
     const trimmed = inputUrl.trim();
@@ -156,8 +156,8 @@ export function BidModal({
       setErrorMessage('Please provide a valid website URL or @handle');
       return;
     }
-    if (bidAmount < 5) {
-      setErrorMessage('Minimum bid is $5');
+    if (bidAmount < 1) {
+      setErrorMessage('Minimum bid is $1');
       return;
     }
 

@@ -27,8 +27,8 @@ export function WarHeader({
 
   return (
     <header className="w-full bg-[#0a0a0e]/95 backdrop-blur-md border-b border-zinc-900 px-2.5 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between font-mono text-xs z-30 select-none">
-      {/* Left: Brand + War Ticker */}
-      <div className="flex items-center gap-2 sm:gap-4 overflow-hidden shrink-0">
+      {/* Left: Brand */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <Link
           href="/"
           className="flex items-center gap-1 sm:gap-1.5 font-black text-xs sm:text-sm tracking-tight text-white hover:text-[#ea6c52] transition-colors shrink-0"
@@ -45,13 +45,6 @@ export function WarHeader({
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
           <span>{onlineCount}</span>
           <span className="text-[8px] text-zinc-400 uppercase">LIVE</span>
-        </div>
-
-        {/* Ticker Subtitle for Desktop */}
-        <div className="hidden lg:flex items-center gap-2 text-zinc-500 text-[11px] font-semibold border-l border-zinc-800 pl-3">
-          <span className="uppercase tracking-widest text-zinc-400">
-            BID ON ANY COUNTRY · YOUR LOGO RULES IT
-          </span>
         </div>
       </div>
 

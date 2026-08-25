@@ -45,7 +45,7 @@ export default function HomePage() {
   });
   const [recentBids, setRecentBids] = useState<BidTransaction[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategorySlug>('all');
-  const [currentBidAmount, setCurrentBidAmount] = useState<number>(5);
+  const [currentBidAmount, setCurrentBidAmount] = useState<number>(1);
 
   // World War Map State
   const [territories, setTerritories] = useState<TerritoryState[]>([]);
@@ -83,9 +83,9 @@ export default function HomePage() {
         setProjects(data.projects);
         if (cat !== 'all') {
           if (data.projects.length > 0) {
-            setCurrentBidAmount(data.projects[0].totalBid + 5);
+            setCurrentBidAmount(data.projects[0].totalBid + 1);
           } else {
-            setCurrentBidAmount(6);
+            setCurrentBidAmount(1);
           }
         }
       }
@@ -93,7 +93,9 @@ export default function HomePage() {
       if (data.stats) {
         setStats(data.stats);
         if (cat === 'all' && data.stats.currentKing) {
-          setCurrentBidAmount(data.stats.currentKing.totalBid + 5);
+          setCurrentBidAmount(data.stats.currentKing.totalBid + 1);
+        } else if (cat === 'all' && !data.stats.currentKing) {
+          setCurrentBidAmount(1);
         }
       }
 
@@ -235,42 +237,7 @@ export default function HomePage() {
       {/* Top Header */}
       <Header />
 
-      {/* Centered Compact View Switcher matching media_1787500529760.png */}
-      <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-1.5 pb-0.5 flex items-center justify-center">
-        <div className="inline-flex p-0.5 rounded-xl bg-zinc-100 dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs">
-          <button
-            type="button"
-            onClick={() => setViewMode('board')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
-              viewMode === 'board'
-                ? 'bg-white dark:bg-[#25221d] text-zinc-900 dark:text-white shadow-xs'
-                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5 text-[#ea6c52]" />
-            <span>Classic Board</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setViewMode('map')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
-              viewMode === 'map'
-                ? 'bg-[#ea6c52] text-white shadow-xs'
-                : 'text-zinc-500 hover:text-[#ea6c52]'
-            }`}
-          >
-            <span>🗺️</span>
-            <span>World Map</span>
-            <span className="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-black/20 text-white">
-              WAR
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {viewMode === 'board' ? (
-        <main className="w-full pb-12">
+      <main className="w-full pb-12">
           {/* Hero Section with Favicon Grabber and Category Dropdown */}
           <HeroBiddingBar
             stats={stats}
@@ -319,33 +286,6 @@ export default function HomePage() {
             onOpenStats={() => setIsStatsOpen(true)}
           />
         </main>
-      ) : (
-        <main className="w-full pb-12 pt-2 sm:pt-3">
-          <div className="w-full px-2 sm:px-4 max-w-6xl mx-auto">
-            {/* Full-Sized Interactive World War Map Container */}
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-[#070709] h-[65vh] sm:h-[75vh] min-h-[440px] sm:min-h-[580px]">
-              <WorldWarMap
-                territories={territories}
-                selectedTerritory={selectedTerritory}
-                onSelectTerritory={handleSelectTerritory}
-              />
-
-              {/* Left HUD Panel */}
-              <WorldPowersDrawer
-                powers={powers}
-                warEvents={warEvents}
-                onSelectCountry={handleSelectCountryByCode}
-              />
-
-              {/* Right HUD Panel */}
-              <UnclaimedLandDrawer
-                territories={territories}
-                onSelectCountry={handleSelectCountryByCode}
-              />
-            </div>
-          </div>
-        </main>
-      )}
 
       {/* Right Slide-in Command Side Drawer */}
       <CommandSideDrawer

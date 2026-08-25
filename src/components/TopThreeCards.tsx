@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Project } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
 import { ProductLogo } from './ProductLogo';
+import { RealisticCrown } from './RealisticCrown';
 
 interface TopThreeCardsProps {
   topProjects: Project[];
@@ -49,7 +50,7 @@ export function TopThreeCards({ topProjects, onSelectProject }: TopThreeCardsPro
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 flex flex-col gap-3 py-1.5">
       {topProjects.slice(0, 3).map((project, idx) => {
         const displayRank = idx + 1;
-        const nextPrice = project.totalBid + 5;
+        const nextPrice = project.totalBid + 1;
         const isHovered = hoveredId === project.id;
         const catInfo = getCategory(project.category);
         const displayTitle = formatProjectTitle(project);
@@ -74,9 +75,16 @@ export function TopThreeCards({ topProjects, onSelectProject }: TopThreeCardsPro
             <div className="flex items-center justify-between gap-3 sm:gap-5">
               {/* Left Side: Rank Badge + BIGGER Icon + Details */}
               <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                {/* Round Solid Terracotta Rank Badge */}
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#e05d44] text-white flex items-center justify-center font-black text-xs sm:text-base flex-shrink-0 shadow-xs">
-                  #{displayRank}
+                {/* Round Solid Terracotta Rank Badge with Realistic Crown for #1 */}
+                <div className="relative">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#e05d44] text-white flex items-center justify-center font-black text-xs sm:text-base flex-shrink-0 shadow-xs">
+                    #{displayRank}
+                  </div>
+                  {displayRank === 1 && (
+                    <div className="absolute -top-3.5 -left-1.5 pointer-events-none">
+                      <RealisticCrown size="sm" />
+                    </div>
+                  )}
                 </div>
 
                 {/* BIGGER & SHARPER Icon using ProductLogo (56px - 64px) */}

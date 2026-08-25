@@ -14,22 +14,22 @@ export function Footer({ onOpenRules, onOpenStats }: FooterProps) {
       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1">
         <span>Built by</span>
         <a
-          href="https://x.com/shipxcode"
+          href="https://x.com/shipxankit"
           target="_blank"
           rel="noopener noreferrer"
           className="font-bold text-zinc-800 dark:text-zinc-200 hover:text-[#e05d44] dark:hover:text-[#e05d44] transition-colors"
         >
-          @shipxcode
+          @shipxankit
         </a>
         <span>·</span>
         <span>Brought to you by</span>
         <a
-          href="https://shipxcode.dev"
+          href="https://x.com/shipxankit"
           target="_blank"
           rel="noopener noreferrer"
           className="font-bold text-[#e05d44] hover:underline"
         >
-          shipxcode.dev
+          @shipxankit on 𝕏
         </a>
       </div>
 

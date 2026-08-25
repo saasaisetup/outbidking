@@ -74,7 +74,7 @@ export function HeroBiddingBar({
   }, [url]);
 
   const handleDecrement = () => {
-    onBidAmountChange(Math.max(5, currentBidAmount - 1));
+    onBidAmountChange(Math.max(1, currentBidAmount - 1));
   };
 
   const handleIncrement = () => {
@@ -96,7 +96,7 @@ export function HeroBiddingBar({
     onSubmitBid({
       url: finalUrl,
       category: category || 'ai-agents-infrastructure',
-      bidAmount: currentBidAmount || 5,
+      bidAmount: currentBidAmount || 1,
       logoUrl: faviconUrl || undefined,
       isHandle: isXHandle,
     });
@@ -133,7 +133,7 @@ export function HeroBiddingBar({
             <span>$</span>
             <input
               type="number"
-              min={5}
+              min={1}
               max={999999}
               value={currentBidAmount === 0 ? '' : currentBidAmount}
               onChange={(e) => {
@@ -159,7 +159,7 @@ export function HeroBiddingBar({
 
       {/* Subtitle matching media_1787458001988.png */}
       <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#f87171] dark:text-[#f87171] max-w-lg font-medium leading-relaxed px-2">
-        New spots start at $5. Paying less than the #1 price still puts you on the board at whatever place that bid can take.
+        New spots start at $1. Paying less than the #1 price still puts you on the board at whatever place that bid can take.
       </p>
 
       {/* Main Responsive Input Form stretched to full max-w-4xl navbar alignment */}

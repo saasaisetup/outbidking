@@ -53,7 +53,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
         </div>
 
         <div className="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
-          <span>Built by <a href="https://x.com/shipxcode" target="_blank" rel="noopener noreferrer" className="text-[#e05d44] font-bold hover:underline">@shipxcode</a></span>
+          <span>Built by <a href="https://x.com/shipxankit" target="_blank" rel="noopener noreferrer" className="text-[#e05d44] font-bold hover:underline">@shipxankit</a></span>
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold hover:opacity-90 transition-opacity"

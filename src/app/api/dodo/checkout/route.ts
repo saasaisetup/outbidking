@@ -27,9 +27,9 @@ export async function POST(req: NextRequest) {
     }
 
     const numericBid = Number(bidAmount);
-    if (isNaN(numericBid) || numericBid < (isTerritory ? 3 : 5)) {
+    if (isNaN(numericBid) || numericBid < 1) {
       return NextResponse.json(
-        { success: false, error: `Minimum bid is $${isTerritory ? 3 : 5}` },
+        { success: false, error: 'Minimum bid is $1' },
         { status: 400 }
       );
     }

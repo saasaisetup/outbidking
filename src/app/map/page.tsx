@@ -7,6 +7,7 @@ import { WorldPowersDrawer } from '@/components/WorldPowersDrawer';
 import { UnclaimedLandDrawer } from '@/components/UnclaimedLandDrawer';
 import { CommandSideDrawer } from '@/components/CommandSideDrawer';
 import { HowWarWorksModal } from '@/components/HowWarWorksModal';
+import { MapSkeletonLoader } from '@/components/MapSkeletonLoader';
 import { TerritoryState, WorldPower, WarEvent, MapStats } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { subscribeToLivePresence } from '@/lib/presence';
@@ -18,6 +19,7 @@ export default function WorldMapPage() {
   const [powers, setPowers] = useState<WorldPower[]>([]);
   const [warEvents, setWarEvents] = useState<WarEvent[]>([]);
   const [liveVisitors, setLiveVisitors] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<MapStats>({
     onlineCount: 1,
     totalVisitors: 0,
@@ -48,6 +50,8 @@ export default function WorldMapPage() {
       }
     } catch (err) {
       console.error('[Map] Fetch error:', err);
+    } finally {
+      setIsLoading(false);
     }
   }, [liveVisitors]);
 
@@ -146,6 +150,9 @@ export default function WorldMapPage() {
 
       {/* Main Full-Bleed World War Map Canvas */}
       <main className="relative flex-1 w-full h-[calc(100vh-56px)] overflow-hidden">
+        {/* Tactical Skeleton Screen matching uploaded green map placeholder */}
+        <MapSkeletonLoader isLoading={isLoading} />
+
         <WorldWarMap
           territories={territories}
           selectedTerritory={selectedTerritory}

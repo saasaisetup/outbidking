@@ -61,12 +61,21 @@ export default function AboutPage() {
           <div className="mt-8 p-5 rounded-2xl bg-zinc-50 dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] w-full flex items-center justify-between gap-4">
             <div>
               <div className="font-bold text-sm text-zinc-900 dark:text-white">
-                Builder & Creator
+                Built by <a href="https://x.com/shipxankit" target="_blank" rel="noopener noreferrer" className="text-[#e05d44] hover:underline">@shipxankit</a>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                The public pay-to-rank leaderboard at outbidking.lol
+                The public pay-to-rank leaderboard & world conquest game at outbidking.lol
               </p>
             </div>
+            <a
+              href="https://x.com/shipxankit"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5"
+            >
+              <span>Follow @shipxankit</span>
+              <span>↗</span>
+            </a>
           </div>
         </main>
       </div>
