@@ -32,31 +32,31 @@ export function StatsModal({ isOpen, onClose, stats }: StatsModalProps) {
           <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
             <div className="text-[11px] font-semibold text-zinc-500 uppercase">Live Online</div>
             <div className="text-xl sm:text-2xl font-black text-emerald-500 font-mono mt-0.5">
-              1,082
+              {stats.totalProjectsCount > 0 ? (stats.totalBidsCount + 1) : 1}
             </div>
             <div className="text-[10px] text-zinc-400">active founders now</div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-            <div className="text-[11px] font-semibold text-zinc-500 uppercase">Total Visitors</div>
-            <div className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white font-mono mt-0.5">
-              1,170,800
+            <div className="text-[11px] font-semibold text-zinc-500 uppercase">Total Volume</div>
+            <div className="text-xl sm:text-2xl font-black text-[#ea6c52] font-mono mt-0.5">
+              ${(stats.totalVolume || 0).toLocaleString()}
             </div>
-            <div className="text-[10px] text-zinc-400">since launch</div>
+            <div className="text-[10px] text-zinc-400">across {stats.totalProjectsCount || 0} projects</div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-            <div className="text-[11px] font-semibold text-zinc-500 uppercase">Total Volume</div>
-            <div className="text-xl sm:text-2xl font-black text-[#e05d44] font-mono mt-0.5">
-              ${(stats.totalVolume || 148250).toLocaleString()}
+            <div className="text-[11px] font-semibold text-zinc-500 uppercase">Bids Placed</div>
+            <div className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white font-mono mt-0.5">
+              {(stats.totalBidsCount || 0).toLocaleString()}
             </div>
-            <div className="text-[10px] text-zinc-400">across 991+ projects</div>
+            <div className="text-[10px] text-zinc-400">total transactions</div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
             <div className="text-[11px] font-semibold text-zinc-500 uppercase">Clicks Delivered</div>
             <div className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white font-mono mt-0.5">
-              {(stats.totalClicksDelivered || 58290).toLocaleString()}
+              {(stats.totalClicksDelivered || 0).toLocaleString()}
             </div>
             <div className="text-[10px] text-zinc-400">direct outbound traffic</div>
           </div>

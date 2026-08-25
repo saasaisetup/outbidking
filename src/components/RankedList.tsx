@@ -42,6 +42,31 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
     window.scrollTo({ top: 400, behavior: 'smooth' });
   };
 
+  if (projects.length === 0) {
+    return (
+      <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6">
+        <div className="p-8 sm:p-12 rounded-3xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50/50 dark:bg-[#141210]/50 text-center flex flex-col items-center justify-center">
+          <div className="w-14 h-14 rounded-3xl bg-[#ea6c52]/10 border border-[#ea6c52]/30 flex items-center justify-center text-3xl mb-3.5 shadow-sm">
+            👑
+          </div>
+          <h3 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">
+            The Throne is Open
+          </h3>
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-md mb-5 leading-relaxed">
+            No products or creators have claimed the leaderboard yet. Be the founding King and lock in your rank for just $5.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="px-6 py-3 rounded-2xl bg-[#ea6c52] hover:bg-[#d95b41] text-white font-mono font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_4px_15px_rgba(234,108,82,0.35)] transition-all cursor-pointer active:scale-95 flex items-center gap-2"
+          >
+            <span>👑 Claim #1 Throne via Dodo Payments ($5)</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (pageItems.length === 0 && projects.length <= 3) {
     return null;
   }

@@ -17,13 +17,13 @@ export default function WorldMapPage() {
   const [territories, setTerritories] = useState<TerritoryState[]>([]);
   const [powers, setPowers] = useState<WorldPower[]>([]);
   const [warEvents, setWarEvents] = useState<WarEvent[]>([]);
-  const [liveVisitors, setLiveVisitors] = useState<number>(134);
+  const [liveVisitors, setLiveVisitors] = useState<number>(1);
   const [stats, setStats] = useState<MapStats>({
-    onlineCount: 134,
-    totalVisitors: 13029,
-    totalPlundered: 2709,
-    totalClicks: 14722,
-    claimedCount: 132,
+    onlineCount: 1,
+    totalVisitors: 0,
+    totalPlundered: 0,
+    totalClicks: 0,
+    claimedCount: 0,
     totalCountries: 194,
   });
 
@@ -53,6 +53,29 @@ export default function WorldMapPage() {
 
   useEffect(() => {
     fetchTerritoryData();
+
+    // Handle Dodo Payments checkout return
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const paymentId = params.get('payment_id') || params.get('paymentId');
+      const status = params.get('status');
+
+      if (paymentId || status === 'succeeded' || status === 'success') {
+        if (paymentId) {
+          fetch(`/api/dodo/verify?payment_id=${paymentId}`)
+            .then((r) => r.json())
+            .then((res) => {
+              if (res.success) {
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.4 } });
+                soundManager.playKingGong();
+                fetchTerritoryData();
+              }
+            })
+            .catch(() => {});
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
 
     // Realtime Presence Tracker for live visitors
     const unsubscribePresence = subscribeToLivePresence((onlineCount) => {

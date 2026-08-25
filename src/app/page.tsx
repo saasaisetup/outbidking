@@ -28,34 +28,35 @@ import { soundManager } from '@/lib/sound';
 import { supabase } from '@/lib/supabase';
 import { subscribeToLivePresence } from '@/lib/presence';
 import { Globe, Layers, ExternalLink } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 export default function HomePage() {
   const [viewMode, setViewMode] = useState<'board' | 'map'>('board');
   const [projects, setProjects] = useState<Project[]>([]);
-  const [liveVisitors, setLiveVisitors] = useState<number>(134);
+  const [liveVisitors, setLiveVisitors] = useState<number>(1);
   const [stats, setStats] = useState<PlatformStats>({
-    totalVolume: 62750,
-    totalBidsCount: 500,
-    totalProjectsCount: 991,
-    totalClicksDelivered: 58290,
+    totalVolume: 0,
+    totalBidsCount: 0,
+    totalProjectsCount: 0,
+    totalClicksDelivered: 0,
     currentKing: null,
-    kingHoldDurationSeconds: 68400,
-    highestSingleBid: 14018,
+    highestSingleBid: 0,
+    kingHoldDurationSeconds: 0,
   });
   const [recentBids, setRecentBids] = useState<BidTransaction[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategorySlug>('all');
-  const [currentBidAmount, setCurrentBidAmount] = useState<number>(14023);
+  const [currentBidAmount, setCurrentBidAmount] = useState<number>(5);
 
   // World War Map State
   const [territories, setTerritories] = useState<TerritoryState[]>([]);
   const [powers, setPowers] = useState<WorldPower[]>([]);
   const [warEvents, setWarEvents] = useState<WarEvent[]>([]);
   const [mapStats, setMapStats] = useState<MapStats>({
-    onlineCount: 134,
-    totalVisitors: 13029,
-    totalPlundered: 2709,
-    totalClicks: 14722,
-    claimedCount: 132,
+    onlineCount: 1,
+    totalVisitors: 0,
+    totalPlundered: 0,
+    totalClicks: 0,
+    claimedCount: 0,
     totalCountries: 194,
   });
   const [selectedTerritory, setSelectedTerritory] = useState<TerritoryState | null>(null);
@@ -125,6 +126,30 @@ export default function HomePage() {
   useEffect(() => {
     fetchData(selectedCategory);
     fetchTerritories();
+
+    // Handle Dodo Payments checkout return
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const paymentId = params.get('payment_id') || params.get('paymentId');
+      const status = params.get('status');
+
+      if (paymentId || status === 'succeeded' || status === 'success') {
+        if (paymentId) {
+          fetch(`/api/dodo/verify?payment_id=${paymentId}`)
+            .then((r) => r.json())
+            .then((res) => {
+              if (res.success) {
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.4 } });
+                soundManager.playCashChing();
+                fetchData(selectedCategory);
+                fetchTerritories();
+              }
+            })
+            .catch(() => {});
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
 
     const unsubscribePresence = subscribeToLivePresence((onlineCount) => {
       setLiveVisitors(onlineCount);

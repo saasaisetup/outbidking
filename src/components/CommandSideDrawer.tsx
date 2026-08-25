@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ExternalLink, ShieldCheck, Zap, CreditCard, Wallet, Globe, Swords, Sparkles, Loader2 } from 'lucide-react';
 import { TerritoryState } from '@/lib/types';
-import { EMPIRE_COLORS, calcMinOutbid } from '@/lib/worldData';
+import { EMPIRE_COLORS, calcMinOutbid, WORLD_COUNTRIES } from '@/lib/worldData';
 import confetti from 'canvas-confetti';
 import { soundManager } from '@/lib/sound';
 
@@ -32,6 +32,8 @@ export function CommandSideDrawer({
 
   const minBid = territory?.minOutbidPrice || (territory?.currentBid ? calcMinOutbid(territory.currentBid) : territory?.isOceanFleet ? 25 : 3);
   const defenseWallCost = Math.ceil(bidAmount * 1.5);
+  const countryMeta = territory ? WORLD_COUNTRIES.find((c) => c.code === territory.countryCode) : null;
+  const displayFlag = countryMeta?.flag || territory?.flag || '🏳️';
 
   useEffect(() => {
     if (territory) {
@@ -148,10 +150,9 @@ export function CommandSideDrawer({
           {/* Sovereign Country Info */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
-              <span className="text-2xl">{territory.flag}</span>
+              <span className="text-2xl">{displayFlag}</span>
               <h2 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-100">
-                <span className="text-zinc-400 mr-1.5 font-mono">{territory.countryCode}</span>
-                <span>{territory.countryName}</span>
+                {territory.countryName}
               </h2>
             </div>
             <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-black bg-zinc-800 text-zinc-300 border border-zinc-700">

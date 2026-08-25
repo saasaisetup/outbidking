@@ -79,7 +79,7 @@ export function UnclaimedLandDrawer({
       >
         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
         <Flag className="w-3.5 h-3.5 text-emerald-400" />
-        <span>UNCLAIMED — {unclaimedCount || 60} LEFT</span>
+        <span>UNCLAIMED — {unclaimedCount} LEFT</span>
         {isOpen ? <ChevronDown className="w-3.5 h-3.5 ml-1" /> : <ChevronUp className="w-3.5 h-3.5 ml-1" />}
       </button>
     </div>

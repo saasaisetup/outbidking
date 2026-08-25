@@ -18,11 +18,11 @@ export function WarHeader({
   onOpenHelp,
   isMapPage = false,
 }: WarHeaderProps) {
-  const onlineCount = stats.onlineCount || 148;
-  const totalVisitors = (stats.totalVisitors || 13401).toLocaleString();
-  const totalPlundered = (stats.totalPlundered || 2733).toLocaleString();
-  const totalClicks = (stats.totalClicks || 15100).toLocaleString();
-  const claimedCount = stats.claimedCount || 134;
+  const onlineCount = stats.onlineCount || 1;
+  const totalVisitors = (stats.totalVisitors || 0).toLocaleString();
+  const totalPlundered = (stats.totalPlundered || 0).toLocaleString();
+  const totalClicks = (stats.totalClicks || 0).toLocaleString();
+  const claimedCount = stats.claimedCount || 0;
   const totalCountries = stats.totalCountries || 194;
 
   return (

@@ -8,12 +8,12 @@ interface BottomRevenueCounterProps {
 }
 
 export function BottomRevenueCounter({ stats }: BottomRevenueCounterProps) {
-  const displayTotal = stats.totalVolume || 148250;
+  const displayTotal = stats?.totalVolume || 0;
 
   return (
     <section className="w-full max-w-4xl mx-auto px-4 py-16 flex flex-col items-center justify-center text-center">
-      <div className="text-xs sm:text-sm font-semibold text-[#e05d44] mb-3">
-        This simple side project made
+      <div className="text-xs sm:text-sm font-semibold text-[#ea6c52] mb-3">
+        Total Volume Bidded
       </div>
 
       {/* Giant Box Counter */}
@@ -23,8 +23,8 @@ export function BottomRevenueCounter({ stats }: BottomRevenueCounterProps) {
         </span>
       </div>
 
-      <div className="mt-3 text-xs sm:text-sm text-zinc-500 font-medium">
-        since its launch 66 hours ago
+      <div className="mt-3 text-xs sm:text-sm text-zinc-500 font-medium font-mono">
+        100% transparent on-chain & live verified
       </div>
     </section>
   );

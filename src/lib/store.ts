@@ -45,9 +45,9 @@ class Store {
       projects: [],
       transactions: [],
       stats: {
-        totalClicks: 142732,
-        highestBid: 14043,
-        launchTime: new Date(Date.now() - 1000 * 60 * 60 * 66).toISOString(),
+        totalClicks: 0,
+        highestBid: 0,
+        launchTime: new Date().toISOString(),
       }
     };
   }
@@ -83,18 +83,9 @@ class Store {
 
     WORLD_COUNTRIES.forEach((c) => {
       const saved = savedTerritories[c.code];
-      const seed = SEED_TERRITORIES[c.code];
-      const curRuler = saved?.currentRuler || (seed?.currentRuler ? {
-        title: seed.currentRuler.title,
-        url: seed.currentRuler.url,
-        warCry: seed.currentRuler.warCry,
-        logoUrl: seed.currentRuler.logoUrl,
-        color: seed.currentRuler.color || c.defaultColor,
-        totalBid: seed.currentRuler.totalBid || seed.currentBid || c.startingPrice || 3,
-      } : null);
-
-      const curBid = saved?.currentBid || seed?.currentBid || c.startingPrice || 3;
-      const minPrice = saved?.minOutbidPrice || seed?.minOutbidPrice || calcMinOutbid(curBid);
+      const curRuler = saved?.currentRuler || null;
+      const curBid = saved?.currentBid || c.startingPrice || 3;
+      const minPrice = saved?.minOutbidPrice || calcMinOutbid(curBid);
 
       this.territoriesCache[c.code] = {
         countryCode: c.code,
@@ -109,20 +100,14 @@ class Store {
         currentRuler: curRuler,
         currentBid: curBid,
         minOutbidPrice: minPrice,
-        totalPlunder: saved?.totalPlunder || (curRuler ? curBid : 0),
+        totalPlunder: saved?.totalPlunder || 0,
         clicks: saved?.clicks || 0,
-        conqueredAt: saved?.conqueredAt || (curRuler ? new Date(Date.now() - 86400000).toISOString() : undefined),
+        conqueredAt: saved?.conqueredAt || undefined,
       };
     });
 
-    this.warEventsCache = [
-      { id: 'we_1', countryCode: 'KR', countryName: 'South Korea', flag: '🇰🇷', rulerTitle: 'grinda.ai', rulerUrl: 'https://grinda.ai', warCry: 'Korean AI Innovations', amount: 25, type: 'claimed', timestamp: '1d ago' },
-      { id: 'we_2', countryCode: 'TH', countryName: 'Thailand', flag: '🇹🇭', rulerTitle: 'bookit.now', rulerUrl: 'https://bookit.now', warCry: 'Instant booking everywhere', amount: 12, type: 'claimed', timestamp: '1d ago' },
-      { id: 'we_3', countryCode: 'CN', countryName: 'China', flag: '🇨🇳', rulerTitle: 'xme.lol', rulerUrl: 'https://xme.lol', warCry: 'Scale your presence', amount: 27, type: 'conquered', timestamp: '1d ago' },
-      { id: 'we_4', countryCode: 'TD', countryName: 'Chad', flag: '🇹🇩', rulerTitle: 'ilmi.online', rulerUrl: 'https://ilmi.online', warCry: 'Online learning for all', amount: 16, type: 'conquered', timestamp: '1d ago' },
-      { id: 'we_5', countryCode: 'US', countryName: 'United States', flag: '🇺🇸', rulerTitle: 'Marlow Town', rulerUrl: 'https://marlow.lol', warCry: 'Building the king of towns', amount: 160, type: 'conquered', timestamp: '2d ago' },
-      { id: 'we_6', countryCode: 'RU', countryName: 'Russia', flag: '🇷🇺', rulerTitle: 'Viral SEO - AI Suite', rulerUrl: 'https://getviralseo.com', warCry: 'Rank #1 with AI', amount: 93, type: 'conquered', timestamp: '2d ago' },
-    ];
+    // Real war activity stream (empty until users conquer countries)
+    this.warEventsCache = [];
   }
 
   private save() {
@@ -416,16 +401,16 @@ class Store {
     this.init();
     const territories = Object.values(this.territoriesCache);
     const claimed = territories.filter((t) => !!t.currentRuler);
-    const totalPlundered = claimed.reduce((acc, t) => acc + t.totalPlunder, 0);
+    const totalPlundered = claimed.reduce((acc, t) => acc + (t.totalPlunder || 0), 0);
     const totalClicks = claimed.reduce((acc, t) => acc + (t.clicks || 0), 0);
 
     return {
-      onlineCount: 132,
-      totalVisitors: 13008,
-      totalPlundered: Math.max(totalPlundered, 2709),
-      totalClicks: Math.max(totalClicks, 14692),
-      claimedCount: claimed.length || 132,
-      totalCountries: 194,
+      onlineCount: 1,
+      totalVisitors: 0,
+      totalPlundered: totalPlundered,
+      totalClicks: totalClicks,
+      claimedCount: claimed.length,
+      totalCountries: territories.length || 194,
     };
   }
 
@@ -863,13 +848,13 @@ class Store {
     }
 
     return {
-      totalVolume: Math.max(totalVolume, 194201),
+      totalVolume: totalVolume,
       totalBidsCount: this.db.transactions.length,
       totalProjectsCount: this.db.projects.length,
       totalClicksDelivered: totalClicks,
       currentKing: king,
       kingHoldDurationSeconds: kingHoldSeconds,
-      highestSingleBid: this.db.stats.highestBid || (king ? king.totalBid : 14043),
+      highestSingleBid: this.db.stats.highestBid || (king ? king.totalBid : 0),
     };
   }
 
