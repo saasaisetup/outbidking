@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { RulesModal } from '@/components/RulesModal';
-import { AboutModal } from '@/components/AboutModal';
 import { StatsModal } from '@/components/StatsModal';
 import { CategoryIcon } from '@/components/CategoryIcon';
 import { CATEGORIES } from '@/lib/categories';
@@ -14,8 +12,6 @@ import { StatsPill } from '@/components/StatsPill';
 import { Trophy, ArrowRight } from 'lucide-react';
 
 export default function CategoriesPage() {
-  const [isRulesOpen, setIsRulesOpen] = useState(false);
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [stats, setStats] = useState<PlatformStats>({
     totalVolume: 0,
@@ -33,11 +29,7 @@ export default function CategoriesPage() {
     <div className="min-h-screen bg-white dark:bg-[#09090b] text-zinc-900 dark:text-[#f4f4f5] font-sans flex flex-col justify-between transition-colors duration-200">
       <div>
         {/* Header */}
-        <Header
-          onOpenRules={() => setIsRulesOpen(true)}
-          onOpenAbout={() => setIsAboutOpen(true)}
-          onOpenCategories={() => {}}
-        />
+        <Header />
 
         <main className="w-full max-w-4xl mx-auto px-4 pt-6 sm:pt-8 pb-16 flex flex-col items-start">
           {/* Visitor Pill */}
@@ -56,13 +48,13 @@ export default function CategoriesPage() {
               </p>
             </div>
 
-            {/* Prominent CTA Button */}
+            {/* Prominent 3D CTA Button */}
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white font-black text-xs sm:text-sm tracking-tight shadow-md shadow-[#ea6c52]/30 hover:shadow-lg hover:shadow-[#ea6c52]/50 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-xs sm:text-sm tracking-tight shadow-[0_4px_0_0_#b8432a,0_6px_14px_rgba(234,108,82,0.4)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[2px] transition-all cursor-pointer shrink-0"
             >
               <Trophy className="w-4 h-4 text-amber-200" />
-              <span>Claim #1 Throne</span>
+              <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">Claim #1 Throne</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -94,10 +86,10 @@ export default function CategoriesPage() {
             ))}
           </div>
 
-          {/* Bottom CTA Card */}
-          <div className="mt-12 p-6 rounded-3xl bg-gradient-to-br from-[#ea6c52]/10 via-[#f97316]/5 to-transparent border border-[#ea6c52]/30 w-full flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          {/* Bottom 3D CTA Card */}
+          <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#ea6c52]/10 via-[#f97316]/5 to-transparent border border-[#ea6c52]/30 w-full flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div>
-              <h3 className="font-black text-lg text-zinc-900 dark:text-white">
+              <h3 className="font-black text-lg sm:text-xl text-zinc-900 dark:text-white">
                 Dominate your category leaderboard
               </h3>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
@@ -106,23 +98,16 @@ export default function CategoriesPage() {
             </div>
             <Link
               href="/"
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white font-black text-xs sm:text-sm tracking-tight shadow-md shadow-[#ea6c52]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+              className="px-6 py-3 rounded-full bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-xs sm:text-sm tracking-tight shadow-[0_4px_0_0_#b8432a,0_6px_14px_rgba(234,108,82,0.4)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[2px] transition-all cursor-pointer shrink-0"
             >
-              Grab #1 Throne ($1)
+              <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">Grab #1 Throne ($1)</span>
             </Link>
           </div>
         </main>
       </div>
 
       {/* Footer */}
-      <Footer
-        onOpenRules={() => setIsRulesOpen(true)}
-        onOpenAbout={() => setIsAboutOpen(true)}
-        onOpenStats={() => setIsStatsOpen(true)}
-      />
-
-      <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} />
-      <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      <Footer onOpenStats={() => setIsStatsOpen(true)} />
       <StatsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} stats={stats} />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Moon, Sun, Trophy } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 
 interface HeaderProps {
@@ -22,7 +22,7 @@ export function Header({
   const toggleTheme = propToggleTheme || hookToggleTheme;
 
   return (
-    <header className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3 sm:pt-6 pb-2 flex items-center justify-between gap-2">
+    <header className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2 flex items-center justify-between gap-2">
       {/* Brand Logo with 3 stacked lines & Prominent Enlarged 'O' */}
       <Link href="/" className="flex items-center gap-1.5 sm:gap-2.5 group shrink-0">
         <div className="w-4 sm:w-6 h-3.5 sm:h-5 flex flex-col justify-between py-0.5">
@@ -37,49 +37,29 @@ export function Header({
         </span>
       </Link>
 
-      {/* Nav Links + Prominent Leaderboard Button */}
-      <nav className="flex items-center gap-2 sm:gap-3.5 text-[11px] sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 shrink-0">
-        {/* Prominent Tactile Orange Leaderboard Button */}
+      {/* Clean Nav Links (Leaderboard is a clean link, NOT a button) */}
+      <nav className="flex items-center gap-3.5 sm:gap-6 text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 shrink-0">
         <Link
           href="/"
-          className="group relative inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white shadow-md shadow-[#ea6c52]/30 hover:shadow-lg hover:shadow-[#ea6c52]/45 hover:scale-[1.03] active:scale-[0.98] transition-all font-black text-xs sm:text-sm tracking-tight cursor-pointer"
-          title="Leaderboard: Outbid competitors and grab #1"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors"
         >
-          <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-200" />
-          <span>Leaderboard</span>
+          Leaderboard
         </Link>
-
-        {/* 
-        PRESERVED FOR FUTURE USE: World War Map Feature
-        <Link
-          href="/map"
-          className="group relative inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] text-white shadow-md shadow-[#ea6c52]/25 hover:shadow-lg hover:shadow-[#ea6c52]/40 hover:scale-[1.03] active:scale-[0.98] transition-all font-black text-xs sm:text-sm tracking-tight cursor-pointer"
-          title="World Map: Claim Your Country and Rule It"
-        >
-          <span className="text-sm sm:text-base">🗺️</span>
-          <span>World Map</span>
-          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black bg-black/30 text-amber-200 border border-white/20 uppercase tracking-widest hidden sm:inline">
-            WAR
-          </span>
-          <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-        </Link>
-        */}
-
         <Link
           href="/categories"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-xs sm:text-sm hidden md:inline font-medium"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors hidden xs:inline"
         >
           Categories
         </Link>
         <Link
           href="/about"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-xs sm:text-sm font-medium"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors"
         >
           About
         </Link>
         <Link
           href="/rules"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors text-xs sm:text-sm font-medium"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors"
         >
           Rules
         </Link>

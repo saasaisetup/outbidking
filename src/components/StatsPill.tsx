@@ -17,7 +17,7 @@ export function StatsPill({
   showStatsLink = true,
 }: StatsPillProps) {
   const { onlineCount } = useOnlinePresence();
-  const [totalVisitors, setTotalVisitors] = useState<number>(1);
+  const [totalVisitors, setTotalVisitors] = useState<number>(58);
 
   useEffect(() => {
     let active = true;
@@ -37,7 +37,10 @@ export function StatsPill({
         { event: '*', schema: 'public', table: 'site_stats' },
         (payload: any) => {
           if (payload.new && payload.new.total_visitors) {
-            setTotalVisitors(Number(payload.new.total_visitors));
+            const raw = Number(payload.new.total_visitors);
+            if (raw > 0 && raw < 10000) {
+              setTotalVisitors(raw);
+            }
           }
         }
       )

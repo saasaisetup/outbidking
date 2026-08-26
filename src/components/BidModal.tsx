@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Loader2, ShieldCheck, Globe, Crown, Sparkles, ExternalLink, Lock, Upload, Image as ImageIcon, CreditCard, CheckCircle2 } from 'lucide-react';
+import { X, Loader2, ShieldCheck, Globe, Crown, Upload, Image as ImageIcon, CreditCard, CheckCircle2 } from 'lucide-react';
 import { PlatformStats } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
 
@@ -29,15 +29,12 @@ export function BidModal({
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(initialCategory);
   const [bidAmount, setBidAmount] = useState(initialBidAmount);
-  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
-  const [isXHandle, setIsXHandle] = useState(false);
-  const [isInstagram, setIsInstagram] = useState(false);
-  const [isGithub, setIsGithub] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isCustomLogo, setIsCustomLogo] = useState(false);
   const [customerEmail, setCustomerEmail] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isScraping, setIsScraping] = useState(false);
+  const [isFetchingAvatar, setIsFetchingAvatar] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -45,107 +42,38 @@ export function BidModal({
   const kingBid = stats?.currentKing?.totalBid || 0;
   const takeNumberOneAmount = kingBid > 0 ? kingBid + 1 : 1;
 
-  const detectAndScrapeUrl = async (inputUrl: string) => {
+  const fetchAvatarAndMeta = async (inputUrl: string) => {
     const trimmed = inputUrl.trim();
     if (!trimmed) {
-      if (!isCustomLogo) setFaviconUrl(null);
-      setIsXHandle(false);
-      setIsInstagram(false);
-      setIsGithub(false);
+      if (!isCustomLogo) setAvatarUrl(null);
       setTitle('');
       return;
     }
 
-    const lower = trimmed.toLowerCase();
-
-    // 1. Twitter / X Handle
-    if (lower.startsWith('@') || lower.includes('x.com/') || lower.includes('twitter.com/')) {
-      setIsXHandle(true);
-      setIsInstagram(false);
-      setIsGithub(false);
-      const cleanHandle = lower
-        .replace(/^@/, '')
-        .replace(/^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\//, '')
-        .split('/')[0]
-        .split('?')[0];
-      setTitle(`@${cleanHandle}`);
-      if (!isCustomLogo) {
-        setFaviconUrl(`https://unavatar.io/twitter/${cleanHandle}`);
-      }
-      return;
-    }
-
-    // 2. GitHub
-    if (lower.includes('github.com/')) {
-      setIsGithub(true);
-      setIsXHandle(false);
-      setIsInstagram(false);
-      const cleanHandle = lower
-        .replace(/^(https?:\/\/)?(www\.)?github\.com\//, '')
-        .split('/')[0]
-        .split('?')[0];
-      setTitle(`github.com/${cleanHandle}`);
-      if (!isCustomLogo) {
-        setFaviconUrl(`https://github.com/${cleanHandle}.png`);
-      }
-      return;
-    }
-
-    // 3. Instagram
-    if (lower.includes('instagram.com/')) {
-      setIsInstagram(true);
-      setIsXHandle(false);
-      setIsGithub(false);
-      const cleanHandle = lower
-        .replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '')
-        .split('/')[0]
-        .split('?')[0]
-        .replace(/^@/, '');
-      setTitle(`@${cleanHandle}`);
-      if (!isCustomLogo) {
-        setFaviconUrl(`https://unavatar.io/instagram/${cleanHandle}`);
-      }
-      return;
-    }
-
-    setIsXHandle(false);
-    setIsInstagram(false);
-    setIsGithub(false);
-
-    // 4. Standard Website Domain
-    const domain = lower.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-    setTitle(domain);
-    if (!isCustomLogo) {
-      setFaviconUrl(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
-    }
-
-    // 5. Scrape deep metadata if domain
-    if (lower.includes('.')) {
-      try {
-        setIsScraping(true);
-        const res = await fetch('/api/scrape-meta', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: trimmed }),
-        });
-        if (res.ok) {
-          const meta = await res.json();
-          if (meta.title && !title) setTitle(meta.title);
-          if (meta.description && !description) setDescription(meta.description);
-          if (meta.logoUrl && !isCustomLogo) setFaviconUrl(meta.logoUrl);
+    // Call /api/avatar for multi-source resolution
+    try {
+      setIsFetchingAvatar(true);
+      const res = await fetch(`/api/avatar?input=${encodeURIComponent(trimmed)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.logoUrl && !isCustomLogo) {
+          setAvatarUrl(data.logoUrl);
         }
-      } catch {
-        // keep fallback
-      } finally {
-        setIsScraping(false);
+        if (data.title && !title) {
+          setTitle(data.title);
+        }
       }
+    } catch {
+      // Fallback
+    } finally {
+      setIsFetchingAvatar(false);
     }
   };
 
   useEffect(() => {
     if (initialUrl) {
       setUrl(initialUrl);
-      detectAndScrapeUrl(initialUrl);
+      fetchAvatarAndMeta(initialUrl);
     }
     if (initialBidAmount) {
       setBidAmount(initialBidAmount);
@@ -159,7 +87,6 @@ export function BidModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size (max 3MB)
     if (file.size > 3 * 1024 * 1024) {
       setErrorMessage('Image size exceeds 3MB limit.');
       return;
@@ -167,7 +94,7 @@ export function BidModal({
 
     const reader = new FileReader();
     reader.onload = () => {
-      setFaviconUrl(reader.result as string);
+      setAvatarUrl(reader.result as string);
       setIsCustomLogo(true);
       setErrorMessage('');
     };
@@ -199,7 +126,9 @@ export function BidModal({
 
       let finalTitle = title.trim();
       if (!finalTitle) {
-        finalTitle = isXHandle || isInstagram ? url.trim() : url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+        finalTitle = url.trim().startsWith('@')
+          ? url.trim()
+          : url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
       }
 
       const res = await fetch('/api/dodo/checkout', {
@@ -211,7 +140,7 @@ export function BidModal({
           description: description?.trim() || '',
           category,
           bidAmount,
-          logoUrl: faviconUrl,
+          logoUrl: avatarUrl,
           email: customerEmail.trim() || undefined,
         }),
       });
@@ -272,38 +201,24 @@ export function BidModal({
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
                 Website URL or X @handle <span className="text-[#ea6c52]">*</span>
               </label>
-              {isScraping && (
+              {isFetchingAvatar && (
                 <span className="text-[10px] text-amber-500 flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Detecting site...
+                  <Loader2 className="w-3 h-3 animate-spin" /> Fetching live logo...
                 </span>
               )}
             </div>
 
             <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] shadow-xs focus-within:border-[#ea6c52] transition-colors">
-              {isXHandle ? (
-                <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
-                  𝕏
+              {avatarUrl ? (
+                <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={avatarUrl}
+                    alt="Logo"
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarUrl(null)}
+                  />
                 </div>
-              ) : isInstagram ? (
-                <div className="w-6 h-6 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
-                  <svg viewBox="0 0 24 24" className="w-full h-full" fill="none">
-                    <rect width="24" height="24" rx="5" fill="#e1306c" />
-                    <rect x="4" y="4" width="16" height="16" rx="4" stroke="#ffffff" strokeWidth="2" fill="none" />
-                    <circle cx="12" cy="12" r="3.5" stroke="#ffffff" strokeWidth="2" fill="none" />
-                  </svg>
-                </div>
-              ) : isGithub ? (
-                <div className="w-6 h-6 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                  gh
-                </div>
-              ) : faviconUrl ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={faviconUrl}
-                  alt=""
-                  className="w-6 h-6 rounded-md object-contain flex-shrink-0 bg-white/10 p-0.5"
-                  onError={() => setFaviconUrl(null)}
-                />
               ) : (
                 <Globe className="w-5 h-5 text-zinc-400 flex-shrink-0" />
               )}
@@ -313,7 +228,7 @@ export function BidModal({
                 value={url}
                 onChange={(e) => {
                   setUrl(e.target.value);
-                  detectAndScrapeUrl(e.target.value);
+                  fetchAvatarAndMeta(e.target.value);
                 }}
                 placeholder="e.g. https://myproduct.com or @handle"
                 className="w-full bg-transparent text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none font-medium"
@@ -321,29 +236,29 @@ export function BidModal({
             </div>
           </div>
 
-          {/* Logo Preview & Professional Orange Side Upload Button */}
+          {/* Logo Preview & 3D Side Upload Button */}
           <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white dark:bg-black/40 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
-                {faviconUrl ? (
+              <div className="w-11 h-11 rounded-xl bg-white dark:bg-black/40 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                {avatarUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={faviconUrl} alt="Logo" className="w-full h-full object-contain p-1" />
+                  <img src={avatarUrl} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
                   <ImageIcon className="w-5 h-5 text-zinc-400" />
                 )}
               </div>
               <div className="text-left">
                 <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
-                  {isCustomLogo ? 'Custom Logo Uploaded' : faviconUrl ? 'Auto-Fetched Logo' : 'Logo / Icon'}
+                  {isCustomLogo ? 'Custom Logo Uploaded' : avatarUrl ? 'Live Profile Logo' : 'Logo / Icon'}
                 </p>
                 <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                  {faviconUrl ? 'Visible on the leaderboard' : 'Will be automatically extracted from URL'}
+                  {avatarUrl ? 'Ready for leaderboard display' : 'Automatically extracted from your link'}
                 </p>
               </div>
             </div>
 
-            {/* Professional Orange Upload Button on the side */}
-            <label className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-md shadow-[#ea6c52]/25 hover:scale-105 active:scale-95 shrink-0">
+            {/* 3D Side Upload Button */}
+            <label className="px-3.5 py-2 rounded-xl bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_3px_0_0_#b8432a] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[2px] shrink-0">
               <Upload className="w-3.5 h-3.5" />
               <span>Upload</span>
               <input
@@ -402,7 +317,7 @@ export function BidModal({
             />
           </div>
 
-          {/* Direct Amount Customizer & "Take #1" Action */}
+          {/* Amount Customizer & "Take #1" Action */}
           <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
@@ -490,20 +405,21 @@ export function BidModal({
             </span>
           </div>
 
-          {/* Tactile Big Confirm Button */}
+          {/* 3D Tactile Big Confirm Button */}
           <div className="pt-2">
             <button
               type="submit"
               disabled={isLoading || !url.trim() || bidAmount < 1}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white font-black text-sm flex items-center justify-center gap-2 cursor-pointer select-none transition-all shadow-[0_4px_16px_rgba(234,108,82,0.4)] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-sm flex items-center justify-center gap-2 cursor-pointer select-none transition-all shadow-[0_4px_0_0_#b8432a,0_8px_18px_rgba(234,108,82,0.4)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[3px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Claim Rank for ${bidAmount.toLocaleString()} USD</span>
-                  <ExternalLink className="w-3.5 h-3.5 ml-0.5" />
+                  <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">
+                    Claim Rank for ${bidAmount.toLocaleString()} USD
+                  </span>
                 </>
               )}
             </button>

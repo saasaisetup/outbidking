@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Webhook } from 'standardwebhooks';
 import { store } from '@/lib/store';
 import { supabase } from '@/lib/supabase';
 
@@ -7,19 +8,43 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
+    const webhookSecret = process.env.DODO_PAYMENTS_WEBHOOK_KEY || process.env.DODO_WEBHOOK_SECRET;
+
+    // 1. Signature Verification via standardwebhooks
+    const webhookId = req.headers.get('webhook-id') || req.headers.get('x-webhook-id') || '';
+    const webhookSignature = req.headers.get('webhook-signature') || req.headers.get('x-webhook-signature') || '';
+    const webhookTimestamp = req.headers.get('webhook-timestamp') || req.headers.get('x-webhook-timestamp') || '';
+
+    if (webhookSecret && webhookSignature) {
+      try {
+        const wh = new Webhook(webhookSecret);
+        await wh.verify(rawBody, {
+          'webhook-id': webhookId,
+          'webhook-signature': webhookSignature,
+          'webhook-timestamp': webhookTimestamp,
+        });
+      } catch (err: any) {
+        console.error('[Dodo Webhook] Invalid signature verification:', err.message);
+        return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 401 });
+      }
+    } else {
+      console.warn('[Dodo Webhook] Running without strict signature verification (configure DODO_PAYMENTS_WEBHOOK_KEY in production).');
+    }
+
     let payload: any;
     try {
       payload = JSON.parse(rawBody);
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
 
     const eventType = payload.type || payload.event_type || payload.event;
     const data = payload.data || payload;
+    const paymentId = data.payment_id || data.id || webhookId;
 
-    console.log(`[Dodo Webhook] Received event: ${eventType}`);
+    console.log(`[Dodo Webhook] Received verified event: ${eventType} (ID: ${paymentId})`);
 
-    // Handle successful payment
+    // 2. Handle successful payment fulfillment
     if (
       eventType === 'payment.succeeded' ||
       eventType === 'payment_succeeded' ||
@@ -40,38 +65,10 @@ export async function POST(req: NextRequest) {
         customColor,
       } = metadata;
 
-      const numericBid = Number(bidAmount) || (data.total_amount ? data.total_amount / 100 : 5);
+      const numericBid = Number(bidAmount) || (data.total_amount ? data.total_amount / 100 : 1);
 
-      if (isTerritory === 'true' && countryCode) {
-        // Fulfill Territory Conquest
-        const result = await store.conquerTerritoryAsync({
-          countryCode,
-          title: title || url,
-          url,
-          warCry,
-          customColor,
-          bidAmount: numericBid,
-          logoUrl,
-          category,
-          paymentProvider: 'dodo',
-        });
-
-        // Broadcast realtime update
-        if (supabase) {
-          try {
-            await supabase.channel('world-war-realtime').send({
-              type: 'broadcast',
-              event: 'TERRITORY_CONQUERED',
-              payload: { territory: result.territory },
-            });
-          } catch (e) {
-            console.error('[Dodo Webhook] Failed to broadcast territory update:', e);
-          }
-        }
-
-        console.log(`[Dodo Webhook] Territory ${countryCode} successfully conquered by ${title}!`);
-      } else if (url) {
-        // Fulfill Leaderboard Bid
+      // Fulfill Leaderboard Bid
+      if (url) {
         const result = await store.placeBidAsync({
           url,
           title: title || url,
@@ -80,10 +77,10 @@ export async function POST(req: NextRequest) {
           bidAmount: numericBid,
           logoUrl,
           paymentProvider: 'dodo',
-          paymentIntentId: data.payment_id || data.id,
+          paymentIntentId: paymentId,
         });
 
-        // Broadcast realtime update
+        // Broadcast realtime update to all live connected users
         if (supabase) {
           try {
             await supabase.channel('outbid-realtime').send({
@@ -92,17 +89,33 @@ export async function POST(req: NextRequest) {
               payload: result,
             });
           } catch (e) {
-            console.error('[Dodo Webhook] Failed to broadcast leaderboard update:', e);
+            console.error('[Dodo Webhook] Failed to broadcast realtime update:', e);
           }
         }
 
         console.log(`[Dodo Webhook] Bid of $${numericBid} placed for ${url}!`);
       }
+
+      // Log into Supabase webhook_events table for audit trail
+      if (supabase && webhookId) {
+        try {
+          await supabase.from('webhook_events').insert({
+            webhook_id: webhookId,
+            event_type: eventType,
+            payment_id: paymentId,
+            payload,
+            status: 'processed',
+            processed_at: new Date().toISOString(),
+          });
+        } catch {
+          // non-blocking
+        }
+      }
     }
 
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ success: true, received: true });
   } catch (error: any) {
     console.error('[Dodo Webhook] Error processing webhook:', error);
-    return NextResponse.json({ error: error.message || 'Webhook error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Webhook internal error' }, { status: 500 });
   }
 }

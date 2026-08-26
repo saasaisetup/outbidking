@@ -11,16 +11,12 @@ import { RankedList } from '@/components/RankedList';
 import { Footer } from '@/components/Footer';
 
 import { BidModal } from '@/components/BidModal';
-import { RulesModal } from '@/components/RulesModal';
-import { AboutModal } from '@/components/AboutModal';
 import { StatsModal } from '@/components/StatsModal';
-import { OutbidToast } from '@/components/OutbidToast';
 
 import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
 import { soundManager } from '@/lib/sound';
 import { ArrowLeft } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
 
 export default function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -42,11 +38,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
   const [prefillUrl, setPrefillUrl] = useState('');
   const [prefillBid, setPrefillBid] = useState<number | undefined>(undefined);
-
-  const [isRulesOpen, setIsRulesOpen] = useState(false);
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
-  const [toastEvent, setToastEvent] = useState<SSEEventData | null>(null);
 
   const currentCategory = CATEGORIES.find((c) => c.slug === slug) || {
     slug: slug as CategorySlug,
@@ -124,11 +116,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090b] text-zinc-900 dark:text-[#f4f4f5] selection:bg-[#ea6c52] selection:text-white font-sans transition-colors duration-200">
-      <Header
-        onOpenRules={() => setIsRulesOpen(true)}
-        onOpenAbout={() => setIsAboutOpen(true)}
-        onOpenCategories={() => {}}
-      />
+      <Header />
 
       <main className="w-full pb-16">
         {/* Back Link & Category Title */}
@@ -199,10 +187,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
         />
 
         {/* Footer */}
-        <Footer
-          onOpenRules={() => setIsRulesOpen(true)}
-          onOpenStats={() => setIsStatsOpen(true)}
-        />
+        <Footer onOpenStats={() => setIsStatsOpen(true)} />
       </main>
 
       {/* Interactive Modals */}
@@ -216,8 +201,6 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
         onBidSuccess={() => fetchData()}
       />
 
-      <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} />
-      <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
       <StatsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} stats={stats} />
     </div>
   );

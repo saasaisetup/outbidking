@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Minus, Plus, ChevronDown, Globe } from 'lucide-react';
+import { Minus, Plus, ChevronDown, Globe, Loader2 } from 'lucide-react';
 import { CATEGORIES } from '@/lib/categories';
 import { PlatformStats } from '@/lib/types';
 import { CategoryIcon } from './CategoryIcon';
@@ -26,115 +26,62 @@ export function HeroBiddingBar({
 }: HeroBiddingBarProps) {
   const [url, setUrl] = useState('');
   const [category, setCategory] = useState('ai-agents-infrastructure');
-  const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
-  const [isXHandle, setIsXHandle] = useState(false);
-  const [isInstagram, setIsInstagram] = useState(false);
-  const [isGithub, setIsGithub] = useState(false);
-  const [isYoutube, setIsYoutube] = useState(false);
-  const [isDiscord, setIsDiscord] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isFetchingAvatar, setIsFetchingAvatar] = useState(false);
+  const [isHandle, setIsHandle] = useState(false);
   const urlInputRef = useRef<HTMLInputElement | null>(null);
 
-  // High-precision multi-platform logo fetcher
+  // Synchronous optimistic preview + Asynchronous high-res resolution
   useEffect(() => {
     if (!url || url.trim().length < 2) {
-      setFaviconUrl(null);
-      setIsXHandle(false);
-      setIsInstagram(false);
-      setIsGithub(false);
-      setIsYoutube(false);
-      setIsDiscord(false);
+      setAvatarUrl(null);
+      setIsHandle(false);
+      setIsFetchingAvatar(false);
       return;
     }
 
-    const trimmed = url.trim().toLowerCase();
+    const trimmed = url.trim();
+    const isTwitter = trimmed.startsWith('@') || trimmed.includes('x.com/') || trimmed.includes('twitter.com/');
+    setIsHandle(isTwitter);
 
-    // 1. Twitter / X Handle & URL
-    if (trimmed.startsWith('@') || trimmed.includes('x.com/') || trimmed.includes('twitter.com/')) {
-      setIsXHandle(true);
-      setIsInstagram(false);
-      setIsGithub(false);
-      setIsYoutube(false);
-      setIsDiscord(false);
-      const cleanHandle = trimmed
+    // 1. Immediate Instant Synchronous Preview
+    if (isTwitter) {
+      const handle = trimmed
         .replace(/^@/, '')
         .replace(/^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\//, '')
         .split('/')[0]
         .split('?')[0];
-      setFaviconUrl(`https://unavatar.io/twitter/${cleanHandle}`);
-      return;
+      setAvatarUrl(`https://unavatar.io/x/${handle}`);
+    } else if (trimmed.includes('github.com/')) {
+      const handle = trimmed.replace(/^(https?:\/\/)?(www\.)?github\.com\//, '').split('/')[0];
+      setAvatarUrl(`https://github.com/${handle}.png?size=200`);
+    } else if (trimmed.includes('instagram.com/')) {
+      const handle = trimmed.replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').split('/')[0].replace(/^@/, '');
+      setAvatarUrl(`https://unavatar.io/instagram/${handle}`);
+    } else if (trimmed.includes('.')) {
+      const domain = trimmed.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+      setAvatarUrl(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
+    } else {
+      setAvatarUrl(null);
     }
 
-    // 2. GitHub Handle & Repo
-    if (trimmed.includes('github.com/')) {
-      setIsGithub(true);
-      setIsXHandle(false);
-      setIsInstagram(false);
-      setIsYoutube(false);
-      setIsDiscord(false);
-      const cleanHandle = trimmed
-        .replace(/^(https?:\/\/)?(www\.)?github\.com\//, '')
-        .split('/')[0]
-        .split('?')[0];
-      setFaviconUrl(`https://github.com/${cleanHandle}.png`);
-      return;
-    }
-
-    // 3. Instagram
-    if (trimmed.includes('instagram.com/')) {
-      setIsInstagram(true);
-      setIsXHandle(false);
-      setIsGithub(false);
-      setIsYoutube(false);
-      setIsDiscord(false);
-      const cleanHandle = trimmed
-        .replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '')
-        .split('/')[0]
-        .split('?')[0]
-        .replace(/^@/, '');
-      setFaviconUrl(`https://unavatar.io/instagram/${cleanHandle}`);
-      return;
-    }
-
-    // 4. YouTube
-    if (trimmed.includes('youtube.com/') || trimmed.includes('youtu.be/')) {
-      setIsYoutube(true);
-      setIsXHandle(false);
-      setIsInstagram(false);
-      setIsGithub(false);
-      setIsDiscord(false);
-      setFaviconUrl(`https://unavatar.io/youtube/${trimmed.replace(/^(https?:\/\/)?(www\.)?youtube\.com\/(c\/|user\/|@)?/, '').split('/')[0]}`);
-      return;
-    }
-
-    // 5. Discord
-    if (trimmed.includes('discord.gg/') || trimmed.includes('discord.com/')) {
-      setIsDiscord(true);
-      setIsXHandle(false);
-      setIsInstagram(false);
-      setIsGithub(false);
-      setIsYoutube(false);
-      setFaviconUrl('https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png');
-      return;
-    }
-
-    // 6. Generic Website Domain
-    setIsXHandle(false);
-    setIsInstagram(false);
-    setIsGithub(false);
-    setIsYoutube(false);
-    setIsDiscord(false);
-
-    const timer = setTimeout(() => {
+    // 2. High-Res Live Server Resolution via /api/avatar
+    const timer = setTimeout(async () => {
       try {
-        const domain = trimmed.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-        if (domain.includes('.')) {
-          // Primary Google S2 Favicon 128px
-          setFaviconUrl(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
+        setIsFetchingAvatar(true);
+        const res = await fetch(`/api/avatar?input=${encodeURIComponent(trimmed)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.logoUrl) {
+            setAvatarUrl(data.logoUrl);
+          }
         }
       } catch {
-        // ignore
+        // keep optimistic preview
+      } finally {
+        setIsFetchingAvatar(false);
       }
-    }, 120);
+    }, 150);
 
     return () => clearTimeout(timer);
   }, [url]);
@@ -163,14 +110,14 @@ export function HeroBiddingBar({
       url: finalUrl,
       category: category || 'ai-agents-infrastructure',
       bidAmount: currentBidAmount || 1,
-      logoUrl: faviconUrl || undefined,
-      isHandle: isXHandle,
+      logoUrl: avatarUrl || undefined,
+      isHandle,
     });
   };
 
   return (
     <section className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-5 sm:pt-7 pb-4 flex flex-col items-center text-center">
-      {/* Realtime StatsPill: Live Online Presence + Cumulative Visitors */}
+      {/* Realtime StatsPill: Realistic Live Online Presence + Cumulative Visitors */}
       <StatsPill onOpenStats={onOpenStats} className="mb-5 sm:mb-6" />
 
       {/* Stepper Headline: Grab [ #1 ] for ( - $1 + ) ? */}
@@ -228,48 +175,30 @@ export function HeroBiddingBar({
         New spots start at $1. Paying less than the #1 price still puts you on the board at whatever place that bid can take.
       </p>
 
-      {/* Main Responsive Input Form stretched to full max-w-4xl navbar alignment */}
+      {/* Main Responsive Input Form */}
       <form
         onSubmit={handleSubmit}
         className="mt-6 sm:mt-7 w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3"
       >
-        {/* URL Input with rounded-full pill styling and auto logo grabber */}
-        <div className="flex-1 flex items-center gap-3 px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] shadow-xs focus-within:border-[#ea6c52] transition-colors">
-          {isXHandle ? (
-            <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black shrink-0">
-              𝕏
+        {/* URL Input with Live Profile Avatar / Logo renderer */}
+        <div className="flex-1 flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 rounded-full bg-white dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] shadow-xs focus-within:border-[#ea6c52] transition-colors">
+          {avatarUrl ? (
+            <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 bg-white flex items-center justify-center shadow-xs">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={avatarUrl}
+                alt="Avatar"
+                className="w-full h-full object-contain p-0.5"
+                onError={() => setAvatarUrl(null)}
+              />
+              {isFetchingAvatar && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <Loader2 className="w-3 h-3 text-white animate-spin" />
+                </div>
+              )}
             </div>
-          ) : isInstagram ? (
-            <div className="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 24 24" className="w-full h-full" fill="none">
-                <defs>
-                  <radialGradient id="ig-hero-grad-3" cx="25%" cy="110%" r="130%">
-                    <stop offset="0%" stopColor="#fdf497" />
-                    <stop offset="10%" stopColor="#fdf497" />
-                    <stop offset="45%" stopColor="#fd5949" />
-                    <stop offset="65%" stopColor="#d6249f" />
-                    <stop offset="95%" stopColor="#285AEB" />
-                  </radialGradient>
-                </defs>
-                <rect width="24" height="24" rx="5" fill="url(#ig-hero-grad-3)" />
-                <rect x="4" y="4" width="16" height="16" rx="4" stroke="#ffffff" strokeWidth="2" fill="none" />
-                <circle cx="12" cy="12" r="3.5" stroke="#ffffff" strokeWidth="2" fill="none" />
-              </svg>
-            </div>
-          ) : isGithub ? (
-            <div className="w-5 h-5 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center text-[10px] font-bold shrink-0">
-              gh
-            </div>
-          ) : faviconUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={faviconUrl}
-              alt=""
-              className="w-5 h-5 rounded-md object-contain shrink-0 bg-white/10 p-0.5"
-              onError={() => setFaviconUrl(null)}
-            />
           ) : (
-            <Globe className="w-4 h-4 text-zinc-400 shrink-0" />
+            <Globe className="w-5 h-5 text-zinc-400 shrink-0" />
           )}
 
           <input
@@ -283,7 +212,7 @@ export function HeroBiddingBar({
           />
         </div>
 
-        {/* Category Dropdown with rounded-full pill styling */}
+        {/* Category Dropdown */}
         <div className="relative w-full sm:w-72 flex items-center">
           <div className="absolute left-4 pointer-events-none z-10">
             <CategoryIcon slug={category || 'ai-agents-infrastructure'} size="sm" />
@@ -302,12 +231,12 @@ export function HeroBiddingBar({
           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
         </div>
 
-        {/* Always Highlighted Tactile Premium Orange "Rankbid" Button */}
+        {/* 3D Tactile Highlighted Rankbid Button */}
         <button
           type="submit"
-          className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white border border-[#d95b41] shadow-[0_4px_14px_rgba(234,108,82,0.35)] hover:shadow-[0_6px_20px_rgba(234,108,82,0.5)] active:translate-y-[2px] active:shadow-[0_2px_6px_rgba(234,108,82,0.4)] cursor-pointer opacity-100"
+          className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white shadow-[0_4px_0_0_#b8432a,0_8px_18px_rgba(234,108,82,0.4)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[3px] cursor-pointer opacity-100"
         >
-          Rankbid
+          <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">Rankbid</span>
         </button>
       </form>
 
