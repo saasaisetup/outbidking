@@ -25,7 +25,6 @@ import confetti from 'canvas-confetti';
 export default function HomePage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [liveVisitors, setLiveVisitors] = useState<number>(1);
-  const [timeFilter, setTimeFilter] = useState<'week' | 'all'>('week');
   const [stats, setStats] = useState<PlatformStats>({
     totalVolume: 0,
     totalBidsCount: 0,
@@ -166,33 +165,22 @@ export default function HomePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Filter projects by time if applicable
-  const displayProjects = React.useMemo(() => {
-    if (timeFilter === 'all') return projects;
-    // For 'week', filter projects created or updated within the last 7 days
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return projects.filter((p) => new Date(p.updatedAt || p.createdAt) >= weekAgo || projects.length <= 3);
-  }, [projects, timeFilter]);
-
   return (
     <div className="min-h-screen selection:bg-[#ea6c52] selection:text-white font-sans transition-colors duration-200 overflow-x-hidden">
       {/* Top Header */}
       <Header />
 
       <main className="w-full pb-12">
-        {/* Hero Section with Unified Card and Time Filter Switch Pill */}
+        {/* Hero Section with Favicon Grabber and Category Dropdown */}
         <HeroBiddingBar
           stats={stats}
           currentBidAmount={currentBidAmount}
-          timeFilter={timeFilter}
-          onTimeFilterChange={setTimeFilter}
           onBidAmountChange={(amt) => setCurrentBidAmount(amt)}
           onSubmitBid={handleHeroSubmitBid}
           onOpenStats={() => setIsStatsOpen(true)}
         />
 
-        {/* Category Horizontal Filter Pills Bar */}
+        {/* Category Pills Bar */}
         <CategoryFilters
           selectedCategory={selectedCategory}
           onSelectCategory={(slug) => setSelectedCategory(slug)}
@@ -200,7 +188,7 @@ export default function HomePage() {
 
         {/* Top 3 Tinted Crown Cards */}
         <TopThreeCards
-          topProjects={displayProjects}
+          topProjects={projects}
           onSelectProject={handleSelectCardToOutbid}
         />
 
@@ -215,7 +203,7 @@ export default function HomePage() {
 
         {/* Complete Paginated Leaderboard */}
         <RankedList
-          projects={displayProjects}
+          projects={projects}
           onSelectProject={handleSelectCardToOutbid}
           onRefresh={() => fetchData()}
         />
