@@ -42,6 +42,7 @@ export function formatProjectTitle(project: { title?: string; url?: string; norm
 
 export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: TopThreeCardsProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [hoveredBtnId, setHoveredBtnId] = useState<string | null>(null);
 
   if (!topProjects || topProjects.length === 0) return null;
 
@@ -62,6 +63,7 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
         const displayRank = idx + 1;
         const nextPrice = project.totalBid + 1;
         const isHovered = hoveredId === project.id;
+        const isBtnHovered = hoveredBtnId === project.id;
         const catInfo = getCategory(project.category);
         const displayTitle = formatProjectTitle(project);
 
@@ -70,8 +72,18 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
             key={project.id}
             onMouseEnter={() => setHoveredId(project.id)}
             onMouseLeave={() => setHoveredId(null)}
-            className="group relative w-full rounded-[24px] sm:rounded-[28px] border-[1.5px] border-[#fca5a5] dark:border-[#e05d44]/40 bg-[#fdeee9] dark:bg-[#1c1210] p-4 sm:p-5 transition-all duration-150 hover:shadow-md"
+            onClick={() => onSelectProject(project, nextPrice)}
+            className="group relative w-full rounded-[24px] sm:rounded-[28px] border-[1.5px] border-[#fca5a5] dark:border-[#e05d44]/40 bg-[#fdeee9] dark:bg-[#1c1210] p-4 sm:p-5 transition-all duration-150 hover:shadow-md cursor-pointer"
           >
+            {/* Outbid.lol Floating Hover Pill */}
+            {isHovered && (
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+                <span className="px-3.5 py-0.5 rounded-full bg-[#ea6c52] text-white text-[11px] sm:text-xs font-bold tracking-tight shadow-md flex items-center justify-center whitespace-nowrap">
+                  claim this spot for ${nextPrice.toLocaleString()}
+                </span>
+              </div>
+            )}
+
             <div className="flex items-center justify-between gap-3 sm:gap-5">
               {/* Left Side: Rank Badge + Crown + Logo + Details */}
               <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -154,7 +166,7 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
                 </div>
               </div>
 
-              {/* Right Side: Total Verified Bid & Prominent Outbid Price Action */}
+              {/* Right Side: Total Verified Bid & Prominent Outbid Price Action with Outbid.lol Hover state */}
               <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3 flex-shrink-0">
                 {/* Current Bid */}
                 <div className="text-right">
@@ -166,15 +178,22 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
                   </div>
                 </div>
 
-                {/* 3D Outbid Price Action Button */}
+                {/* 3D Outbid Price Action Button with Outbid.lol dynamic hover text */}
                 <button
                   type="button"
-                  onClick={() => onSelectProject(project, nextPrice)}
-                  className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-xs sm:text-sm tracking-tight shadow-[0_3px_0_0_#b8432a,0_4px_10px_rgba(234,108,82,0.35)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[2px] transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none"
+                  onMouseEnter={() => setHoveredBtnId(project.id)}
+                  onMouseLeave={() => setHoveredBtnId(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectProject(project, nextPrice);
+                  }}
+                  className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-xs sm:text-sm tracking-tight shadow-[0_3px_0_0_#b8432a,0_4px_10px_rgba(234,108,82,0.35)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[2px] transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none min-w-[110px] sm:min-w-[130px] justify-center"
                 >
                   <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-200" />
                   <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">
-                    Outbid ${nextPrice.toLocaleString()}
+                    {isBtnHovered || isHovered
+                      ? `Claim for $${nextPrice.toLocaleString()}`
+                      : `Outbid $${nextPrice.toLocaleString()}`}
                   </span>
                 </button>
               </div>
