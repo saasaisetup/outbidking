@@ -32,7 +32,6 @@ export function BidModal({
   const [bidAmount, setBidAmount] = useState(initialBidAmount);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isCustomLogo, setIsCustomLogo] = useState(false);
-  const [customerEmail, setCustomerEmail] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingAvatar, setIsFetchingAvatar] = useState(false);
@@ -149,7 +148,6 @@ export function BidModal({
           category,
           bidAmount,
           logoUrl: avatarUrl,
-          email: customerEmail.trim() || undefined,
           origin: clientOrigin,
         }),
       });
@@ -233,6 +231,7 @@ export function BidModal({
                   <img
                     src={avatarUrl}
                     alt="Logo"
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover"
                     onError={() => setAvatarUrl(null)}
                   />
@@ -260,7 +259,7 @@ export function BidModal({
               <div className="w-10 h-10 rounded-xl bg-white dark:bg-black/40 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
                 {avatarUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={avatarUrl} alt="Logo" className="w-full h-full object-cover" />
+                  <img src={avatarUrl} alt="Logo" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                 ) : (
                   <ImageIcon className="w-5 h-5 text-zinc-400" />
                 )}
@@ -325,20 +324,6 @@ export function BidModal({
               </select>
               <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
             </div>
-          </div>
-
-          {/* Optional Billing Email */}
-          <div>
-            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
-              Receipt Email (Optional)
-            </label>
-            <input
-              type="email"
-              value={customerEmail}
-              onChange={(e) => setCustomerEmail(e.target.value)}
-              placeholder="you@company.com"
-              className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:border-[#ea6c52]"
-            />
           </div>
 
           {/* Amount Customizer & "Take #1" Action */}

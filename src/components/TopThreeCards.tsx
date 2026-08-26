@@ -104,6 +104,7 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
                       href={`/r/${project.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="font-extrabold text-base sm:text-xl text-zinc-900 dark:text-white hover:underline flex items-center gap-1.5 transition-colors truncate group-hover:text-[#ea6c52]"
                       title="Visit destination site"
                     >
