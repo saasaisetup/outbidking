@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       email,
       name,
       returnUrl,
+      origin: clientOrigin,
     } = body;
 
     if (!url || typeof url !== 'string') {
@@ -32,6 +33,24 @@ export async function POST(req: NextRequest) {
         { success: false, error: 'Minimum bid is $1' },
         { status: 400 }
       );
+    }
+
+    // Determine safe origin (avoid private Vercel deployment preview authentication locks)
+    const headerOrigin = req.headers.get('origin') || req.headers.get('referer');
+    let safeOrigin = clientOrigin || headerOrigin || undefined;
+
+    if (safeOrigin) {
+      try {
+        const parsed = new URL(safeOrigin);
+        // If coming from a protected preview *.vercel.app domain, redirect to outbidking.lol
+        if (parsed.hostname.includes('.vercel.app') && !parsed.hostname.includes('localhost')) {
+          safeOrigin = 'https://outbidking.lol';
+        } else {
+          safeOrigin = `${parsed.protocol}//${parsed.host}`;
+        }
+      } catch {
+        safeOrigin = 'https://outbidking.lol';
+      }
     }
 
     const payment = await createDodoCheckoutSession({
@@ -48,6 +67,7 @@ export async function POST(req: NextRequest) {
       customerEmail: email?.trim() || undefined,
       customerName: name?.trim() || undefined,
       returnUrl: returnUrl || undefined,
+      origin: safeOrigin,
     });
 
     if (!payment.payment_link) {

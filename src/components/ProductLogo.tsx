@@ -30,7 +30,22 @@ export function ProductLogo({
     xl: 'w-14 h-14 sm:w-18 sm:h-18 rounded-[20px] sm:rounded-[24px] text-lg sm:text-xl',
   };
 
-  // 1. Official Authentic Instagram Icon
+  // 1. If explicit logoUrl is provided (e.g. live Twitter avatar, GitHub avatar, custom uploaded logo), prioritize rendering it!
+  if (logoUrl && !imgError) {
+    return (
+      <div className={`${sizeClasses[size]} bg-white dark:bg-[#181613] border border-zinc-200 dark:border-zinc-800 flex items-center justify-center p-1 flex-shrink-0 overflow-hidden shadow-2xs ${className}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logoUrl}
+          alt={title || domain}
+          className="w-full h-full object-cover rounded-[14px] sm:rounded-[18px]"
+          onError={() => setImgError(true)}
+        />
+      </div>
+    );
+  }
+
+  // 2. Official Authentic Instagram Icon Fallback
   if (domain.includes('instagram.com') || fullUrl.includes('instagram.com/')) {
     return (
       <div className={`${sizeClasses[size]} overflow-hidden flex items-center justify-center p-0 flex-shrink-0 shadow-xs ${className}`}>
@@ -53,7 +68,7 @@ export function ProductLogo({
     );
   }
 
-  // 2. Official 𝕏 / Twitter Icon
+  // 3. Official 𝕏 / Twitter Icon Fallback (only if no logoUrl or logoUrl failed)
   if (domain.includes('x.com') || domain.includes('twitter.com') || fullUrl.startsWith('@')) {
     return (
       <div className={`${sizeClasses[size]} bg-black dark:bg-[#181613] border border-zinc-800 flex items-center justify-center p-2.5 sm:p-3 flex-shrink-0 shadow-xs ${className}`}>
@@ -64,32 +79,7 @@ export function ProductLogo({
     );
   }
 
-  // 3. Official Midjourney Yacht / Sailboat SVG
-  if (domain.includes('midjourney.com')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-black flex items-center justify-center p-2.5 sm:p-3 flex-shrink-0 shadow-xs ${className}`}>
-        <svg viewBox="0 0 100 100" className="w-full h-full fill-white" fillRule="evenodd" clipRule="evenodd">
-          <path d="M50 8C26.8 8 8 26.8 8 50s18.8 42 42 42 42-18.8 42-42S73.2 8 50 8zm-4.5 24.3l19.8 19.8-19.8 19.8V32.3zm-7.6 5.8v28L23.7 52l14.2-13.9zM50 77.2L34.1 61.3h31.8L50 77.2zM50 22.8l15.9 15.9H34.1L50 22.8z" />
-        </svg>
-      </div>
-    );
-  }
-
-  // 4. ElevenLabs Audio Waveform SVG
-  if (domain.includes('elevenlabs.io')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-black text-white flex items-center justify-center p-3 flex-shrink-0 shadow-xs ${className}`}>
-        <div className="flex items-center gap-1.5 h-full">
-          <div className="w-1.5 h-3/4 rounded-full bg-white animate-pulse" />
-          <div className="w-1.5 h-full rounded-full bg-white" />
-          <div className="w-1.5 h-1/2 rounded-full bg-white" />
-          <div className="w-1.5 h-5/6 rounded-full bg-white" />
-        </div>
-      </div>
-    );
-  }
-
-  // 5. Official GitHub Icon
+  // 4. Official GitHub Icon
   if (domain.includes('github.com')) {
     return (
       <div className={`${sizeClasses[size]} bg-[#24292e] text-white flex items-center justify-center p-2.5 flex-shrink-0 shadow-xs ${className}`}>
@@ -100,130 +90,7 @@ export function ProductLogo({
     );
   }
 
-  // 6. Official LinkedIn Icon
-  if (domain.includes('linkedin.com')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-[#0a66c2] text-white flex items-center justify-center p-2.5 flex-shrink-0 shadow-xs ${className}`}>
-        <svg viewBox="0 0 24 24" className="w-full h-full fill-current">
-          <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
-        </svg>
-      </div>
-    );
-  }
-
-  // 7. Official YouTube Icon
-  if (domain.includes('youtube.com')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-[#ff0000] text-white flex items-center justify-center p-2.5 flex-shrink-0 shadow-xs ${className}`}>
-        <svg viewBox="0 0 24 24" className="w-full h-full fill-current">
-          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-        </svg>
-      </div>
-    );
-  }
-
-  // 8. Known Top AI & Dev Products
-  if (domain.includes('see.io')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-black flex items-center justify-center p-2.5 flex-shrink-0 shadow-xs ${className}`}>
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full bg-white shadow-xs" />
-          <div className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full bg-[#3b82f6] shadow-xs" />
-        </div>
-      </div>
-    );
-  }
-
-  if (domain.includes('joni.ai')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-black flex items-center justify-center p-2 flex-shrink-0 shadow-xs ${className}`}>
-        <svg viewBox="0 0 24 24" className="w-full h-full text-white fill-none stroke-current stroke-2">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M7 14c0 3 1.5 6 3 6s1-2 2-2 1 2 2 2 3-3 3-6" />
-          <circle cx="10" cy="8" r="0.8" fill="currentColor" />
-          <circle cx="14" cy="8" r="0.8" fill="currentColor" />
-        </svg>
-      </div>
-    );
-  }
-
-  if (domain.includes('requesty.ai')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-[#2563eb] text-white flex items-center justify-center p-2 flex-shrink-0 shadow-xs ${className}`}>
-        <div className="font-mono font-black text-sm sm:text-base tracking-tighter">
-          {'>_'}
-        </div>
-      </div>
-    );
-  }
-
-  if (domain.includes('outrank.so')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-[#8b5cf6] text-white flex items-center justify-center p-2.5 flex-shrink-0 shadow-xs ${className}`}>
-        <svg viewBox="0 0 24 24" className="w-full h-full fill-white">
-          <path d="M12 2L2 19.5h8.5L12 14l1.5 5.5H22L12 2z" />
-        </svg>
-      </div>
-    );
-  }
-
-  if (domain.includes('orynth.dev')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-gradient-to-tr from-[#f59e0b] via-[#ec4899] to-[#8b5cf6] flex items-center justify-center p-1.5 flex-shrink-0 shadow-xs ${className}`}>
-        <div className="w-full h-full rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center font-black text-white">
-          ⚡
-        </div>
-      </div>
-    );
-  }
-
-  if (domain.includes('crowdreply.io')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-[#18181b] flex flex-col items-center justify-center gap-1.5 p-2.5 flex-shrink-0 shadow-xs ${className}`}>
-        <div className="w-full h-1 sm:h-1.5 rounded-full bg-[#38bdf8]" />
-        <div className="w-3/4 h-1 sm:h-1.5 rounded-full bg-[#f97316]" />
-        <div className="w-1/2 h-1 sm:h-1.5 rounded-full bg-[#ef4444]" />
-      </div>
-    );
-  }
-
-  if (domain.includes('clay.com')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-[#111827] text-white flex items-center justify-center p-2 flex-shrink-0 shadow-xs ${className}`}>
-        <span className="font-extrabold text-sm sm:text-base tracking-tight text-amber-400">Clay</span>
-      </div>
-    );
-  }
-
-  if (domain.includes('instantly.ai')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-[#2563eb] text-white flex items-center justify-center p-2.5 flex-shrink-0 shadow-xs ${className}`}>
-        <svg viewBox="0 0 24 24" className="w-full h-full fill-white">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-        </svg>
-      </div>
-    );
-  }
-
-  if (domain.includes('deepseek.com')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-[#0284c7] text-white flex items-center justify-center p-2 flex-shrink-0 shadow-xs ${className}`}>
-        <svg viewBox="0 0 24 24" className="w-full h-full fill-white">
-          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-        </svg>
-      </div>
-    );
-  }
-
-  if (domain.includes('shipxcode.dev')) {
-    return (
-      <div className={`${sizeClasses[size]} bg-black text-[#52d489] flex items-center justify-center p-2 flex-shrink-0 shadow-xs border border-[#52d489]/30 ${className}`}>
-        <span className="font-mono font-black text-xs sm:text-sm">ship_</span>
-      </div>
-    );
-  }
-
-  // 9. Generic Dynamic Icon with crisp favicon and themed fallback
+  // 5. Generic Dynamic Favicon
   const src = logoUrl || `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 
   const getGradient = (str: string) => {

@@ -102,12 +102,13 @@ class Store {
         minOutbidPrice: minPrice,
         totalPlunder: saved?.totalPlunder || 0,
         clicks: saved?.clicks || 0,
-        conqueredAt: saved?.conqueredAt || undefined,
+        conqueredAt: saved?.conqueredAt,
       };
     });
 
-    // Real war activity stream (empty until users conquer countries)
-    this.warEventsCache = [];
+    if (this.warEventsCache.length === 0) {
+      this.warEventsCache = [];
+    }
   }
 
   private save() {
@@ -116,111 +117,151 @@ class Store {
         fs.mkdirSync(DATA_DIR, { recursive: true });
       }
       fs.writeFileSync(DB_FILE, JSON.stringify(this.db, null, 2), 'utf-8');
-      fs.writeFileSync(TERRITORIES_FILE, JSON.stringify({
+
+      const territoriesPayload = {
         territories: this.territoriesCache,
         warEvents: this.warEventsCache,
-      }, null, 2), 'utf-8');
-    } catch {
-      // ignore
+        updatedAt: new Date().toISOString(),
+      };
+      fs.writeFileSync(TERRITORIES_FILE, JSON.stringify(territoriesPayload, null, 2), 'utf-8');
+    } catch (err) {
+      console.error('[Store] Error writing database file:', err);
     }
   }
 
-  // ==========================================
-  // TERRITORY / WORLD WAR MAP METHODS
-  // ==========================================
+  public getTerritories(): TerritoryState[] {
+    this.init();
+    return Object.values(this.territoriesCache);
+  }
+
+  public getTerritoryByCode(code: string): TerritoryState | undefined {
+    this.init();
+    return this.territoriesCache[code.toUpperCase()];
+  }
 
   public async getTerritoriesAsync(): Promise<TerritoryState[]> {
     this.init();
     try {
-      const { data, error } = await supabase.from('territories').select('*');
+      const { data, error } = await supabase
+        .from('territories')
+        .select('*');
+
       if (!error && data && data.length > 0) {
-        const result: TerritoryState[] = WORLD_COUNTRIES.map((c) => {
-          const row = data.find((r) => r.country_code === c.code);
-          if (row) {
-            const curBid = Number(row.current_bid || c.startingPrice || 3);
-            const minPrice = Number(row.min_outbid_price || calcMinOutbid(curBid));
-            return {
-              countryCode: c.code,
-              countryName: c.name,
-              numericId: c.numericId,
-              flag: c.flag,
-              coordinates: c.coordinates,
-              population: c.population,
-              tier: c.tier,
-              defaultColor: c.defaultColor,
-              isOceanFleet: c.isOceanFleet,
-              currentRuler: row.current_ruler_title ? {
-                projectId: row.current_ruler_project_id || undefined,
+        data.forEach((row: any) => {
+          const code = row.country_code?.toUpperCase();
+          if (code && this.territoriesCache[code]) {
+            if (row.current_ruler_title && row.current_ruler_url) {
+              this.territoriesCache[code].currentRuler = {
                 title: row.current_ruler_title,
                 url: row.current_ruler_url,
-                warCry: row.war_cry || undefined,
+                warCry: row.current_ruler_warcry,
                 logoUrl: row.current_ruler_logo,
-                color: row.current_ruler_color || c.defaultColor,
-                totalBid: curBid,
-              } : null,
-              currentBid: curBid,
-              minOutbidPrice: minPrice,
-              totalPlunder: Number(row.total_plunder || (row.current_ruler_title ? curBid : 0)),
-              clicks: row.clicks || 0,
-              conqueredAt: row.conquered_at,
-            };
+                color: row.current_ruler_color || this.territoriesCache[code].defaultColor,
+                totalBid: Number(row.current_bid || 0),
+              };
+            }
+            this.territoriesCache[code].currentBid = Number(row.current_bid || this.territoriesCache[code].currentBid);
+            this.territoriesCache[code].minOutbidPrice = Number(row.min_outbid_price || calcMinOutbid(this.territoriesCache[code].currentBid));
+            this.territoriesCache[code].totalPlunder = Number(row.total_plunder || 0);
+            this.territoriesCache[code].clicks = Number(row.clicks || 0);
+            this.territoriesCache[code].conqueredAt = row.conquered_at;
           }
-          return this.territoriesCache[c.code] || {
-            countryCode: c.code,
-            countryName: c.name,
-            numericId: c.numericId,
-            flag: c.flag,
-            coordinates: c.coordinates,
-            population: c.population,
-            tier: c.tier,
-            defaultColor: c.defaultColor,
-            isOceanFleet: c.isOceanFleet,
-            currentRuler: null,
-            currentBid: c.startingPrice || 3,
-            minOutbidPrice: calcMinOutbid(c.startingPrice || 3),
-            totalPlunder: 0,
-            clicks: 0,
-          };
         });
-
-        result.forEach((t) => {
-          this.territoriesCache[t.countryCode] = t;
-        });
-
-        return result;
       }
-    } catch (err) {
-      console.error('[getTerritoriesAsync error]', err);
+    } catch {
+      // ignore
     }
-
     return Object.values(this.territoriesCache);
   }
 
-  public  async conquerTerritoryAsync(params: {
+  public getWarEvents(limit = 30): WarEvent[] {
+    this.init();
+    return this.warEventsCache.slice(0, limit);
+  }
+
+  public getWorldPowers(): WorldPower[] {
+    this.init();
+    const map = new Map<string, {
+      title: string;
+      url: string;
+      logoUrl: string;
+      color: string;
+      territoriesCount: number;
+      totalPlunder: number;
+      countries: string[];
+    }>();
+
+    Object.values(this.territoriesCache).forEach((t) => {
+      if (!t.currentRuler) return;
+      const key = t.currentRuler.url.toLowerCase();
+      const existing = map.get(key);
+      if (existing) {
+        existing.territoriesCount += 1;
+        existing.totalPlunder += t.currentBid;
+        existing.countries.push(t.countryCode);
+      } else {
+        map.set(key, {
+          title: t.currentRuler.title,
+          url: t.currentRuler.url,
+          logoUrl: t.currentRuler.logoUrl || '',
+          color: t.currentRuler.color,
+          territoriesCount: 1,
+          totalPlunder: t.currentBid,
+          countries: [t.countryCode],
+        });
+      }
+    });
+
+    const list = Array.from(map.values()).sort((a, b) => b.territoriesCount - a.territoriesCount || b.totalPlunder - a.totalPlunder);
+    return list.map((p, idx) => ({
+      ...p,
+      rank: idx + 1,
+    }));
+  }
+
+  public getMapStats(): MapStats {
+    this.init();
+    const territories = Object.values(this.territoriesCache);
+    const claimedCount = territories.filter((t) => !!t.currentRuler).length;
+    const totalCountries = territories.length;
+    const totalPlundered = territories.reduce((sum, t) => sum + (t.totalPlunder || 0), 0);
+    const totalClicks = territories.reduce((sum, t) => sum + (t.clicks || 0), 0);
+
+    return {
+      onlineCount: 2,
+      totalVisitors: 58,
+      totalPlundered,
+      totalClicks,
+      claimedCount,
+      totalCountries,
+    };
+  }
+
+  public async conquerTerritoryAsync(params: {
     countryCode: string;
     title: string;
     url: string;
     warCry?: string;
-    bidAmount: number;
     customColor?: string;
+    bidAmount: number;
     logoUrl?: string;
     category?: string;
-    paymentProvider?: string;
+    paymentProvider?: 'dodo' | 'stripe' | 'crypto';
   }): Promise<{ territory: TerritoryState; warEvent: WarEvent; powers: WorldPower[]; stats: MapStats }> {
     this.init();
 
-    // GLOBAL HEGEMONY CONQUEST ($5,000 Full Planet Buyout)
-    if (params.countryCode === 'GLOBAL_HEGEMONY' || (params.bidAmount >= 5000 && params.category === 'global-hegemony')) {
-      const color = params.customColor || getEmpireColor(params.title || params.url);
-      const domainFavicon = params.logoUrl || `https://www.google.com/s2/favicons?domain=${normalizeUrl(params.url)}&sz=128`;
+    if (params.countryCode.toUpperCase() === 'CONQUER_ALL' || params.countryCode.toUpperCase() === 'ALL') {
       const now = new Date().toISOString();
+      const color = params.customColor || '#f97316';
+      const logo = params.logoUrl || `https://www.google.com/s2/favicons?domain=${normalizeUrl(params.url)}&sz=128`;
+
       const ruler = {
         title: params.title.trim(),
         url: params.url.trim().startsWith('http') ? params.url.trim() : `https://${params.url.trim()}`,
-        warCry: params.warCry?.trim() || 'Total Planetary Dominion',
-        logoUrl: domainFavicon,
+        warCry: params.warCry?.trim() || 'Absolute Planetary Domination',
+        logoUrl: logo,
         color: color,
-        totalBid: params.bidAmount,
+        totalBid: 5000,
       };
 
       WORLD_COUNTRIES.forEach((c) => {
@@ -235,8 +276,8 @@ class Store {
           defaultColor: c.defaultColor,
           isOceanFleet: c.isOceanFleet,
           currentRuler: null,
-          currentBid: c.startingPrice || 1,
-          minOutbidPrice: calcMinOutbid(c.startingPrice || 1),
+          currentBid: c.startingPrice || 3,
+          minOutbidPrice: calcMinOutbid(c.startingPrice || 3),
           totalPlunder: 0,
           clicks: 0,
         };
@@ -268,14 +309,6 @@ class Store {
 
       const powers = this.getWorldPowers();
       const stats = this.getMapStats();
-
-      broadcastEvent({
-        type: 'TERRITORY_CONQUERED',
-        data: {
-          message: `👑 GLOBAL HEGEMONY: ${params.title} conquered the entire planet earth for $${params.bidAmount}!`,
-        },
-        timestamp: Date.now(),
-      });
 
       return { territory: this.territoriesCache['US'] || Object.values(this.territoriesCache)[0], warEvent, powers, stats };
     }
@@ -348,153 +381,9 @@ class Store {
     };
 
     this.warEventsCache.unshift(warEvent);
-    if (this.warEventsCache.length > 50) {
-      this.warEventsCache = this.warEventsCache.slice(0, 50);
-    }
-
     this.save();
 
-    (async () => {
-      try {
-        await supabase.from('territories').upsert({
-          country_code: code,
-          country_name: meta.name,
-          flag: meta.flag,
-          current_ruler_title: params.title.trim(),
-          current_ruler_url: updatedTerritory.currentRuler?.url,
-          current_ruler_logo: domainFavicon,
-          current_ruler_color: color,
-          current_bid: params.bidAmount,
-          min_outbid_price: nextOutbidPrice,
-          total_plunder: updatedTerritory.totalPlunder,
-          population: meta.population,
-          conquered_at: updatedTerritory.conqueredAt,
-          updated_at: new Date().toISOString(),
-        });
-
-        await supabase.from('territory_claims').insert({
-          id: warEvent.id,
-          country_code: code,
-          country_name: meta.name,
-          project_title: params.title.trim(),
-          project_url: params.url.trim(),
-          amount: params.bidAmount,
-          payment_provider: params.paymentProvider || 'sandbox',
-          created_at: new Date().toISOString(),
-        });
-      } catch (err) {
-        console.error('[Supabase Territory Sync Error]', err);
-      }
-    })();
-
-    const powers = this.getWorldPowers();
-    const stats = this.getMapStats();
-
-    broadcastEvent({
-      type: 'TERRITORY_CONQUERED',
-      data: {
-        territory: updatedTerritory,
-        message: `⚔️ ${params.title} conquered ${meta.flag} ${meta.name} for $${params.bidAmount}!`,
-      },
-      timestamp: Date.now(),
-    });
-
-    return { territory: updatedTerritory, warEvent, powers, stats };
-  }
-
-  public async recordTerritoryClickAsync(countryCode: string): Promise<string | null> {
-    this.init();
-    const t = this.territoriesCache[countryCode.toUpperCase()];
-    if (!t || !t.currentRuler) return null;
-
-    t.clicks = (t.clicks || 0) + 1;
-    this.save();
-
-    (async () => {
-      try {
-        await supabase
-          .from('territories')
-          .update({ clicks: t.clicks })
-          .eq('country_code', countryCode.toUpperCase());
-      } catch {
-        // ignore
-      }
-    })();
-
-    return t.currentRuler.url;
-  }
-
-  public getWorldPowers(): WorldPower[] {
-    this.init();
-    const empires: Record<string, { title: string; url: string; logoUrl?: string; color: string; count: number; plunder: number; countries: string[] }> = {};
-
-    Object.values(this.territoriesCache).forEach((t) => {
-      if (t.currentRuler) {
-        const key = normalizeUrl(t.currentRuler.url) || t.currentRuler.title.toLowerCase();
-        if (!empires[key]) {
-          empires[key] = {
-            title: t.currentRuler.title,
-            url: t.currentRuler.url,
-            logoUrl: t.currentRuler.logoUrl,
-            color: t.currentRuler.color,
-            count: 0,
-            plunder: 0,
-            countries: [],
-          };
-        }
-        empires[key].count += 1;
-        empires[key].plunder += t.currentBid;
-        empires[key].countries.push(t.countryCode);
-      }
-    });
-
-    const powers = Object.values(empires)
-      .sort((a, b) => b.plunder - a.plunder || b.count - a.count)
-      .map((e, idx) => ({
-        rank: idx + 1,
-        title: e.title,
-        url: e.url,
-        logoUrl: e.logoUrl,
-        color: e.color,
-        territoriesCount: e.count,
-        totalPlunder: e.plunder,
-        countries: e.countries,
-      }));
-
-    return powers;
-  }
-
-  public getWarEvents(limit = 20): WarEvent[] {
-    this.init();
-    return this.warEventsCache.slice(0, limit);
-  }
-
-  public getMapStats(): MapStats {
-    this.init();
-    const territories = Object.values(this.territoriesCache);
-    const claimed = territories.filter((t) => !!t.currentRuler);
-    const totalPlundered = claimed.reduce((acc, t) => acc + (t.totalPlunder || 0), 0);
-    const totalClicks = claimed.reduce((acc, t) => acc + (t.clicks || 0), 0);
-
-    return {
-      onlineCount: 1,
-      totalVisitors: 0,
-      totalPlundered: totalPlundered,
-      totalClicks: totalClicks,
-      claimedCount: claimed.length,
-      totalCountries: territories.length || 194,
-    };
-  }
-
-  // ==========================================
-  // CLASSIC BOARD / PROJECT METHODS
-  // ==========================================
-
-  private recalculateRanks() {
-    this.db.projects.sort((a, b) => b.totalBid - a.totalBid);
-    this.db.projects.forEach((proj, idx) => {
-      proj.rank = idx + 1;
-    });
+    return { territory: updatedTerritory, warEvent, powers: this.getWorldPowers(), stats: this.getMapStats() };
   }
 
   public async getProjectsAsync(category?: string, search?: string): Promise<Project[]> {
@@ -502,7 +391,6 @@ class Store {
       let query = supabase
         .from('projects')
         .select('*')
-        .eq('is_hidden', false)
         .order('total_bid', { ascending: false });
 
       if (category && category !== 'all') {
@@ -512,27 +400,29 @@ class Store {
       const { data, error } = await query;
 
       if (!error && data && data.length > 0) {
-        let list: Project[] = data.map((row, idx) => ({
-          id: row.id,
-          url: row.url,
-          normalizedUrl: row.normalized_url,
-          title: row.title,
-          description: row.description || '',
-          category: row.category,
-          logoUrl: row.logo_url,
-          ogImage: row.og_image,
-          ownerEmail: row.owner_email,
-          twitterHandle: row.twitter_handle,
-          totalBid: Number(row.total_bid),
-          initialBid: Number(row.initial_bid || row.total_bid),
-          clicks: row.clicks || 0,
-          totalKingDurationSeconds: row.total_king_duration_seconds || 0,
-          kingSince: row.king_since,
-          rank: idx + 1,
-          isVerified: row.is_verified ?? true,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
-        }));
+        let list: Project[] = data
+          .filter((row: any) => row.is_hidden !== true)
+          .map((row, idx) => ({
+            id: row.id,
+            url: row.url,
+            normalizedUrl: row.normalized_url || row.url,
+            title: row.title || row.url,
+            description: row.description || '',
+            category: row.category || 'ai-agents-infrastructure',
+            logoUrl: row.logo_url,
+            ogImage: row.og_image,
+            ownerEmail: row.owner_email,
+            twitterHandle: row.twitter_handle,
+            totalBid: Number(row.total_bid || 0),
+            initialBid: Number(row.initial_bid || row.total_bid || 0),
+            clicks: row.clicks || 0,
+            totalKingDurationSeconds: row.total_king_duration_seconds || 0,
+            kingSince: row.king_since,
+            rank: idx + 1,
+            isVerified: row.is_verified ?? true,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          }));
 
         if (search && search.trim()) {
           const q = search.trim().toLowerCase();
@@ -589,38 +479,6 @@ class Store {
     return list;
   }
 
-  public async getProjectByIdAsync(id: string): Promise<Project | undefined> {
-    try {
-      const { data } = await supabase.from('projects').select('*').eq('id', id).single();
-      if (data) {
-        return {
-          id: data.id,
-          url: data.url,
-          normalizedUrl: data.normalized_url,
-          title: data.title,
-          description: data.description || '',
-          category: data.category,
-          logoUrl: data.logo_url,
-          ogImage: data.og_image,
-          ownerEmail: data.owner_email,
-          twitterHandle: data.twitter_handle,
-          totalBid: Number(data.total_bid),
-          initialBid: Number(data.initial_bid || data.total_bid),
-          clicks: data.clicks || 0,
-          totalKingDurationSeconds: data.total_king_duration_seconds || 0,
-          kingSince: data.king_since,
-          rank: data.rank || 1,
-          isVerified: data.is_verified ?? true,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
-        };
-      }
-    } catch {
-      // ignore
-    }
-    return this.getProjectById(id);
-  }
-
   public getProjectById(id: string): Project | undefined {
     this.init();
     return this.db.projects.find(p => p.id === id);
@@ -630,6 +488,38 @@ class Store {
     this.init();
     const norm = normalizeUrl(rawUrl);
     return this.db.projects.find(p => p.normalizedUrl === norm || normalizeUrl(p.url) === norm);
+  }
+
+  public getStats(): PlatformStats {
+    this.init();
+    const projects = this.db.projects.filter(p => !p.isHidden);
+    const totalVolume = projects.reduce((sum, p) => sum + p.totalBid, 0);
+    const totalBidsCount = this.db.transactions.length;
+    const totalProjectsCount = projects.length;
+    const totalClicksDelivered = projects.reduce((sum, p) => sum + (p.clicks || 0), 0);
+
+    const king = projects.length > 0 ? projects[0] : null;
+    const highestSingleBid = this.db.transactions.reduce((max, t) => Math.max(max, t.amount), 0);
+
+    let kingHoldDurationSeconds = 0;
+    if (king && king.kingSince) {
+      kingHoldDurationSeconds = Math.floor((Date.now() - new Date(king.kingSince).getTime()) / 1000);
+    }
+
+    return {
+      totalVolume,
+      totalBidsCount,
+      totalProjectsCount,
+      totalClicksDelivered,
+      currentKing: king,
+      kingHoldDurationSeconds,
+      highestSingleBid,
+    };
+  }
+
+  public getRecentBids(limit = 20): BidTransaction[] {
+    this.init();
+    return this.db.transactions.slice(0, limit);
   }
 
   public getRankForBid(bidAmount: number, existingProjectId?: string): number {
@@ -761,29 +651,30 @@ class Store {
     }
 
     if (existingIndex >= 0) {
-      project = this.db.projects[existingIndex];
-      previousTotal = project.totalBid;
-      previousRank = project.rank;
       isTopUp = true;
+      const existing = this.db.projects[existingIndex];
+      previousTotal = existing.totalBid;
+      previousRank = existing.rank;
 
-      let delta = params.bidAmount;
-      if (params.bidAmount > project.totalBid) {
-        delta = params.bidAmount - project.totalBid;
-      }
+      const newTotal = previousTotal + params.bidAmount;
+      project = {
+        ...existing,
+        title: finalTitle || existing.title,
+        description: params.description !== undefined ? params.description : existing.description,
+        category: params.category || existing.category,
+        logoUrl: params.logoUrl || existing.logoUrl || domainFavicon,
+        ogImage: params.ogImage || existing.ogImage,
+        ownerEmail: params.ownerEmail || existing.ownerEmail,
+        twitterHandle: params.twitterHandle || existing.twitterHandle,
+        totalBid: newTotal,
+        updatedAt: new Date().toISOString(),
+      };
 
-      project.totalBid += delta;
-      if (finalTitle) project.title = finalTitle;
-      if (params.description) project.description = params.description;
-      if (params.category) project.category = params.category;
-      if (params.logoUrl) project.logoUrl = params.logoUrl;
-      if (!project.logoUrl) project.logoUrl = domainFavicon;
-      if (params.ownerEmail) project.ownerEmail = params.ownerEmail;
-      if (params.twitterHandle) project.twitterHandle = params.twitterHandle.replace(/^@/, '');
-      project.updatedAt = new Date().toISOString();
+      this.db.projects.splice(existingIndex, 1);
     } else {
       project = {
-        id: `proj_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        url: params.url.startsWith('http') ? params.url : `https://${params.url}`,
+        id: normalized.replace(/[^a-z0-9]/gi, '_'),
+        url: params.url.trim().startsWith('http') ? params.url.trim() : `https://${params.url.trim()}`,
         normalizedUrl: normalized,
         title: finalTitle || normalized,
         description: params.description || '',
@@ -791,49 +682,53 @@ class Store {
         logoUrl: params.logoUrl || domainFavicon,
         ogImage: params.ogImage,
         ownerEmail: params.ownerEmail,
-        twitterHandle: params.twitterHandle ? params.twitterHandle.replace(/^@/, '') : undefined,
+        twitterHandle: params.twitterHandle,
         totalBid: params.bidAmount,
         initialBid: params.bidAmount,
         clicks: 0,
         totalKingDurationSeconds: 0,
-        rank: 999,
+        rank: 1,
+        isVerified: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        isVerified: true,
       };
-      this.db.projects.push(project);
     }
 
-    this.recalculateRanks();
+    this.db.projects.push(project);
+    this.db.projects.sort((a, b) => b.totalBid - a.totalBid);
 
-    const newKing = this.db.projects[0];
-    const isNewKing = newKing.id === project.id && (!previousKing || previousKing.id !== project.id);
-
-    if (isNewKing) {
-      if (previousKing && previousKing.kingSince) {
-        const heldSeconds = Math.floor((Date.now() - new Date(previousKing.kingSince).getTime()) / 1000);
-        previousKing.totalKingDurationSeconds = (previousKing.totalKingDurationSeconds || 0) + heldSeconds;
-        previousKing.kingSince = null;
+    let newRank = 1;
+    this.db.projects.forEach((p, idx) => {
+      const r = idx + 1;
+      p.rank = r;
+      if (p.id === project.id) {
+        newRank = r;
       }
-      newKing.kingSince = new Date().toISOString();
-    }
+      if (r === 1 && !p.kingSince) {
+        p.kingSince = new Date().toISOString();
+      } else if (r !== 1) {
+        p.kingSince = undefined;
+      }
+    });
+
+    const isNewKing = newRank === 1 && (!previousKing || previousKing.id !== project.id);
 
     const transaction: BidTransaction = {
       id: `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       projectId: project.id,
       projectTitle: project.title,
       projectUrl: project.url,
-      amount: isTopUp ? (project.totalBid - previousTotal) : params.bidAmount,
-      previousTotal: previousTotal,
+      amount: params.bidAmount,
+      previousTotal,
       newTotal: project.totalBid,
-      isTopUp: isTopUp,
-      newRank: project.rank,
-      previousRank: previousRank,
+      isTopUp,
+      newRank,
+      previousRank,
       paymentStatus: 'completed',
-      paymentProvider: params.paymentProvider || 'sandbox',
+      paymentProvider: params.paymentProvider || 'dodo',
       paymentIntentId: params.paymentIntentId,
-      ownerEmail: project.ownerEmail,
-      twitterHandle: project.twitterHandle,
+      ownerEmail: params.ownerEmail,
+      twitterHandle: params.twitterHandle,
       createdAt: new Date().toISOString(),
     };
 
@@ -842,106 +737,28 @@ class Store {
       this.db.transactions = this.db.transactions.slice(0, 500);
     }
 
-    if (project.totalBid > this.db.stats.highestBid) {
-      this.db.stats.highestBid = project.totalBid;
-    }
-
+    this.db.stats.highestBid = Math.max(this.db.stats.highestBid, project.totalBid);
     this.save();
 
-    const stats = this.getStats();
-
-    broadcastEvent({
-      type: isNewKing ? 'NEW_KING' : (isTopUp ? 'RANK_SHIFT' : 'NEW_BID'),
-      data: {
-        transaction,
-        project,
-        stats,
-        message: isNewKing 
-          ? `👑 NEW #1: ${project.title} outbid with $${project.totalBid.toLocaleString()}!`
-          : `⚡ ${project.title} placed $${transaction.amount.toLocaleString()} bid (#${project.rank})`
-      },
-      timestamp: Date.now()
-    });
-
-    return { project, transaction, isNewKing, stats };
-  }
-
-  public async recordClickAsync(projectId: string): Promise<string | null> {
-    const url = this.recordClick(projectId);
-    try {
-      await supabase.rpc('increment_clicks', { target_id: projectId });
-    } catch {
-      // ignore
-    }
-    return url;
+    return {
+      project,
+      transaction,
+      isNewKing,
+      stats: this.getStats(),
+    };
   }
 
   public recordClick(projectId: string): string | null {
     this.init();
-    const proj = this.db.projects.find(p => p.id === projectId);
-    if (!proj) return null;
-
-    proj.clicks = (proj.clicks || 0) + 1;
-    this.db.stats.totalClicks = (this.db.stats.totalClicks || 0) + 1;
-    this.save();
-
-    (async () => {
-      try {
-        await supabase
-          .from('projects')
-          .update({ clicks: proj.clicks })
-          .eq('id', proj.id);
-      } catch {
-        // ignore
-      }
-    })();
-
-    broadcastEvent({
-      type: 'CLICK_UPDATE',
-      data: {
-        project: proj,
-        stats: this.getStats()
-      },
-      timestamp: Date.now()
-    });
-
-    return proj.url;
-  }
-
-  public getStats(): PlatformStats {
-    this.init();
-    const totalVolume = this.db.projects.reduce((acc, p) => acc + p.totalBid, 0);
-    const totalClicks = this.db.projects.reduce((acc, p) => acc + (p.clicks || 0), 0);
-    const king = this.db.projects.length > 0 ? this.db.projects[0] : null;
-
-    let kingHoldSeconds = 0;
-    if (king && king.kingSince) {
-      kingHoldSeconds = Math.floor((Date.now() - new Date(king.kingSince).getTime()) / 1000);
+    const p = this.db.projects.find(x => x.id === projectId);
+    if (p) {
+      p.clicks = (p.clicks || 0) + 1;
+      this.db.stats.totalClicks += 1;
+      this.save();
+      return p.url;
     }
-
-    return {
-      totalVolume: totalVolume,
-      totalBidsCount: this.db.transactions.length,
-      totalProjectsCount: this.db.projects.length,
-      totalClicksDelivered: totalClicks,
-      currentKing: king,
-      kingHoldDurationSeconds: kingHoldSeconds,
-      highestSingleBid: this.db.stats.highestBid || (king ? king.totalBid : 0),
-    };
-  }
-
-  public getRecentBids(limit = 20): BidTransaction[] {
-    this.init();
-    return this.db.transactions.slice(0, limit);
+    return null;
   }
 }
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __outbidStore__: Store | undefined;
-}
-
-export const store =
-  global.__outbidStore__ && typeof global.__outbidStore__.getTerritoriesAsync === 'function'
-    ? global.__outbidStore__
-    : (global.__outbidStore__ = new Store());
+export const store = new Store();

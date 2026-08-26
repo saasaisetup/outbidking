@@ -62,6 +62,30 @@ export interface CreateCheckoutParams {
   customerEmail?: string;
   customerName?: string;
   returnUrl?: string;
+  origin?: string;
+}
+
+/**
+ * Resolves a safe public production or origin URL (never falls back to private protected Vercel previews).
+ */
+export function resolveSafeAppUrl(origin?: string): string {
+  // 1. Explicitly configured public URL
+  if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  }
+
+  // 2. Client-provided window.location.origin
+  if (origin && !origin.includes('localhost')) {
+    return origin.replace(/\/$/, '');
+  }
+
+  // 3. If running on localhost development
+  if (origin && origin.includes('localhost')) {
+    return origin.replace(/\/$/, '');
+  }
+
+  // 4. Safe public production domain default
+  return 'https://outbidking.lol';
 }
 
 /**
@@ -71,11 +95,8 @@ export async function createDodoCheckoutSession(params: CreateCheckoutParams) {
   const productId = await getOrCreateBiddingProduct();
   const amountInCents = Math.round(Math.max(1, params.bidAmount) * 100);
 
-  const appBaseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-
-  const returnUrl = params.returnUrl || (params.isTerritory ? `${appBaseUrl}/map` : appBaseUrl);
+  const baseAppUrl = resolveSafeAppUrl(params.origin);
+  const returnUrl = params.returnUrl || `${baseAppUrl}/payment/success`;
 
   const payment = await dodo.payments.create({
     billing: {
