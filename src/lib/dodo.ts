@@ -8,27 +8,29 @@ export const dodo = new DodoPayments({
   environment,
 });
 
-let cachedProductId: string | null = null;
+// Verified $1 minimum dynamic bidding product in Dodo Payments
+let cachedProductId: string | null = 'pdt_0NmFFINaNKCg0hGTN6H1x';
 
 /**
- * Ensures a reusable dynamic-amount product exists in Dodo Payments.
+ * Ensures a reusable dynamic-amount product ($1 USD minimum) exists in Dodo Payments.
  */
 export async function getOrCreateBiddingProduct(): Promise<string> {
   if (cachedProductId) return cachedProductId;
 
   try {
     const list = await dodo.products.list();
-    const existing = list.items?.find((p) => p.name === 'Outbid King Rank Bid');
+    const existing = list.items?.find((p) => p.name?.includes('Outbid King'));
     if (existing) {
       cachedProductId = existing.product_id;
       return cachedProductId;
     }
 
     const created = await dodo.products.create({
-      name: 'Outbid King Rank Bid',
+      name: 'Outbid King Dynamic Rank Bid',
+      description: 'Dynamic rank bid on outbidking.lol starting at $1 USD',
       price: {
         currency: 'USD',
-        price: 1000,
+        price: 100, // 100 cents = $1.00 USD minimum
         discount: 0,
         purchasing_power_parity: false,
         type: 'one_time_price',
@@ -41,8 +43,8 @@ export async function getOrCreateBiddingProduct(): Promise<string> {
     return cachedProductId;
   } catch (err: any) {
     console.error('[Dodo] Error getting/creating product:', err);
-    // Fallback to verified existing product id
-    return 'pdt_0Nm3RO6jx7u8pMnv9ncdo';
+    // Fallback to verified $1 min product id
+    return 'pdt_0NmFFINaNKCg0hGTN6H1x';
   }
 }
 
@@ -63,11 +65,11 @@ export interface CreateCheckoutParams {
 }
 
 /**
- * Creates a Dodo Payments hosted checkout session.
+ * Creates a Dodo Payments hosted checkout session for any amount starting at $1 USD.
  */
 export async function createDodoCheckoutSession(params: CreateCheckoutParams) {
   const productId = await getOrCreateBiddingProduct();
-  const amountInCents = Math.round(params.bidAmount * 100);
+  const amountInCents = Math.round(Math.max(1, params.bidAmount) * 100);
 
   const appBaseUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
