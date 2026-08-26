@@ -6,7 +6,7 @@ import { CATEGORIES } from '@/lib/categories';
 import { ProductLogo } from './ProductLogo';
 import { CategoryIcon } from './CategoryIcon';
 import { formatProjectTitle } from './TopThreeCards';
-import { RefreshCw, ChevronRight, ChevronLeft, ExternalLink, Info, Flame } from 'lucide-react';
+import { RefreshCw, ChevronRight, ChevronLeft, ExternalLink, Info } from 'lucide-react';
 import { RealisticCrown } from './RealisticCrown';
 
 interface RankedListProps {
@@ -18,7 +18,6 @@ interface RankedListProps {
 
 export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh }: RankedListProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [hoveredBtnId, setHoveredBtnId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
@@ -82,7 +81,6 @@ export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh
         const displayRank = startIndex + idx + 1;
         const nextPrice = project.totalBid + 1;
         const isHovered = hoveredId === project.id;
-        const isBtnHovered = hoveredBtnId === project.id;
         const catInfo = getCategory(project.category);
         const displayTitle = formatProjectTitle(project);
         const showTop10Divider = isFirstPage && displayRank === 11;
@@ -121,18 +119,18 @@ export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh
               onMouseEnter={() => setHoveredId(project.id)}
               onMouseLeave={() => setHoveredId(null)}
               onClick={() => onSelectProject(project, nextPrice)}
-              className="group relative w-full rounded-2xl border border-zinc-200/90 dark:border-[#272732] bg-white dark:bg-[#121217] p-3.5 sm:p-4 transition-all duration-150 hover:border-[#ea6c52]/50 dark:hover:border-zinc-600 hover:shadow-xs cursor-pointer"
+              className="group relative w-full rounded-2xl border border-zinc-200/90 dark:border-[#272732] bg-white dark:bg-[#121217] p-3.5 sm:p-4 transition-all duration-150 hover:border-[#ea6c52]/60 hover:shadow-xs cursor-pointer"
             >
               {/* Outbid.lol Floating Hover Pill */}
               {isHovered && (
-                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
-                  <span className="px-3.5 py-0.5 rounded-full bg-[#ea6c52] text-white text-[11px] sm:text-xs font-bold tracking-tight shadow-md flex items-center justify-center whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+                  <span className="px-4 py-1 rounded-full bg-[#ea6c52] text-white text-[11px] sm:text-xs font-black tracking-tight shadow-md flex items-center justify-center whitespace-nowrap">
                     claim this spot for ${nextPrice.toLocaleString()}
                   </span>
                 </div>
               )}
 
-              <div className="flex items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center justify-between gap-3 sm:gap-6">
                 {/* Left Side: Rank Number + ProductLogo + Details */}
                 <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                   {/* Rank Number */}
@@ -205,35 +203,14 @@ export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh
                   </div>
                 </div>
 
-                {/* Right Side: Total Bid + 3D Outbid Button with Outbid.lol hover text */}
-                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3 shrink-0">
-                  <div className="text-right">
-                    <div className="text-sm sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 font-mono">
-                      ${project.totalBid.toLocaleString()}
-                    </div>
-                    <div className="text-[10px] text-zinc-400">
-                      invested
-                    </div>
+                {/* Right Side: Clean, Spacious Price */}
+                <div className="text-right shrink-0 pr-1 sm:pr-2">
+                  <div className="text-sm sm:text-xl font-bold text-zinc-900 dark:text-zinc-100 font-mono group-hover:text-[#ea6c52] transition-colors">
+                    ${project.totalBid.toLocaleString()}
                   </div>
-
-                  {/* Outbid Action Button with dynamic hover text */}
-                  <button
-                    type="button"
-                    onMouseEnter={() => setHoveredBtnId(project.id)}
-                    onMouseLeave={() => setHoveredBtnId(null)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectProject(project, nextPrice);
-                    }}
-                    className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-xs tracking-tight shadow-[0_2.5px_0_0_#b8432a,0_3px_8px_rgba(234,108,82,0.3)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[1.5px] transition-all cursor-pointer flex items-center gap-1 shrink-0 select-none min-w-[95px] sm:min-w-[110px] justify-center"
-                  >
-                    <Flame className="w-3 h-3 text-amber-200" />
-                    <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">
-                      {isBtnHovered || isHovered
-                        ? `Claim for $${nextPrice.toLocaleString()}`
-                        : `Outbid $${nextPrice.toLocaleString()}`}
-                    </span>
-                  </button>
+                  <div className="text-[10px] text-zinc-400">
+                    invested
+                  </div>
                 </div>
               </div>
             </div>

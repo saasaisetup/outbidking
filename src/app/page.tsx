@@ -56,22 +56,12 @@ export default function HomePage() {
 
       if (data.projects) {
         setProjects(data.projects);
-        if (cat !== 'all') {
-          if (data.projects.length > 0) {
-            setCurrentBidAmount(data.projects[0].totalBid + 1);
-          } else {
-            setCurrentBidAmount(1);
-          }
-        }
+        const topPrice = data.projects.length > 0 ? data.projects[0].totalBid + 1 : 1;
+        setCurrentBidAmount(topPrice);
       }
 
       if (data.stats) {
         setStats(data.stats);
-        if (cat === 'all' && data.stats.currentKing) {
-          setCurrentBidAmount(data.stats.currentKing.totalBid + 1);
-        } else if (cat === 'all' && !data.stats.currentKing) {
-          setCurrentBidAmount(1);
-        }
       }
 
       if (data.recentBids) setRecentBids(data.recentBids);
@@ -169,6 +159,11 @@ export default function HomePage() {
     setIsDetailsOpen(true);
   };
 
+  const handleSelectCategory = (slug: CategorySlug) => {
+    setSelectedCategory(slug);
+    fetchData(slug);
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090b] text-zinc-900 dark:text-[#f4f4f5] selection:bg-[#ea6c52] selection:text-white font-sans transition-colors duration-200">
       {/* Header */}
@@ -187,7 +182,7 @@ export default function HomePage() {
         {/* Category Pills Bar */}
         <CategoryFilters
           selectedCategory={selectedCategory}
-          onSelectCategory={(slug) => setSelectedCategory(slug)}
+          onSelectCategory={handleSelectCategory}
         />
 
         {/* Top 3 Tinted Crown Cards */}

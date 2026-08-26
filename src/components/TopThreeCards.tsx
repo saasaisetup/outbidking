@@ -6,7 +6,7 @@ import { CATEGORIES } from '@/lib/categories';
 import { ProductLogo } from './ProductLogo';
 import { RealisticCrown } from './RealisticCrown';
 import { CategoryIcon } from './CategoryIcon';
-import { ExternalLink, Info, Flame } from 'lucide-react';
+import { ExternalLink, Info } from 'lucide-react';
 
 interface TopThreeCardsProps {
   topProjects: Project[];
@@ -42,7 +42,6 @@ export function formatProjectTitle(project: { title?: string; url?: string; norm
 
 export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: TopThreeCardsProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [hoveredBtnId, setHoveredBtnId] = useState<string | null>(null);
 
   if (!topProjects || topProjects.length === 0) return null;
 
@@ -63,7 +62,6 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
         const displayRank = idx + 1;
         const nextPrice = project.totalBid + 1;
         const isHovered = hoveredId === project.id;
-        const isBtnHovered = hoveredBtnId === project.id;
         const catInfo = getCategory(project.category);
         const displayTitle = formatProjectTitle(project);
 
@@ -73,18 +71,18 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
             onMouseEnter={() => setHoveredId(project.id)}
             onMouseLeave={() => setHoveredId(null)}
             onClick={() => onSelectProject(project, nextPrice)}
-            className="group relative w-full rounded-[24px] sm:rounded-[28px] border-[1.5px] border-[#fca5a5] dark:border-[#e05d44]/40 bg-[#fdeee9] dark:bg-[#1c1210] p-4 sm:p-5 transition-all duration-150 hover:shadow-md cursor-pointer"
+            className="group relative w-full rounded-[24px] sm:rounded-[28px] border-[1.5px] border-[#fca5a5] dark:border-[#e05d44]/40 bg-[#fdeee9] dark:bg-[#1c1210] p-4 sm:p-5 transition-all duration-150 hover:shadow-md hover:border-[#ea6c52] cursor-pointer"
           >
             {/* Outbid.lol Floating Hover Pill */}
             {isHovered && (
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
-                <span className="px-3.5 py-0.5 rounded-full bg-[#ea6c52] text-white text-[11px] sm:text-xs font-bold tracking-tight shadow-md flex items-center justify-center whitespace-nowrap">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
+                <span className="px-4 py-1 rounded-full bg-[#ea6c52] text-white text-[11px] sm:text-xs font-black tracking-tight shadow-lg flex items-center justify-center whitespace-nowrap">
                   claim this spot for ${nextPrice.toLocaleString()}
                 </span>
               </div>
             )}
 
-            <div className="flex items-center justify-between gap-3 sm:gap-5">
+            <div className="flex items-center justify-between gap-3 sm:gap-6">
               {/* Left Side: Rank Badge + Crown + Logo + Details */}
               <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 {/* Round Solid Terracotta Rank Badge with Realistic Gold / Silver / Bronze Crown */}
@@ -166,36 +164,14 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
                 </div>
               </div>
 
-              {/* Right Side: Total Verified Bid & Prominent Outbid Price Action with Outbid.lol Hover state */}
-              <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3 flex-shrink-0">
-                {/* Current Bid */}
-                <div className="text-right">
-                  <div className="text-sm sm:text-xl font-black text-zinc-900 dark:text-white font-mono">
-                    ${project.totalBid.toLocaleString()}
-                  </div>
-                  <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                    invested
-                  </div>
+              {/* Right Side: Clean, Spacious Price */}
+              <div className="text-right flex-shrink-0 pr-1 sm:pr-2">
+                <div className="text-base sm:text-2xl font-black text-zinc-900 dark:text-white font-mono tracking-tight group-hover:text-[#ea6c52] transition-colors">
+                  ${project.totalBid.toLocaleString()}
                 </div>
-
-                {/* 3D Outbid Price Action Button with Outbid.lol dynamic hover text */}
-                <button
-                  type="button"
-                  onMouseEnter={() => setHoveredBtnId(project.id)}
-                  onMouseLeave={() => setHoveredBtnId(null)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectProject(project, nextPrice);
-                  }}
-                  className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-xs sm:text-sm tracking-tight shadow-[0_3px_0_0_#b8432a,0_4px_10px_rgba(234,108,82,0.35)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[2px] transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none min-w-[110px] sm:min-w-[130px] justify-center"
-                >
-                  <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-200" />
-                  <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">
-                    {isBtnHovered || isHovered
-                      ? `Claim for $${nextPrice.toLocaleString()}`
-                      : `Outbid $${nextPrice.toLocaleString()}`}
-                  </span>
-                </button>
+                <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+                  invested
+                </div>
               </div>
             </div>
           </div>

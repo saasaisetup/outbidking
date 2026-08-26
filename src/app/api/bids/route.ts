@@ -11,7 +11,23 @@ export async function GET(req: NextRequest) {
   const existingProjectId = searchParams.get('existingProjectId') || undefined;
 
   const projects = await store.getProjectsAsync(category, search);
-  const stats = store.getStats();
+  const baseStats = store.getStats();
+
+  // If Supabase has live projects, compute currentKing dynamically from live projects!
+  const currentKing = projects.length > 0 ? projects[0] : null;
+  const totalVolume = projects.reduce((sum, p) => sum + (p.totalBid || 0), 0);
+  const totalClicksDelivered = projects.reduce((sum, p) => sum + (p.clicks || 0), 0);
+  const highestSingleBid = projects.reduce((max, p) => Math.max(max, p.totalBid || 0), 0);
+
+  const stats = {
+    ...baseStats,
+    currentKing,
+    highestSingleBid: Math.max(baseStats.highestSingleBid, highestSingleBid),
+    totalVolume: Math.max(baseStats.totalVolume, totalVolume),
+    totalProjectsCount: projects.length,
+    totalClicksDelivered: Math.max(baseStats.totalClicksDelivered, totalClicksDelivered),
+  };
+
   const recentBids = store.getRecentBids(20);
 
   let predictedRank: number | undefined;
