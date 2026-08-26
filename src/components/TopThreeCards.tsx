@@ -6,7 +6,8 @@ import { CATEGORIES } from '@/lib/categories';
 import { ProductLogo } from './ProductLogo';
 import { RealisticCrown } from './RealisticCrown';
 import { CategoryIcon } from './CategoryIcon';
-import { ExternalLink, Info } from 'lucide-react';
+import { formatJoinedTime } from '@/lib/format';
+import { ExternalLink } from 'lucide-react';
 
 interface TopThreeCardsProps {
   topProjects: Project[];
@@ -40,6 +41,12 @@ export function formatProjectTitle(project: { title?: string; url?: string; norm
   return project.normalizedUrl || project.url || 'Untitled';
 }
 
+export function getCleanDomain(rawUrl: string): string {
+  const clean = rawUrl.trim().toLowerCase();
+  if (clean.startsWith('@')) return clean;
+  return clean.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0].split('?')[0];
+}
+
 export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: TopThreeCardsProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -64,6 +71,8 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
         const isHovered = hoveredId === project.id;
         const catInfo = getCategory(project.category);
         const displayTitle = formatProjectTitle(project);
+        const cleanDomain = getCleanDomain(project.url || project.normalizedUrl);
+        const joinedTime = formatJoinedTime(project.createdAt);
 
         return (
           <div
@@ -82,11 +91,11 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
               </div>
             )}
 
-            <div className="flex items-center justify-between gap-3 sm:gap-6">
-              {/* Left Side: Rank Badge + Crown + Logo + Details */}
-              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                {/* Round Solid Terracotta Rank Badge with Realistic Gold / Silver / Bronze Crown */}
-                <div className="relative flex-shrink-0">
+            <div className="flex items-start justify-between gap-3 sm:gap-6">
+              {/* Left Side: Rank Badge + Crown + Product Logo */}
+              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                {/* Terracotta Rank Badge + Realistic Crown */}
+                <div className="relative flex-shrink-0 mt-0.5">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#e05d44] text-white flex items-center justify-center font-black text-xs sm:text-base shadow-xs">
                     #{displayRank}
                   </div>
@@ -98,24 +107,26 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
                 </div>
 
                 {/* Product Logo */}
-                <ProductLogo
-                  url={project.url}
-                  normalizedUrl={project.normalizedUrl}
-                  title={displayTitle}
-                  logoUrl={project.logoUrl}
-                  size="xl"
-                />
+                <div className="mt-0.5">
+                  <ProductLogo
+                    url={project.url}
+                    normalizedUrl={project.normalizedUrl}
+                    title={displayTitle}
+                    logoUrl={project.logoUrl}
+                    size="xl"
+                  />
+                </div>
 
-                {/* Project Details */}
+                {/* Content: Title, Description, and Rich Metadata */}
                 <div className="flex-1 min-w-0">
-                  {/* Title as direct link with hover underline */}
+                  {/* Top Line: Title */}
                   <div className="flex items-center gap-2">
                     <a
                       href={`/r/${project.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="font-extrabold text-base sm:text-xl text-zinc-900 dark:text-white hover:underline flex items-center gap-1.5 transition-colors truncate group-hover:text-[#ea6c52]"
+                      className="font-extrabold text-base sm:text-lg text-zinc-900 dark:text-white hover:underline flex items-center gap-1.5 transition-colors truncate group-hover:text-[#ea6c52]"
                       title="Visit destination site"
                     >
                       <span className="truncate">{displayTitle}</span>
@@ -123,54 +134,68 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
                     </a>
                   </div>
 
-                  {/* Description / About snippet */}
-                  {project.description && (
-                    <p className="mt-0.5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 line-clamp-1 leading-snug">
-                      {project.description}
-                    </p>
-                  )}
+                  {/* Middle Line: 1-2 Lines of Rich Summary */}
+                  <p className="mt-1 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 line-clamp-2 leading-relaxed font-normal">
+                    {project.description ||
+                      `Discover ${displayTitle} — ranked #${displayRank} on the live leaderboard.`}
+                  </p>
 
-                  {/* Metadata line with UNIFIED CategoryIcon & View Details */}
-                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                    {/* Unified Category Icon & Name */}
-                    <span className="text-zinc-700 dark:text-zinc-300 font-semibold flex items-center gap-1.5 truncate max-w-[170px] sm:max-w-none">
+                  {/* Bottom Line: #1 in [Category] · [Time Joined] · [Domain Link] · [Clicks] · see details */}
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                    {/* Orange Category Badge with Icon */}
+                    <span className="font-bold text-[#ea6c52] flex items-center gap-1">
                       <CategoryIcon slug={project.category} size="xs" />
-                      <span>{catInfo ? catInfo.name : project.category}</span>
+                      <span>
+                        #{displayRank} in {catInfo ? catInfo.name.split(' ')[0] : project.category}
+                      </span>
                     </span>
 
                     <span>·</span>
 
-                    {/* Clicks */}
-                    <span className="font-bold text-[#e05d44] flex items-center gap-1 shrink-0">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#e05d44]" />
+                    {/* Joined Date */}
+                    <span>{joinedTime}</span>
+
+                    <span>·</span>
+
+                    {/* Website URL Link */}
+                    <a
+                      href={`/r/${project.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-semibold text-zinc-700 dark:text-zinc-300 hover:underline hover:text-[#ea6c52] truncate max-w-[120px] sm:max-w-[160px]"
+                    >
+                      {cleanDomain}
+                    </a>
+
+                    <span>·</span>
+
+                    {/* Total Clicks */}
+                    <span className="font-bold text-zinc-900 dark:text-white">
                       {(project.clicks || 0).toLocaleString()} clicks
                     </span>
 
                     <span>·</span>
 
-                    {/* View Details Trigger */}
+                    {/* "see details" trigger */}
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (onViewDetails) onViewDetails(project);
                       }}
-                      className="inline-flex items-center gap-1 text-[#ea6c52] hover:text-[#d95b41] hover:underline font-bold cursor-pointer transition-colors"
+                      className="text-zinc-500 hover:text-[#ea6c52] hover:underline font-semibold cursor-pointer transition-colors"
                     >
-                      <Info className="w-3 h-3" />
-                      <span>View Details</span>
+                      see details
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Right Side: Clean, Spacious Price */}
-              <div className="text-right flex-shrink-0 pr-1 sm:pr-2">
-                <div className="text-base sm:text-2xl font-black text-zinc-900 dark:text-white font-mono tracking-tight group-hover:text-[#ea6c52] transition-colors">
+              {/* Right Side: Bold Orange Price */}
+              <div className="text-right flex-shrink-0 pt-0.5 pr-1 sm:pr-2">
+                <div className="text-lg sm:text-2xl font-black text-[#ea6c52] font-mono tracking-tight">
                   ${project.totalBid.toLocaleString()}
-                </div>
-                <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-                  invested
                 </div>
               </div>
             </div>

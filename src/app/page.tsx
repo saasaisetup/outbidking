@@ -40,6 +40,8 @@ export default function HomePage() {
   // Modals state
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
   const [prefillUrl, setPrefillUrl] = useState('');
+  const [prefillTitle, setPrefillTitle] = useState('');
+  const [prefillDescription, setPrefillDescription] = useState('');
   const [prefillBid, setPrefillBid] = useState<number | undefined>(undefined);
   const [prefillCategory, setPrefillCategory] = useState('ai-agents-infrastructure');
 
@@ -134,14 +136,20 @@ export default function HomePage() {
     url,
     category,
     bidAmount,
+    title,
+    description,
     logoUrl,
   }: {
     url: string;
     category: string;
     bidAmount: number;
+    title?: string;
+    description?: string;
     logoUrl?: string;
   }) => {
     setPrefillUrl(url);
+    setPrefillTitle(title || '');
+    setPrefillDescription(description || '');
     setPrefillCategory(category);
     setPrefillBid(bidAmount);
     setIsBidModalOpen(true);
@@ -149,6 +157,8 @@ export default function HomePage() {
 
   const handleSelectCardToOutbid = (project: Project, nextPrice: number) => {
     setPrefillUrl(project.url);
+    setPrefillTitle(project.title);
+    setPrefillDescription(project.description);
     setPrefillCategory(project.category);
     setPrefillBid(nextPrice);
     setIsBidModalOpen(true);
@@ -221,6 +231,8 @@ export default function HomePage() {
         isOpen={isBidModalOpen}
         onClose={() => setIsBidModalOpen(false)}
         initialUrl={prefillUrl}
+        initialTitle={prefillTitle}
+        initialDescription={prefillDescription}
         initialBidAmount={prefillBid || currentBidAmount}
         initialCategory={prefillCategory}
         stats={stats}

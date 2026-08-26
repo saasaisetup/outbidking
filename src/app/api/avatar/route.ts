@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 // In-memory cache for fast repeated lookups
-const avatarCache = new Map<string, { logoUrl: string; title: string; timestamp: number }>();
+const avatarCache = new Map<string, { logoUrl: string; title: string; description: string; timestamp: number }>();
 const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
 
 export async function GET(req: NextRequest) {
@@ -24,12 +24,14 @@ export async function GET(req: NextRequest) {
         success: true,
         logoUrl: cached.logoUrl,
         title: cached.title,
+        description: cached.description,
         source: 'cache',
       });
     }
 
     let logoUrl: string | null = null;
     let title: string = input;
+    let description: string = '';
 
     // 1. Twitter / X Handle or URL
     if (cleanInput.startsWith('@') || cleanInput.includes('x.com/') || cleanInput.includes('twitter.com/')) {
@@ -42,7 +44,7 @@ export async function GET(req: NextRequest) {
 
       title = `@${handle}`;
 
-      // Try Microlink first for high-res official profile avatar
+      // Try Microlink first for high-res official profile avatar and bio
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2500);
@@ -64,6 +66,9 @@ export async function GET(req: NextRequest) {
           if (microData?.data?.title && !title.startsWith('@')) {
             title = microData.data.title;
           }
+          if (microData?.data?.description) {
+            description = microData.data.description;
+          }
         }
       } catch {
         // Fallback to unavatar
@@ -71,6 +76,9 @@ export async function GET(req: NextRequest) {
 
       if (!logoUrl) {
         logoUrl = `https://unavatar.io/x/${handle}`;
+      }
+      if (!description) {
+        description = `Verified creator & founder on 𝕏 (@${handle}). Ranking live on Outbid King.`;
       }
     }
     // 2. GitHub
@@ -82,6 +90,7 @@ export async function GET(req: NextRequest) {
         .trim();
       title = `github.com/${handle}`;
       logoUrl = `https://github.com/${handle}.png?size=200`;
+      description = `Open-source developer and builder on GitHub.`;
     }
     // 3. Instagram
     else if (cleanInput.includes('instagram.com/')) {
@@ -93,12 +102,14 @@ export async function GET(req: NextRequest) {
         .trim();
       title = `@${handle}`;
       logoUrl = `https://unavatar.io/instagram/${handle}`;
+      description = `Creator and influencer profile on Instagram.`;
     }
     // 4. YouTube
     else if (cleanInput.includes('youtube.com/') || cleanInput.includes('youtu.be/')) {
       const handle = cleanInput.replace(/^(https?:\/\/)?(www\.)?youtube\.com\/(c\/|user\/|@)?/, '').split('/')[0];
       title = handle;
       logoUrl = `https://unavatar.io/youtube/${handle}`;
+      description = `Official YouTube channel and video creator.`;
     }
     // 5. Standard Website Domain
     else {
@@ -108,10 +119,10 @@ export async function GET(req: NextRequest) {
       if (domain.includes('.')) {
         logoUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 
-        // Optional scrape for high-res og:image or favicon
+        // Optional scrape for high-res og:image, title, and description
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2000);
+          const timeoutId = setTimeout(() => controller.abort(), 2500);
           const microRes = await fetch(`https://api.microlink.io?url=https://${domain}`, {
             signal: controller.signal,
             headers: { 'User-Agent': 'Mozilla/5.0' },
@@ -125,23 +136,31 @@ export async function GET(req: NextRequest) {
               logoUrl = ogLogo;
             }
             if (microData?.data?.title) {
-              title = microData.data.title;
+              title = `${domain} · ${microData.data.title}`;
+            }
+            if (microData?.data?.description) {
+              description = microData.data.description;
             }
           }
         } catch {
           // keep Google S2 favicon
         }
+
+        if (!description) {
+          description = `Explore ${domain} — verified product ranked on the live leaderboard.`;
+        }
       }
     }
 
     if (logoUrl) {
-      avatarCache.set(cleanInput, { logoUrl, title, timestamp: Date.now() });
+      avatarCache.set(cleanInput, { logoUrl, title, description, timestamp: Date.now() });
     }
 
     return NextResponse.json({
       success: true,
       logoUrl,
       title,
+      description,
     });
   } catch (error: any) {
     console.error('[API /api/avatar] Error:', error);

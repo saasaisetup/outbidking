@@ -10,6 +10,8 @@ interface BidModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialUrl?: string;
+  initialTitle?: string;
+  initialDescription?: string;
   initialBidAmount?: number;
   initialCategory?: string;
   stats: PlatformStats;
@@ -20,14 +22,16 @@ export function BidModal({
   isOpen,
   onClose,
   initialUrl = '',
+  initialTitle = '',
+  initialDescription = '',
   initialBidAmount = 1,
   initialCategory = 'ai-agents-infrastructure',
   stats,
   onBidSuccess,
 }: BidModalProps) {
   const [url, setUrl] = useState(initialUrl);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState(initialTitle);
+  const [description, setDescription] = useState(initialDescription);
   const [category, setCategory] = useState(initialCategory);
   const [bidAmount, setBidAmount] = useState(initialBidAmount);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -47,6 +51,7 @@ export function BidModal({
     if (!trimmed) {
       if (!isCustomLogo) setAvatarUrl(null);
       setTitle('');
+      setDescription('');
       return;
     }
 
@@ -61,6 +66,9 @@ export function BidModal({
         if (data.title && !title) {
           setTitle(data.title);
         }
+        if (data.description && !description) {
+          setDescription(data.description);
+        }
       }
     } catch {
       // Fallback
@@ -74,13 +82,19 @@ export function BidModal({
       setUrl(initialUrl);
       fetchAvatarAndMeta(initialUrl);
     }
+    if (initialTitle) {
+      setTitle(initialTitle);
+    }
+    if (initialDescription) {
+      setDescription(initialDescription);
+    }
     if (initialBidAmount) {
       setBidAmount(initialBidAmount);
     }
     if (initialCategory) {
       setCategory(initialCategory);
     }
-  }, [initialUrl, initialBidAmount, initialCategory]);
+  }, [initialUrl, initialTitle, initialDescription, initialBidAmount, initialCategory]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -219,7 +233,7 @@ export function BidModal({
               </label>
               {isFetchingAvatar && (
                 <span className="text-[10px] text-amber-500 flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Fetching live logo...
+                  <Loader2 className="w-3 h-3 animate-spin" /> Fetching live details...
                 </span>
               )}
             </div>
@@ -297,8 +311,22 @@ export function BidModal({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Product or brand name (optional)"
+              placeholder="e.g. see.io · see your idea live"
               className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-xs font-semibold text-zinc-900 dark:text-white focus:outline-none focus:border-[#ea6c52]"
+            />
+          </div>
+
+          {/* Product Summary / Description (1-2 sentences) */}
+          <div>
+            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
+              Brief Summary (1-2 sentences)
+            </label>
+            <textarea
+              rows={2}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Just describe your idea. AI turns it into a fully built, live website in minutes."
+              className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-[#ea6c52] resize-none leading-relaxed"
             />
           </div>
 

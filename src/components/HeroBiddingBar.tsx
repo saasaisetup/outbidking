@@ -12,7 +12,15 @@ interface HeroBiddingBarProps {
   currentBidAmount: number;
   targetRank?: number;
   onBidAmountChange: (amount: number) => void;
-  onSubmitBid: (params: { url: string; category: string; bidAmount: number; logoUrl?: string; isHandle?: boolean }) => void;
+  onSubmitBid: (params: {
+    url: string;
+    category: string;
+    bidAmount: number;
+    title?: string;
+    description?: string;
+    logoUrl?: string;
+    isHandle?: boolean;
+  }) => void;
   onOpenStats?: () => void;
 }
 
@@ -27,6 +35,8 @@ export function HeroBiddingBar({
   const [url, setUrl] = useState('');
   const [category, setCategory] = useState('ai-agents-infrastructure');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [extractedTitle, setExtractedTitle] = useState('');
+  const [extractedDescription, setExtractedDescription] = useState('');
   const [isFetchingAvatar, setIsFetchingAvatar] = useState(false);
   const [isHandle, setIsHandle] = useState(false);
   const urlInputRef = useRef<HTMLInputElement | null>(null);
@@ -35,6 +45,8 @@ export function HeroBiddingBar({
   useEffect(() => {
     if (!url || url.trim().length < 2) {
       setAvatarUrl(null);
+      setExtractedTitle('');
+      setExtractedDescription('');
       setIsHandle(false);
       setIsFetchingAvatar(false);
       return;
@@ -75,6 +87,12 @@ export function HeroBiddingBar({
           if (data.logoUrl) {
             setAvatarUrl(data.logoUrl);
           }
+          if (data.title) {
+            setExtractedTitle(data.title);
+          }
+          if (data.description) {
+            setExtractedDescription(data.description);
+          }
         }
       } catch {
         // keep optimistic preview
@@ -110,6 +128,8 @@ export function HeroBiddingBar({
       url: finalUrl,
       category: category || 'ai-agents-infrastructure',
       bidAmount: currentBidAmount || 1,
+      title: extractedTitle || undefined,
+      description: extractedDescription || undefined,
       logoUrl: avatarUrl || undefined,
       isHandle,
     });

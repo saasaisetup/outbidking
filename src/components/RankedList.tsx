@@ -5,8 +5,9 @@ import { Project } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
 import { ProductLogo } from './ProductLogo';
 import { CategoryIcon } from './CategoryIcon';
-import { formatProjectTitle } from './TopThreeCards';
-import { RefreshCw, ChevronRight, ChevronLeft, ExternalLink, Info } from 'lucide-react';
+import { formatProjectTitle, getCleanDomain } from './TopThreeCards';
+import { formatJoinedTime } from '@/lib/format';
+import { RefreshCw, ChevronRight, ChevronLeft, ExternalLink } from 'lucide-react';
 import { RealisticCrown } from './RealisticCrown';
 
 interface RankedListProps {
@@ -83,6 +84,8 @@ export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh
         const isHovered = hoveredId === project.id;
         const catInfo = getCategory(project.category);
         const displayTitle = formatProjectTitle(project);
+        const cleanDomain = getCleanDomain(project.url || project.normalizedUrl);
+        const joinedTime = formatJoinedTime(project.createdAt);
         const showTop10Divider = isFirstPage && displayRank === 11;
         const showTop20Divider = isFirstPage && displayRank === 21;
         const showTop50Divider = isFirstPage && displayRank === 51;
@@ -130,25 +133,28 @@ export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh
                 </div>
               )}
 
-              <div className="flex items-center justify-between gap-3 sm:gap-6">
-                {/* Left Side: Rank Number + ProductLogo + Details */}
-                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-3 sm:gap-6">
+                {/* Left Side: Rank Number + Product Logo */}
+                <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                   {/* Rank Number */}
-                  <div className="w-7 sm:w-9 font-mono text-zinc-400 dark:text-zinc-500 font-bold text-sm sm:text-lg shrink-0">
+                  <div className="w-6 sm:w-8 font-mono text-zinc-400 dark:text-zinc-500 font-bold text-sm sm:text-base shrink-0 mt-1">
                     #{displayRank}
                   </div>
 
-                  {/* ProductLogo */}
-                  <ProductLogo
-                    url={project.url}
-                    normalizedUrl={project.normalizedUrl}
-                    title={displayTitle}
-                    logoUrl={project.logoUrl}
-                    size="lg"
-                  />
+                  {/* Product Logo */}
+                  <div className="mt-0.5">
+                    <ProductLogo
+                      url={project.url}
+                      normalizedUrl={project.normalizedUrl}
+                      title={displayTitle}
+                      logoUrl={project.logoUrl}
+                      size="lg"
+                    />
+                  </div>
 
-                  {/* Details */}
+                  {/* Content: Title, Description, and Rich Metadata */}
                   <div className="flex-1 min-w-0">
+                    {/* Top Line: Title */}
                     <div className="flex items-center gap-2">
                       <a
                         href={`/r/${project.id}`}
@@ -163,53 +169,68 @@ export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh
                       </a>
                     </div>
 
-                    {project.description && (
-                      <p className="mt-0.5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 line-clamp-1 leading-snug">
-                        {project.description}
-                      </p>
-                    )}
+                    {/* Middle Line: 1-2 Lines of Summary */}
+                    <p className="mt-0.5 text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+                      {project.description ||
+                        `Discover ${displayTitle} — ranked #${displayRank} on the live leaderboard.`}
+                    </p>
 
-                    {/* Metadata line with UNIFIED CategoryIcon & View Details */}
+                    {/* Bottom Line: #rank in [Category] · [Time Joined] · [Domain Link] · [Clicks] · see details */}
                     <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] sm:text-xs text-zinc-400 dark:text-zinc-500 font-medium">
-                      {/* Unified Category Icon & Name */}
-                      <span className="text-zinc-600 dark:text-zinc-300 font-semibold flex items-center gap-1.5 truncate max-w-[150px] sm:max-w-none">
+                      {/* Orange Category Badge with Icon */}
+                      <span className="font-bold text-[#ea6c52] flex items-center gap-1">
                         <CategoryIcon slug={project.category} size="xs" />
-                        <span>{catInfo ? catInfo.name : project.category}</span>
+                        <span>
+                          #{displayRank} in {catInfo ? catInfo.name.split(' ')[0] : project.category}
+                        </span>
                       </span>
 
                       <span>·</span>
 
-                      {/* Clicks */}
-                      <span className="font-semibold text-[#ea6c52] flex items-center gap-1 shrink-0">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#ea6c52]" />
+                      {/* Joined Date */}
+                      <span>{joinedTime}</span>
+
+                      <span>·</span>
+
+                      {/* Website URL Link */}
+                      <a
+                        href={`/r/${project.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-semibold text-zinc-600 dark:text-zinc-300 hover:underline hover:text-[#ea6c52] truncate max-w-[120px] sm:max-w-[160px]"
+                      >
+                        {cleanDomain}
+                      </a>
+
+                      <span>·</span>
+
+                      {/* Total Clicks */}
+                      <span className="font-bold text-zinc-800 dark:text-zinc-200">
                         {(project.clicks || 0).toLocaleString()} clicks
                       </span>
 
                       <span>·</span>
 
-                      {/* View Details Trigger */}
+                      {/* "see details" trigger */}
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (onViewDetails) onViewDetails(project);
                         }}
-                        className="inline-flex items-center gap-1 text-[#ea6c52] hover:text-[#d95b41] hover:underline font-bold cursor-pointer transition-colors"
+                        className="text-zinc-400 hover:text-[#ea6c52] hover:underline font-semibold cursor-pointer transition-colors"
                       >
-                        <Info className="w-3 h-3" />
-                        <span>View Details</span>
+                        see details
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Side: Clean, Spacious Price */}
-                <div className="text-right shrink-0 pr-1 sm:pr-2">
-                  <div className="text-sm sm:text-xl font-bold text-zinc-900 dark:text-zinc-100 font-mono group-hover:text-[#ea6c52] transition-colors">
+                {/* Right Side: Clean Price */}
+                <div className="text-right shrink-0 pt-0.5 pr-1 sm:pr-2">
+                  <div className="text-base sm:text-xl font-bold text-[#ea6c52] font-mono group-hover:brightness-110 transition-colors">
                     ${project.totalBid.toLocaleString()}
-                  </div>
-                  <div className="text-[10px] text-zinc-400">
-                    invested
                   </div>
                 </div>
               </div>
