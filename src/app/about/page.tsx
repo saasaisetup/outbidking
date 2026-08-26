@@ -5,26 +5,24 @@ import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { StatsModal } from '@/components/StatsModal';
-import { RulesModal } from '@/components/RulesModal';
 import { PlatformStats } from '@/lib/types';
-
 import { StatsPill } from '@/components/StatsPill';
+import { Trophy, ArrowRight } from 'lucide-react';
 
 export default function AboutPage() {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
-  const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [stats, setStats] = useState<PlatformStats>({
-    totalVolume: 194201,
-    totalBidsCount: 500,
-    totalProjectsCount: 991,
-    totalClicksDelivered: 142732,
+    totalVolume: 0,
+    totalBidsCount: 0,
+    totalProjectsCount: 0,
+    totalClicksDelivered: 0,
     currentKing: null,
-    kingHoldDurationSeconds: 68400,
-    highestSingleBid: 14043,
+    kingHoldDurationSeconds: 0,
+    highestSingleBid: 0,
   });
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0e0d0b] text-zinc-900 dark:text-white font-sans flex flex-col justify-between transition-colors duration-200">
+    <div className="min-h-screen bg-white dark:bg-[#09090b] text-zinc-900 dark:text-[#f4f4f5] font-sans flex flex-col justify-between transition-colors duration-200">
       <div>
         <Header />
 
@@ -34,12 +32,29 @@ export default function AboutPage() {
             <StatsPill onOpenStats={() => setIsStatsOpen(true)} />
           </div>
 
-          {/* Heading */}
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
-            About outbidking.lol
-          </h1>
+          {/* Top Title & CTA Button */}
+          <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight">
+                About outbidking.lol
+              </h1>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                The public pay-to-rank arena for modern products and founders.
+              </p>
+            </div>
 
-          <p className="mt-4 text-sm sm:text-base text-zinc-700 dark:text-zinc-300 leading-relaxed font-normal">
+            {/* Prominent CTA Button */}
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white font-black text-xs sm:text-sm tracking-tight shadow-md shadow-[#ea6c52]/30 hover:shadow-lg hover:shadow-[#ea6c52]/50 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+            >
+              <Trophy className="w-4 h-4 text-amber-200" />
+              <span>Claim #1 Throne</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <p className="mt-6 text-sm sm:text-base text-zinc-700 dark:text-zinc-300 leading-relaxed font-normal">
             <strong className="text-zinc-900 dark:text-white font-semibold">outbidking.lol</strong> is a public pay-to-rank leaderboard for modern AI agents, apps, developer tools, and creators: no ads, no black-box algorithms, no fake review manipulation. Just outbid your competitors to claim the #1 King throne.
           </p>
 
@@ -54,39 +69,56 @@ export default function AboutPage() {
             How clicks work
           </h2>
           <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Every listing links through a high-speed redirect counter (<code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-900 text-xs font-mono">/r/[id]</code>) that records real unique human click traffic in real time. The higher your rank, the more referral traffic lands on your product.
+            Every listing links through a high-speed redirect counter (<code className="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-xs font-mono">/r/[id]</code>) that records real unique human click traffic in real time. The higher your rank, the more referral traffic lands on your product.
           </p>
 
           {/* Author Card */}
-          <div className="mt-8 p-5 rounded-2xl bg-zinc-50 dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] w-full flex items-center justify-between gap-4">
+          <div className="mt-8 p-5 rounded-2xl bg-zinc-50 dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <div className="font-bold text-sm text-zinc-900 dark:text-white">
-                Built by <a href="https://x.com/shipxankit" target="_blank" rel="noopener noreferrer" className="text-[#e05d44] hover:underline">@shipxankit</a>
+                Built by <a href="https://x.com/shipxankit" target="_blank" rel="noopener noreferrer" className="text-[#ea6c52] hover:underline">@shipxankit</a>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                The public pay-to-rank leaderboard & world conquest game at outbidking.lol
+                The public pay-to-rank leaderboard at outbidking.lol
               </p>
             </div>
             <a
               href="https://x.com/shipxankit"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-black text-white dark:bg-white dark:text-black text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1.5 shrink-0"
             >
-              <span>Follow @shipxankit</span>
+              <span>Follow @shipxankit on 𝕏</span>
               <span>↗</span>
             </a>
+          </div>
+
+          {/* Bottom CTA Card */}
+          <div className="mt-10 p-6 rounded-3xl bg-gradient-to-br from-[#ea6c52]/10 via-[#f97316]/5 to-transparent border border-[#ea6c52]/30 w-full flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div>
+              <h3 className="font-black text-lg text-zinc-900 dark:text-white">
+                Ready to take the #1 Throne?
+              </h3>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1">
+                Lock your rank today starting at just $1 USD.
+              </p>
+            </div>
+            <Link
+              href="/"
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white font-black text-xs sm:text-sm tracking-tight shadow-md shadow-[#ea6c52]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+            >
+              Grab #1 Throne
+            </Link>
           </div>
         </main>
       </div>
 
       <Footer
-        onOpenRules={() => setIsRulesOpen(true)}
+        onOpenAbout={() => {}}
         onOpenStats={() => setIsStatsOpen(true)}
       />
 
       <StatsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} stats={stats} />
-      <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} />
     </div>
   );
 }

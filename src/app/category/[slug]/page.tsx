@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { HeroBiddingBar } from '@/components/HeroBiddingBar';
-import { HeroCrown } from '@/components/HeroCrown';
 import { CategoryFilters } from '@/components/CategoryFilters';
 import { TopThreeCards } from '@/components/TopThreeCards';
 import { LatestActivityTicker } from '@/components/LatestActivityTicker';
@@ -28,16 +27,16 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
   const { slug } = use(params);
   const [projects, setProjects] = useState<Project[]>([]);
   const [stats, setStats] = useState<PlatformStats>({
-    totalVolume: 62750,
-    totalBidsCount: 500,
-    totalProjectsCount: 991,
-    totalClicksDelivered: 58290,
+    totalVolume: 0,
+    totalBidsCount: 0,
+    totalProjectsCount: 0,
+    totalClicksDelivered: 0,
     currentKing: null,
-    kingHoldDurationSeconds: 68400,
-    highestSingleBid: 14018,
+    kingHoldDurationSeconds: 0,
+    highestSingleBid: 0,
   });
   const [recentBids, setRecentBids] = useState<BidTransaction[]>([]);
-  const [currentBidAmount, setCurrentBidAmount] = useState<number>(14023);
+  const [currentBidAmount, setCurrentBidAmount] = useState<number>(1);
 
   // Modals state
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
@@ -66,7 +65,9 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
       if (data.stats) {
         setStats(data.stats);
         if (data.projects && data.projects.length > 0) {
-          setCurrentBidAmount(data.projects[0].totalBid + 5);
+          setCurrentBidAmount(data.projects[0].totalBid + 1);
+        } else {
+          setCurrentBidAmount(1);
         }
       }
       if (data.recentBids) setRecentBids(data.recentBids);
@@ -122,7 +123,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0d0c0a] text-zinc-900 dark:text-white selection:bg-[#e05d44] selection:text-white font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-white dark:bg-[#09090b] text-zinc-900 dark:text-[#f4f4f5] selection:bg-[#ea6c52] selection:text-white font-sans transition-colors duration-200">
       <Header
         onOpenRules={() => setIsRulesOpen(true)}
         onOpenAbout={() => setIsAboutOpen(true)}
@@ -139,7 +140,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>All Categories</span>
           </Link>
-          <span className="text-xs font-bold text-[#e05d44] flex items-center gap-1">
+          <span className="text-xs font-bold text-[#ea6c52] flex items-center gap-1">
             <span>{currentCategory.icon}</span>
             <span>{currentCategory.name}</span>
           </span>
@@ -171,7 +172,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
           topProjects={projects}
           onSelectProject={(p) => {
             setPrefillUrl(p.url);
-            setPrefillBid(p.totalBid + 5);
+            setPrefillBid(p.totalBid + 1);
             setIsBidModalOpen(true);
           }}
         />
@@ -181,7 +182,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
           recentBids={recentBids}
           onSelectBid={(tx) => {
             setPrefillUrl(tx.projectUrl);
-            setPrefillBid(tx.amount + 5);
+            setPrefillBid(tx.amount + 1);
             setIsBidModalOpen(true);
           }}
         />
@@ -191,7 +192,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
           projects={projects}
           onSelectProject={(p) => {
             setPrefillUrl(p.url);
-            setPrefillBid(p.totalBid + 5);
+            setPrefillBid(p.totalBid + 1);
             setIsBidModalOpen(true);
           }}
           onRefresh={() => fetchData()}
@@ -210,6 +211,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
         onClose={() => setIsBidModalOpen(false)}
         initialUrl={prefillUrl}
         initialBidAmount={prefillBid || currentBidAmount}
+        initialCategory={slug}
         stats={stats}
         onBidSuccess={() => fetchData()}
       />

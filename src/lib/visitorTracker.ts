@@ -1,7 +1,6 @@
 import { supabase } from './supabase';
 
 const VISITED_KEY = 'visited_site';
-const FALLBACK_BASELINE = 142732;
 
 /**
  * Records or retrieves cumulative unique site visitors from Supabase.
@@ -10,7 +9,7 @@ const FALLBACK_BASELINE = 142732;
  */
 export async function recordVisitor(): Promise<number> {
   if (typeof window === 'undefined') {
-    return FALLBACK_BASELINE;
+    return 1;
   }
 
   try {
@@ -21,7 +20,6 @@ export async function recordVisitor(): Promise<number> {
       const { data, error } = await supabase.rpc('increment_visitor_count');
 
       if (error) {
-        console.warn('[VisitorTracker] RPC increment error, falling back to query:', error.message);
         return await fetchCurrentVisitorCount();
       }
 
@@ -32,14 +30,13 @@ export async function recordVisitor(): Promise<number> {
         // Handle private browsing storage quotas
       }
 
-      const count = typeof data === 'number' ? data : Number(data) || FALLBACK_BASELINE;
+      const count = typeof data === 'number' ? data : Number(data) || 1;
       return count;
     } else {
       // 3. Returning visitor: fetch current total
       return await fetchCurrentVisitorCount();
     }
   } catch (err) {
-    console.error('[VisitorTracker] Error recording visitor:', err);
     return await fetchCurrentVisitorCount();
   }
 }
@@ -56,11 +53,11 @@ export async function fetchCurrentVisitorCount(): Promise<number> {
       .single();
 
     if (error || !data) {
-      return FALLBACK_BASELINE;
+      return 1;
     }
 
-    return Number(data.total_visitors) || FALLBACK_BASELINE;
+    return Number(data.total_visitors) || 1;
   } catch {
-    return FALLBACK_BASELINE;
+    return 1;
   }
 }

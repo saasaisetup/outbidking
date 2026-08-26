@@ -17,11 +17,9 @@ export function StatsPill({
   showStatsLink = true,
 }: StatsPillProps) {
   const { onlineCount } = useOnlinePresence();
-  const [totalVisitors, setTotalVisitors] = useState<number>(142732);
-  const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [totalVisitors, setTotalVisitors] = useState<number>(1);
 
   useEffect(() => {
-    setIsMounted(true);
     let active = true;
 
     // Record unique visitor & fetch latest count from Supabase
@@ -55,22 +53,22 @@ export function StatsPill({
     <button
       type="button"
       onClick={onOpenStats}
-      className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors shadow-2xs cursor-pointer select-none max-w-full group ${className}`}
+      className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-100 dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] text-[11px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors shadow-2xs cursor-pointer select-none max-w-full group ${className}`}
     >
       {/* Pulsing Green Live Dot */}
-      <span className="relative flex h-2 w-2 flex-shrink-0">
+      <span className="relative flex h-2 w-2 shrink-0">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
       </span>
 
-      {/* Online Count */}
-      <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+      {/* Real-time Online Count */}
+      <span className="font-bold text-zinc-800 dark:text-zinc-200">
         {onlineCount.toLocaleString()} online
       </span>
 
       <span className="text-zinc-400 dark:text-zinc-600">·</span>
 
-      {/* Cumulative Visitors */}
+      {/* Real-time Cumulative Unique Visitors */}
       <span className="font-medium text-zinc-600 dark:text-zinc-400">
         {totalVisitors.toLocaleString()} visitors
       </span>

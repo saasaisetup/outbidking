@@ -12,12 +12,12 @@
 }
 
 html.dark, .dark {
-  --bg: #0e0d0b;
-  --text: #f4f3ef;
-  --card: #181613;
-  --border: #2b2721;
-  --input: #181613;
-  --stepper: #1a1815;
+  --bg: #09090b;
+  --text: #f4f4f5;
+  --card: #121217;
+  --border: #272732;
+  --input: #121217;
+  --stepper: #181822;
 }
 
 html {

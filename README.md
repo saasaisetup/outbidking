@@ -1,6 +1,6 @@
-# ⚡ outbidrank.lol — Viral Pay-to-Rank SaaS Platform
+# ⚡ outbidking.lol — Viral Pay-to-Rank SaaS Platform
 
-> **Built by [@shipxcode](https://x.com/shipxcode) · [shipxcode.dev](https://shipxcode.dev)**
+> **Built by [@shipxcode](https://x.com/shipxcode) · [shipxankit.dev](https://shipxcode.dev)**
 
 A complete, production-grade 1:1 SaaS clone of the viral pay-to-rank public auction directory where rankings are determined strictly by cumulative non-consumable bids.
 

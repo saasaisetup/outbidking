@@ -46,7 +46,7 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
   if (projects.length === 0) {
     return (
       <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6">
-        <div className="p-8 sm:p-12 rounded-3xl border border-dashed border-zinc-300 dark:border-zinc-800 bg-zinc-50/50 dark:bg-[#141210]/50 text-center flex flex-col items-center justify-center">
+        <div className="p-8 sm:p-12 rounded-3xl border border-dashed border-zinc-300 dark:border-[#272732] bg-zinc-50/50 dark:bg-[#121217]/50 text-center flex flex-col items-center justify-center">
           <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-4 shadow-sm">
             <RealisticCrown size="xl" />
           </div>
@@ -59,7 +59,7 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#d95b41] hover:to-[#ea580c] text-white font-mono font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_4px_15px_rgba(234,108,82,0.35)] hover:shadow-[0_6px_20px_rgba(234,108,82,0.5)] transition-all cursor-pointer active:scale-95 flex items-center gap-2"
+            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#d95b41] hover:to-[#ea580c] text-white font-mono font-black text-xs sm:text-sm uppercase tracking-wider shadow-[0_4px_16px_rgba(234,108,82,0.4)] hover:shadow-[0_6px_22px_rgba(234,108,82,0.55)] transition-all cursor-pointer active:scale-95 flex items-center gap-2"
           >
             <RealisticCrown size="sm" glow={false} />
             <span>Claim #1 Throne via Dodo Payments ($1)</span>
@@ -77,7 +77,7 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 flex flex-col gap-2.5 sm:gap-3 py-1.5">
       {pageItems.map((project, idx) => {
         const displayRank = startIndex + idx + 1;
-        const nextPrice = project.totalBid + 5;
+        const nextPrice = project.totalBid + 1;
         const isHovered = hoveredId === project.id;
         const catInfo = getCategory(project.category);
         const displayTitle = formatProjectTitle(project);
@@ -90,7 +90,7 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
             {/* Divider Badges */}
             {showTop10Divider && (
               <div className="py-3 sm:py-4 flex items-center justify-center">
-                <div className="px-3.5 py-0.5 sm:py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+                <div className="px-3.5 py-0.5 sm:py-1 rounded-full bg-zinc-100 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
                   ── TOP 10 ──
                 </div>
               </div>
@@ -98,7 +98,7 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
 
             {showTop20Divider && (
               <div className="py-3 sm:py-4 flex items-center justify-center">
-                <div className="px-3.5 py-0.5 sm:py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+                <div className="px-3.5 py-0.5 sm:py-1 rounded-full bg-zinc-100 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
                   ── TOP 20 ──
                 </div>
               </div>
@@ -106,7 +106,7 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
 
             {showTop50Divider && (
               <div className="py-3 sm:py-4 flex items-center justify-center">
-                <div className="px-3.5 py-0.5 sm:py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
+                <div className="px-3.5 py-0.5 sm:py-1 rounded-full bg-zinc-100 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-[10px] sm:text-[11px] font-bold text-zinc-500 uppercase tracking-widest">
                   ── TOP 50 ──
                 </div>
               </div>
@@ -117,12 +117,12 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
               onMouseEnter={() => setHoveredId(project.id)}
               onMouseLeave={() => setHoveredId(null)}
               onClick={() => onSelectProject(project, nextPrice)}
-              className="group relative w-full rounded-2xl border border-zinc-200/90 dark:border-[#2b2721] bg-white dark:bg-[#181613] p-3.5 sm:p-4 transition-all duration-150 hover:border-[#e05d44]/50 dark:hover:border-zinc-600 hover:shadow-xs cursor-pointer"
+              className="group relative w-full rounded-2xl border border-zinc-200/90 dark:border-[#272732] bg-white dark:bg-[#121217] p-3.5 sm:p-4 transition-all duration-150 hover:border-[#ea6c52]/50 dark:hover:border-zinc-600 hover:shadow-xs cursor-pointer"
             >
               {/* Compact Muted "claim this rank for $XX" floating pill */}
               {isHovered && (
                 <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-30 pointer-events-none animate-in fade-in zoom-in-95 duration-100">
-                  <span className="px-3.5 py-0.5 rounded-full bg-[#ea6c52] dark:bg-[#e05d44] text-white text-[11px] sm:text-xs font-bold tracking-tight shadow-md flex items-center justify-center whitespace-nowrap">
+                  <span className="px-3.5 py-0.5 rounded-full bg-[#ea6c52] text-white text-[11px] sm:text-xs font-bold tracking-tight shadow-md flex items-center justify-center whitespace-nowrap">
                     claim this rank for ${nextPrice.toLocaleString()}
                   </span>
                 </div>
@@ -132,7 +132,7 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
                 {/* Left Side: Rank Number + BIGGER Icon + Details */}
                 <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                   {/* Rank Number */}
-                  <div className="w-7 sm:w-9 font-mono text-zinc-400 dark:text-zinc-500 font-bold text-sm sm:text-lg flex-shrink-0">
+                  <div className="w-7 sm:w-9 font-mono text-zinc-400 dark:text-zinc-500 font-bold text-sm sm:text-lg shrink-0">
                     #{displayRank}
                   </div>
 
@@ -166,24 +166,24 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
                     )}
 
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs text-zinc-400 dark:text-zinc-500 font-medium">
-                      <span>yesterday</span>
+                      <span>recently</span>
                       <span>·</span>
                       <span className="text-zinc-600 dark:text-zinc-300 font-medium flex items-center gap-1 truncate max-w-[130px] sm:max-w-none">
                         {catInfo?.icon && <span>{catInfo.icon}</span>}
                         <span>{catInfo ? catInfo.name : project.category}</span>
                       </span>
                       <span>·</span>
-                      <span className="font-semibold text-[#e05d44] flex items-center gap-1 flex-shrink-0">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#e05d44]" />
+                      <span className="font-semibold text-[#ea6c52] flex items-center gap-1 shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#ea6c52]" />
                         {(project.clicks || 0).toLocaleString()} clicks
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Side: Terracotta Bold Price */}
-                <div className="text-right flex-shrink-0">
-                  <div className="text-sm sm:text-lg font-bold text-[#e05d44] font-mono">
+                {/* Right Side: Bold Price */}
+                <div className="text-right shrink-0">
+                  <div className="text-sm sm:text-xl font-bold text-zinc-900 dark:text-zinc-100 font-mono">
                     ${project.totalBid.toLocaleString()}
                   </div>
                 </div>
@@ -193,54 +193,37 @@ export function RankedList({ projects, onSelectProject, onRefresh }: RankedListP
         );
       })}
 
-      {/* Interactive 50-Item Pagination Bar */}
-      <div className="mt-6 sm:mt-8 pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col items-center gap-3">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-          {currentPage > 1 && (
+      {/* Pagination Controls & Live Refresh Button */}
+      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4 border-t border-zinc-200 dark:border-[#272732] text-xs text-zinc-500">
+        <button
+          onClick={handleRefreshClick}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#ea6c52]' : ''}`} />
+          <span>Refresh List</span>
+        </button>
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
             <button
+              disabled={currentPage <= 1}
               onClick={() => handlePageSelect(currentPage - 1)}
-              className="w-8 h-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+              className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#272732] disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-[#181822] cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-          )}
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <span className="font-mono">
+              Page {currentPage} of {totalPages}
+            </span>
             <button
-              key={p}
-              onClick={() => handlePageSelect(p)}
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all active:scale-90 cursor-pointer ${
-                currentPage === p
-                  ? 'bg-[#ea6c52] text-white shadow-xs'
-                  : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-
-          {currentPage < totalPages && (
-            <button
+              disabled={currentPage >= totalPages}
               onClick={() => handlePageSelect(currentPage + 1)}
-              className="w-8 h-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center cursor-pointer active:scale-90 transition-transform"
+              className="p-1.5 rounded-lg border border-zinc-200 dark:border-[#272732] disabled:opacity-40 hover:bg-zinc-100 dark:hover:bg-[#181822] cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
-          )}
-        </div>
-
-        <div className="text-[11px] sm:text-xs text-zinc-400 font-medium">
-          Showing {startIndex + 1} - {Math.min(endIndex, projects.length)} of {projects.length} listings
-        </div>
-
-        {/* Refresh Button */}
-        <button
-          onClick={handleRefreshClick}
-          className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer active:scale-95"
-        >
-          <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span>Refresh Live Bids</span>
-        </button>
+          </div>
+        )}
       </div>
     </div>
   );

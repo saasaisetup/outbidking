@@ -21,19 +21,17 @@ export function subscribeToLivePresence(
     .on('presence', { event: 'sync' }, () => {
       const presenceState = channel.presenceState();
       const count = Object.keys(presenceState).length;
-      // Add dynamic baseline active founders to raw live tabs
-      const totalLive = Math.max(count, 1) + 128;
-      onPresenceUpdate(totalLive);
+      onPresenceUpdate(Math.max(count, 1));
     })
-    .on('presence', { event: 'join' }, ({ newPresences }) => {
+    .on('presence', { event: 'join' }, () => {
       const presenceState = channel.presenceState();
       const count = Object.keys(presenceState).length;
-      onPresenceUpdate(Math.max(count, 1) + 128);
+      onPresenceUpdate(Math.max(count, 1));
     })
-    .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+    .on('presence', { event: 'leave' }, () => {
       const presenceState = channel.presenceState();
       const count = Object.keys(presenceState).length;
-      onPresenceUpdate(Math.max(count, 1) + 128);
+      onPresenceUpdate(Math.max(count, 1));
     })
     .subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {

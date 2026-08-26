@@ -23,24 +23,26 @@ export function Header({
 
   return (
     <header className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-3 sm:pt-6 pb-2 flex items-center justify-between gap-2">
-      {/* Brand Logo with 3 stacked lines */}
-      <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
-        <div className="w-4 sm:w-6 h-3 sm:h-5 flex flex-col justify-between py-0.5">
+      {/* Brand Logo with 3 stacked lines & Prominent Enlarged 'O' */}
+      <Link href="/" className="flex items-center gap-1.5 sm:gap-2.5 group shrink-0">
+        <div className="w-4 sm:w-6 h-3.5 sm:h-5 flex flex-col justify-between py-0.5">
           <div className="w-2.5 sm:w-3.5 h-0.5 sm:h-1 rounded-full bg-[#ea6c52]" />
           <div className="w-4 sm:w-6 h-0.5 sm:h-1 rounded-full bg-zinc-900 dark:bg-white" />
           <div className="w-3 sm:w-4.5 h-0.5 sm:h-1 rounded-full bg-zinc-900 dark:bg-white" />
         </div>
-        <span className="font-black text-sm sm:text-xl tracking-tight text-zinc-900 dark:text-white">
-          outbidking<span className="text-[#ea6c52]">.lol</span>
+        <span className="font-black text-base sm:text-2xl tracking-tight text-zinc-900 dark:text-white flex items-baseline">
+          <span className="text-xl sm:text-3xl font-black text-[#ea6c52] tracking-tighter">O</span>
+          <span className="font-black">utbidking</span>
+          <span className="text-[#ea6c52]">.lol</span>
         </span>
       </Link>
 
-      {/* Nav Links + Prominent Leaderboard CTA */}
-      <nav className="flex items-center gap-1.5 sm:gap-3 text-[11px] sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 shrink-0">
-        {/* Prominent Leaderboard Button in place of World Map */}
+      {/* Nav Links + Prominent Leaderboard Button */}
+      <nav className="flex items-center gap-2 sm:gap-3.5 text-[11px] sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 shrink-0">
+        {/* Prominent Tactile Orange Leaderboard Button */}
         <Link
           href="/"
-          className="group relative inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] text-white shadow-md shadow-[#ea6c52]/25 hover:shadow-lg hover:shadow-[#ea6c52]/40 hover:scale-[1.03] active:scale-[0.98] transition-all font-black text-xs sm:text-sm tracking-tight cursor-pointer"
+          className="group relative inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white shadow-md shadow-[#ea6c52]/30 hover:shadow-lg hover:shadow-[#ea6c52]/45 hover:scale-[1.03] active:scale-[0.98] transition-all font-black text-xs sm:text-sm tracking-tight cursor-pointer"
           title="Leaderboard: Outbid competitors and grab #1"
         >
           <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-200" />
@@ -87,7 +89,7 @@ export function Header({
           onClick={toggleTheme}
           aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="p-1 sm:p-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
+          className="p-1.5 sm:p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
         >
           {darkMode ? (
             <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />

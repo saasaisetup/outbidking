@@ -23,11 +23,12 @@ export function CategoryFilters({
           return (
             <button
               key={cat.slug}
+              type="button"
               onClick={() => onSelectCategory(cat.slug as CategorySlug)}
-              className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-150 flex-shrink-0 cursor-pointer active:scale-95 ${
+              className={`inline-flex items-center gap-2 px-3.5 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-150 flex-shrink-0 cursor-pointer active:scale-95 ${
                 isSelected
-                  ? 'bg-[#ea6c52] text-white shadow-xs'
-                  : 'bg-zinc-100 dark:bg-[#181613] text-zinc-700 dark:text-zinc-400 border border-zinc-200/80 dark:border-[#2e2a24] hover:border-zinc-300 dark:hover:border-zinc-700 hover:text-zinc-950 dark:hover:text-zinc-200'
+                  ? 'bg-gradient-to-r from-[#ea6c52] to-[#f97316] text-white border border-[#d95b41] shadow-md shadow-[#ea6c52]/25'
+                  : 'bg-zinc-100 dark:bg-[#121217] text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-[#272732] hover:border-zinc-300 dark:hover:border-zinc-700 hover:text-zinc-950 dark:hover:text-white'
               }`}
             >
               {/* Category Icon */}
