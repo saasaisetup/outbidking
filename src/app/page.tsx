@@ -11,9 +11,8 @@ import { BottomRevenueCounter } from '@/components/BottomRevenueCounter';
 import { Footer } from '@/components/Footer';
 
 import { BidModal } from '@/components/BidModal';
-import { RulesModal } from '@/components/RulesModal';
-import { AboutModal } from '@/components/AboutModal';
 import { StatsModal } from '@/components/StatsModal';
+import { ProjectDetailsModal } from '@/components/ProjectDetailsModal';
 import { OutbidToast } from '@/components/OutbidToast';
 
 import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug } from '@/lib/types';
@@ -42,11 +41,11 @@ export default function HomePage() {
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
   const [prefillUrl, setPrefillUrl] = useState('');
   const [prefillBid, setPrefillBid] = useState<number | undefined>(undefined);
-  const [prefillCategory, setPrefillCategory] = useState('agencies-studios-services');
+  const [prefillCategory, setPrefillCategory] = useState('ai-agents-infrastructure');
 
-  const [isRulesOpen, setIsRulesOpen] = useState(false);
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [selectedDetailProject, setSelectedDetailProject] = useState<Project | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [toastEvent, setToastEvent] = useState<SSEEventData | null>(null);
 
   const fetchData = useCallback(async (cat = selectedCategory) => {
@@ -145,6 +144,7 @@ export default function HomePage() {
     url,
     category,
     bidAmount,
+    logoUrl,
   }: {
     url: string;
     category: string;
@@ -152,26 +152,30 @@ export default function HomePage() {
     logoUrl?: string;
   }) => {
     setPrefillUrl(url);
-    setPrefillCategory(category || (selectedCategory !== 'all' ? selectedCategory : 'agencies-studios-services'));
+    setPrefillCategory(category);
     setPrefillBid(bidAmount);
     setIsBidModalOpen(true);
   };
 
   const handleSelectCardToOutbid = (project: Project, nextPrice: number) => {
-    setCurrentBidAmount(nextPrice);
     setPrefillUrl(project.url);
-    setPrefillBid(nextPrice);
     setPrefillCategory(project.category);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setPrefillBid(nextPrice);
+    setIsBidModalOpen(true);
+  };
+
+  const handleOpenDetails = (project: Project) => {
+    setSelectedDetailProject(project);
+    setIsDetailsOpen(true);
   };
 
   return (
-    <div className="min-h-screen selection:bg-[#ea6c52] selection:text-white font-sans transition-colors duration-200 overflow-x-hidden">
-      {/* Top Header */}
+    <div className="min-h-screen bg-white dark:bg-[#09090b] text-zinc-900 dark:text-[#f4f4f5] selection:bg-[#ea6c52] selection:text-white font-sans transition-colors duration-200">
+      {/* Header */}
       <Header />
 
-      <main className="w-full pb-12">
-        {/* Hero Section with Favicon Grabber and Category Dropdown */}
+      <main className="w-full pb-16">
+        {/* Hero Section */}
         <HeroBiddingBar
           stats={stats}
           currentBidAmount={currentBidAmount}
@@ -190,6 +194,7 @@ export default function HomePage() {
         <TopThreeCards
           topProjects={projects}
           onSelectProject={handleSelectCardToOutbid}
+          onViewDetails={handleOpenDetails}
         />
 
         {/* Latest Activity Ticker */}
@@ -205,19 +210,15 @@ export default function HomePage() {
         <RankedList
           projects={projects}
           onSelectProject={handleSelectCardToOutbid}
+          onViewDetails={handleOpenDetails}
           onRefresh={() => fetchData()}
         />
 
         {/* Bottom Revenue Counter */}
-        <BottomRevenueCounter
-          stats={stats}
-        />
+        <BottomRevenueCounter stats={stats} />
 
         {/* Footer */}
-        <Footer
-          onOpenRules={() => setIsRulesOpen(true)}
-          onOpenStats={() => setIsStatsOpen(true)}
-        />
+        <Footer onOpenStats={() => setIsStatsOpen(true)} />
       </main>
 
       {/* Interactive Modals */}
@@ -225,20 +226,17 @@ export default function HomePage() {
         isOpen={isBidModalOpen}
         onClose={() => setIsBidModalOpen(false)}
         initialUrl={prefillUrl}
-        initialBidAmount={prefillBid}
+        initialBidAmount={prefillBid || currentBidAmount}
         initialCategory={prefillCategory}
         stats={stats}
         onBidSuccess={() => fetchData()}
       />
 
-      <RulesModal
-        isOpen={isRulesOpen}
-        onClose={() => setIsRulesOpen(false)}
-      />
-
-      <AboutModal
-        isOpen={isAboutOpen}
-        onClose={() => setIsAboutOpen(false)}
+      <ProjectDetailsModal
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        project={selectedDetailProject}
+        onOutbid={(p, nextAmt) => handleSelectCardToOutbid(p, nextAmt)}
       />
 
       <StatsModal

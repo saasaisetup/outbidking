@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Loader2, ShieldCheck, Globe, Crown, Upload, Image as ImageIcon, CreditCard, CheckCircle2 } from 'lucide-react';
+import { X, Loader2, ShieldCheck, Globe, Crown, Upload, Image as ImageIcon, CreditCard, CheckCircle2, ChevronDown } from 'lucide-react';
 import { PlatformStats } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
+import { CategoryIcon } from './CategoryIcon';
 
 interface BidModalProps {
   isOpen: boolean;
@@ -50,7 +51,6 @@ export function BidModal({
       return;
     }
 
-    // Call /api/avatar for multi-source resolution
     try {
       setIsFetchingAvatar(true);
       const res = await fetch(`/api/avatar?input=${encodeURIComponent(trimmed)}`);
@@ -120,16 +120,24 @@ export function BidModal({
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setErrorMessage('');
+    setIsLoading(true);
+    setErrorMessage('');
 
+    try {
       let finalTitle = title.trim();
+      const cleanUrl = url.trim().toLowerCase();
       if (!finalTitle) {
-        finalTitle = url.trim().startsWith('@')
-          ? url.trim()
-          : url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+        if (cleanUrl.startsWith('@')) {
+          finalTitle = cleanUrl;
+        } else if (cleanUrl.includes('x.com/') || cleanUrl.includes('twitter.com/')) {
+          const handle = cleanUrl.replace(/^(https?:\/\/)?(www\.)?(x\.com|twitter\.com)\//, '').split('/')[0].split('?')[0].replace(/^@/, '');
+          finalTitle = `@${handle}`;
+        } else {
+          finalTitle = url.trim().replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+        }
       }
+
+      const clientOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://outbidking.lol';
 
       const res = await fetch('/api/dodo/checkout', {
         method: 'POST',
@@ -142,6 +150,7 @@ export function BidModal({
           bidAmount,
           logoUrl: avatarUrl,
           email: customerEmail.trim() || undefined,
+          origin: clientOrigin,
         }),
       });
 
@@ -152,10 +161,10 @@ export function BidModal({
         return;
       }
 
-      // Redirect immediately to official Dodo Payments checkout page
+      // Redirect directly to official Dodo Payments checkout page
       window.location.href = data.paymentLink;
     } catch (err: any) {
-      setErrorMessage(err.message || 'An error occurred while initiating payment');
+      setErrorMessage(err.message || 'Something went wrong creating checkout');
       setIsLoading(false);
     }
   };
@@ -163,39 +172,48 @@ export function BidModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150 overflow-y-auto">
-      <div className="relative w-full max-w-lg my-8 rounded-3xl bg-white dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] shadow-2xl p-6 sm:p-7 text-zinc-900 dark:text-[#f4f4f5] font-sans animate-in zoom-in-95 duration-150">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute right-5 top-5 p-2 rounded-full text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] shadow-2xl p-4 sm:p-6 my-auto max-h-[92vh] flex flex-col animate-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#ea6c52] to-[#f97316] text-white flex flex-col justify-center items-center gap-1 p-2 shadow-md shadow-[#ea6c52]/30 flex-shrink-0">
-            <Crown className="w-5 h-5 text-white" />
+        <div className="flex items-start justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#ea6c52] text-white flex items-center justify-center shadow-xs">
+              <Crown className="w-5 h-5 fill-current" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
+                Claim Your Spot on the Board
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Instant ranking activation starting at <span className="font-bold text-[#ea6c52]">$1 USD</span>
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
-              Claim Your Spot on the Board
-            </h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Instant ranking activation starting at <span className="font-bold text-[#ea6c52]">$1 USD</span>
-            </p>
-          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-300 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {errorMessage && (
-          <div className="my-3 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs font-semibold">
-            {errorMessage}
-          </div>
-        )}
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleSubmitDodoBid} className="mt-3.5 space-y-3.5 overflow-y-auto pr-1 flex-1 pb-2">
+          {errorMessage && (
+            <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-semibold">
+              {errorMessage}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmitDodoBid} className="space-y-4 mt-4">
-          {/* URL / Handle Input */}
+          {/* URL Input */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
@@ -220,7 +238,7 @@ export function BidModal({
                   />
                 </div>
               ) : (
-                <Globe className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+                <Globe className="w-4 h-4 text-zinc-400 flex-shrink-0" />
               )}
               <input
                 type="text"
@@ -230,16 +248,16 @@ export function BidModal({
                   setUrl(e.target.value);
                   fetchAvatarAndMeta(e.target.value);
                 }}
-                placeholder="e.g. https://myproduct.com or @handle"
-                className="w-full bg-transparent text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none font-medium"
+                placeholder="e.g. https://myproduct.com or @shipxankit"
+                className="w-full bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none font-medium"
               />
             </div>
           </div>
 
           {/* Logo Preview & 3D Side Upload Button */}
           <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-white dark:bg-black/40 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-white dark:bg-black/40 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
                 {avatarUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={avatarUrl} alt="Logo" className="w-full h-full object-cover" />
@@ -247,18 +265,18 @@ export function BidModal({
                   <ImageIcon className="w-5 h-5 text-zinc-400" />
                 )}
               </div>
-              <div className="text-left">
-                <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
-                  {isCustomLogo ? 'Custom Logo Uploaded' : avatarUrl ? 'Live Profile Logo' : 'Logo / Icon'}
+              <div className="text-left min-w-0">
+                <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200 truncate">
+                  {isCustomLogo ? 'Custom Logo Uploaded' : avatarUrl ? 'Live Profile Logo' : 'Logo / Favicon'}
                 </p>
-                <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                  {avatarUrl ? 'Ready for leaderboard display' : 'Automatically extracted from your link'}
+                <p className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+                  {avatarUrl ? 'Ready for leaderboard display' : 'Automatically extracted from link'}
                 </p>
               </div>
             </div>
 
             {/* 3D Side Upload Button */}
-            <label className="px-3.5 py-2 rounded-xl bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_3px_0_0_#b8432a] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[2px] shrink-0">
+            <label className="px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white font-black text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_3px_0_0_#b8432a] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[1.5px] shrink-0 select-none">
               <Upload className="w-3.5 h-3.5" />
               <span>Upload</span>
               <input
@@ -280,27 +298,33 @@ export function BidModal({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Product or brand name"
+              placeholder="Product or brand name (optional)"
               className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-xs font-semibold text-zinc-900 dark:text-white focus:outline-none focus:border-[#ea6c52]"
             />
           </div>
 
-          {/* Category Dropdown */}
+          {/* Category Dropdown with Unified CategoryIcon */}
           <div>
             <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
               Category <span className="text-[#ea6c52]">*</span>
             </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-[#ea6c52] cursor-pointer"
-            >
-              {CATEGORIES.filter((c) => c.slug !== 'all').map((c) => (
-                <option key={c.slug} value={c.slug} className="dark:bg-[#121217]">
-                  {c.icon} {c.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative flex items-center">
+              <div className="absolute left-3.5 pointer-events-none z-10">
+                <CategoryIcon slug={category || 'ai-agents-infrastructure'} size="xs" />
+              </div>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full py-2.5 pl-10 pr-9 rounded-2xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[#ea6c52] cursor-pointer appearance-none"
+              >
+                {CATEGORIES.filter((c) => c.slug !== 'all').map((c) => (
+                  <option key={c.slug} value={c.slug} className="dark:bg-[#121217] text-zinc-900 dark:text-zinc-200">
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+            </div>
           </div>
 
           {/* Optional Billing Email */}
@@ -313,12 +337,12 @@ export function BidModal({
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
               placeholder="you@company.com"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:border-[#ea6c52]"
+              className="w-full px-3.5 py-2 rounded-xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:border-[#ea6c52]"
             />
           </div>
 
           {/* Amount Customizer & "Take #1" Action */}
-          <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] space-y-3">
+          <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
                 Your Bid Amount (USD)
@@ -326,7 +350,7 @@ export function BidModal({
               <button
                 type="button"
                 onClick={handleSetTakeNumberOne}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#ea6c52]/15 text-[#ea6c52] dark:text-[#f87171] border border-[#ea6c52]/30 text-[11px] font-black hover:bg-[#ea6c52]/25 transition-all cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#ea6c52]/15 text-[#ea6c52] dark:text-[#f87171] border border-[#ea6c52]/30 text-[11px] font-black hover:bg-[#ea6c52]/25 transition-all cursor-pointer"
               >
                 <Crown className="w-3 h-3 fill-current" />
                 <span>Take #1 Spot (${takeNumberOneAmount.toLocaleString()})</span>
@@ -334,7 +358,7 @@ export function BidModal({
             </div>
 
             {/* Direct Editable Currency Input */}
-            <div className="relative flex items-center px-4 py-2.5 rounded-xl bg-white dark:bg-[#121217] border border-zinc-300 dark:border-zinc-700 shadow-inner">
+            <div className="relative flex items-center px-3.5 py-2 rounded-xl bg-white dark:bg-[#121217] border border-zinc-300 dark:border-zinc-700 shadow-inner">
               <span className="text-xl font-black text-zinc-400 mr-2 font-mono">$</span>
               <input
                 type="number"
@@ -351,7 +375,7 @@ export function BidModal({
             </div>
 
             {/* Quick Add Increment Pills */}
-            <div className="flex items-center justify-between gap-1.5 pt-1">
+            <div className="flex items-center justify-between gap-1.5 pt-0.5">
               <span className="text-[11px] text-zinc-400 font-medium">Quick add:</span>
               <div className="flex items-center gap-1.5">
                 {[1, 5, 25, 100, 500].map((inc) => (
@@ -359,7 +383,7 @@ export function BidModal({
                     key={inc}
                     type="button"
                     onClick={() => addAmount(inc)}
-                    className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-[#121217] border border-zinc-200 dark:border-zinc-700 text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 shadow-2xs"
+                    className="px-2.5 py-1 rounded-xl bg-white dark:bg-[#121217] border border-zinc-200 dark:border-zinc-700 text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer active:scale-95 shadow-2xs"
                   >
                     +${inc}
                   </button>
@@ -383,7 +407,7 @@ export function BidModal({
           </div>
 
           {/* Highlighted Dodo Payments Option Badge */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#ea6c52]/10 via-[#f97316]/10 to-transparent border border-[#ea6c52]/30 flex items-center justify-between">
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-[#ea6c52]/10 via-[#f97316]/10 to-transparent border border-[#ea6c52]/30 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-lg bg-[#ea6c52] text-white flex items-center justify-center shrink-0">
                 <CreditCard className="w-4 h-4" />
@@ -406,7 +430,7 @@ export function BidModal({
           </div>
 
           {/* 3D Tactile Big Confirm Button */}
-          <div className="pt-2">
+          <div className="pt-1">
             <button
               type="submit"
               disabled={isLoading || !url.trim() || bidAmount < 1}
@@ -425,7 +449,7 @@ export function BidModal({
             </button>
           </div>
 
-          <p className="text-center text-[10px] text-zinc-400">
+          <p className="text-center text-[10px] text-zinc-400 pb-1">
             Official Dodo Payments checkout · Instant live activation
           </p>
         </form>

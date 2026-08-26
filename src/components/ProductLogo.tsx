@@ -30,7 +30,7 @@ export function ProductLogo({
     xl: 'w-14 h-14 sm:w-18 sm:h-18 rounded-[20px] sm:rounded-[24px] text-lg sm:text-xl',
   };
 
-  // 1. If explicit logoUrl is provided (e.g. live Twitter avatar, GitHub avatar, custom uploaded logo), prioritize rendering it!
+  // 1. If explicit logoUrl is provided, prioritize rendering with no-referrer
   if (logoUrl && !imgError) {
     return (
       <div className={`${sizeClasses[size]} bg-white dark:bg-[#181613] border border-zinc-200 dark:border-zinc-800 flex items-center justify-center p-1 flex-shrink-0 overflow-hidden shadow-2xs ${className}`}>
@@ -38,6 +38,7 @@ export function ProductLogo({
         <img
           src={logoUrl}
           alt={title || domain}
+          referrerPolicy="no-referrer"
           className="w-full h-full object-cover rounded-[14px] sm:rounded-[18px]"
           onError={() => setImgError(true)}
         />
@@ -115,6 +116,7 @@ export function ProductLogo({
         <img
           src={src}
           alt={title || domain}
+          referrerPolicy="no-referrer"
           className="w-full h-full object-contain rounded-lg"
           onError={() => setImgError(true)}
         />

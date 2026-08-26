@@ -12,8 +12,10 @@ import { Footer } from '@/components/Footer';
 
 import { BidModal } from '@/components/BidModal';
 import { StatsModal } from '@/components/StatsModal';
+import { ProjectDetailsModal } from '@/components/ProjectDetailsModal';
+import { CategoryIcon } from '@/components/CategoryIcon';
 
-import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug } from '@/lib/types';
+import { Project, PlatformStats, BidTransaction, CategorySlug } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
 import { soundManager } from '@/lib/sound';
 import { ArrowLeft } from 'lucide-react';
@@ -39,6 +41,8 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
   const [prefillUrl, setPrefillUrl] = useState('');
   const [prefillBid, setPrefillBid] = useState<number | undefined>(undefined);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [selectedDetailProject, setSelectedDetailProject] = useState<Project | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const currentCategory = CATEGORIES.find((c) => c.slug === slug) || {
     slug: slug as CategorySlug,
@@ -114,6 +118,17 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
     setIsBidModalOpen(true);
   };
 
+  const handleSelectCardToOutbid = (project: Project, nextPrice: number) => {
+    setPrefillUrl(project.url);
+    setPrefillBid(nextPrice);
+    setIsBidModalOpen(true);
+  };
+
+  const handleOpenDetails = (project: Project) => {
+    setSelectedDetailProject(project);
+    setIsDetailsOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#09090b] text-zinc-900 dark:text-[#f4f4f5] selection:bg-[#ea6c52] selection:text-white font-sans transition-colors duration-200">
       <Header />
@@ -128,8 +143,8 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>All Categories</span>
           </Link>
-          <span className="text-xs font-bold text-[#ea6c52] flex items-center gap-1">
-            <span>{currentCategory.icon}</span>
+          <span className="text-xs font-bold text-[#ea6c52] flex items-center gap-1.5">
+            <CategoryIcon slug={slug} size="xs" />
             <span>{currentCategory.name}</span>
           </span>
         </div>
@@ -158,11 +173,8 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
         {/* Top 3 Tinted Cards */}
         <TopThreeCards
           topProjects={projects}
-          onSelectProject={(p) => {
-            setPrefillUrl(p.url);
-            setPrefillBid(p.totalBid + 1);
-            setIsBidModalOpen(true);
-          }}
+          onSelectProject={handleSelectCardToOutbid}
+          onViewDetails={handleOpenDetails}
         />
 
         {/* Latest Activity Ticker */}
@@ -178,11 +190,8 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
         {/* Ranked Table */}
         <RankedList
           projects={projects}
-          onSelectProject={(p) => {
-            setPrefillUrl(p.url);
-            setPrefillBid(p.totalBid + 1);
-            setIsBidModalOpen(true);
-          }}
+          onSelectProject={handleSelectCardToOutbid}
+          onViewDetails={handleOpenDetails}
           onRefresh={() => fetchData()}
         />
 
@@ -199,6 +208,13 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
         initialCategory={slug}
         stats={stats}
         onBidSuccess={() => fetchData()}
+      />
+
+      <ProjectDetailsModal
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        project={selectedDetailProject}
+        onOutbid={(p, nextAmt) => handleSelectCardToOutbid(p, nextAmt)}
       />
 
       <StatsModal isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} stats={stats} />
