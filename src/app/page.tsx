@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { HeroBiddingBar } from '@/components/HeroBiddingBar';
 import { CategoryFilters } from '@/components/CategoryFilters';
@@ -11,29 +10,22 @@ import { RankedList } from '@/components/RankedList';
 import { BottomRevenueCounter } from '@/components/BottomRevenueCounter';
 import { Footer } from '@/components/Footer';
 
-// World War Map Components
-import { WorldWarMap } from '@/components/WorldWarMap';
-import { WorldPowersDrawer } from '@/components/WorldPowersDrawer';
-import { UnclaimedLandDrawer } from '@/components/UnclaimedLandDrawer';
-import { CommandSideDrawer } from '@/components/CommandSideDrawer';
-
 import { BidModal } from '@/components/BidModal';
 import { RulesModal } from '@/components/RulesModal';
 import { AboutModal } from '@/components/AboutModal';
 import { StatsModal } from '@/components/StatsModal';
 import { OutbidToast } from '@/components/OutbidToast';
 
-import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug, TerritoryState, WorldPower, WarEvent, MapStats } from '@/lib/types';
+import { Project, PlatformStats, BidTransaction, SSEEventData, CategorySlug } from '@/lib/types';
 import { soundManager } from '@/lib/sound';
 import { supabase } from '@/lib/supabase';
 import { subscribeToLivePresence } from '@/lib/presence';
-import { Globe, Layers, ExternalLink } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function HomePage() {
-  const [viewMode, setViewMode] = useState<'board' | 'map'>('board');
   const [projects, setProjects] = useState<Project[]>([]);
   const [liveVisitors, setLiveVisitors] = useState<number>(1);
+  const [timeFilter, setTimeFilter] = useState<'week' | 'all'>('week');
   const [stats, setStats] = useState<PlatformStats>({
     totalVolume: 0,
     totalBidsCount: 0,
@@ -47,26 +39,11 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<CategorySlug>('all');
   const [currentBidAmount, setCurrentBidAmount] = useState<number>(1);
 
-  // World War Map State
-  const [territories, setTerritories] = useState<TerritoryState[]>([]);
-  const [powers, setPowers] = useState<WorldPower[]>([]);
-  const [warEvents, setWarEvents] = useState<WarEvent[]>([]);
-  const [mapStats, setMapStats] = useState<MapStats>({
-    onlineCount: 1,
-    totalVisitors: 0,
-    totalPlundered: 0,
-    totalClicks: 0,
-    claimedCount: 0,
-    totalCountries: 194,
-  });
-  const [selectedTerritory, setSelectedTerritory] = useState<TerritoryState | null>(null);
-  const [isCommandDrawerOpen, setIsCommandDrawerOpen] = useState(false);
-
   // Modals state
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
   const [prefillUrl, setPrefillUrl] = useState('');
   const [prefillBid, setPrefillBid] = useState<number | undefined>(undefined);
-  const [prefillCategory, setPrefillCategory] = useState('ai-agents-infrastructure');
+  const [prefillCategory, setPrefillCategory] = useState('agencies-studios-services');
 
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -105,29 +82,8 @@ export default function HomePage() {
     }
   }, [selectedCategory]);
 
-  const fetchTerritories = useCallback(async () => {
-    try {
-      const res = await fetch('/api/territories');
-      const data = await res.json();
-      if (data.success) {
-        if (data.territories) setTerritories(data.territories);
-        if (data.powers) setPowers(data.powers);
-        if (data.warEvents) setWarEvents(data.warEvents);
-        if (data.stats) {
-          setMapStats({
-            ...data.stats,
-            onlineCount: liveVisitors || data.stats.onlineCount,
-          });
-        }
-      }
-    } catch (err) {
-      console.error('[Outbid] Fetch territories error:', err);
-    }
-  }, [liveVisitors]);
-
   useEffect(() => {
     fetchData(selectedCategory);
-    fetchTerritories();
 
     // Handle Dodo Payments checkout return
     if (typeof window !== 'undefined') {
@@ -144,7 +100,6 @@ export default function HomePage() {
                 confetti({ particleCount: 120, spread: 80, origin: { y: 0.4 } });
                 soundManager.playCashChing();
                 fetchData(selectedCategory);
-                fetchTerritories();
               }
             })
             .catch(() => {});
@@ -155,11 +110,10 @@ export default function HomePage() {
 
     const unsubscribePresence = subscribeToLivePresence((onlineCount) => {
       setLiveVisitors(onlineCount);
-      setMapStats((prev) => ({ ...prev, onlineCount }));
     });
 
     const channel = supabase
-      .channel('realtime-global-feed')
+      .channel('realtime-leaderboard-feed')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'projects' },
@@ -175,18 +129,10 @@ export default function HomePage() {
           fetchData();
         }
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'territories' },
-        () => {
-          fetchTerritories();
-        }
-      )
       .subscribe();
 
     const pollTimer = setInterval(() => {
       fetchData();
-      fetchTerritories();
     }, 4000);
 
     return () => {
@@ -194,7 +140,7 @@ export default function HomePage() {
       supabase.removeChannel(channel);
       clearInterval(pollTimer);
     };
-  }, [selectedCategory, fetchData, fetchTerritories]);
+  }, [selectedCategory, fetchData]);
 
   const handleHeroSubmitBid = ({
     url,
@@ -207,7 +153,7 @@ export default function HomePage() {
     logoUrl?: string;
   }) => {
     setPrefillUrl(url);
-    setPrefillCategory(category || (selectedCategory !== 'all' ? selectedCategory : 'ai-agents-infrastructure'));
+    setPrefillCategory(category || (selectedCategory !== 'all' ? selectedCategory : 'agencies-studios-services'));
     setPrefillBid(bidAmount);
     setIsBidModalOpen(true);
   };
@@ -220,86 +166,71 @@ export default function HomePage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSelectTerritory = (t: TerritoryState) => {
-    setSelectedTerritory(t);
-    setIsCommandDrawerOpen(true);
-  };
-
-  const handleSelectCountryByCode = (code: string) => {
-    const t = territories.find((item) => item.countryCode === code);
-    if (t) {
-      handleSelectTerritory(t);
-    }
-  };
+  // Filter projects by time if applicable
+  const displayProjects = React.useMemo(() => {
+    if (timeFilter === 'all') return projects;
+    // For 'week', filter projects created or updated within the last 7 days
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return projects.filter((p) => new Date(p.updatedAt || p.createdAt) >= weekAgo || projects.length <= 3);
+  }, [projects, timeFilter]);
 
   return (
-    <div className="min-h-screen selection:bg-[#e05d44] selection:text-white font-sans transition-colors duration-200 overflow-x-hidden">
+    <div className="min-h-screen selection:bg-[#ea6c52] selection:text-white font-sans transition-colors duration-200 overflow-x-hidden">
       {/* Top Header */}
       <Header />
 
       <main className="w-full pb-12">
-          {/* Hero Section with Favicon Grabber and Category Dropdown */}
-          <HeroBiddingBar
-            stats={stats}
-            currentBidAmount={currentBidAmount}
-            onBidAmountChange={(amt) => setCurrentBidAmount(amt)}
-            onSubmitBid={handleHeroSubmitBid}
-            onOpenStats={() => setIsStatsOpen(true)}
-          />
+        {/* Hero Section with Unified Card and Time Filter Switch Pill */}
+        <HeroBiddingBar
+          stats={stats}
+          currentBidAmount={currentBidAmount}
+          timeFilter={timeFilter}
+          onTimeFilterChange={setTimeFilter}
+          onBidAmountChange={(amt) => setCurrentBidAmount(amt)}
+          onSubmitBid={handleHeroSubmitBid}
+          onOpenStats={() => setIsStatsOpen(true)}
+        />
 
-          {/* Category Pills Bar */}
-          <CategoryFilters
-            selectedCategory={selectedCategory}
-            onSelectCategory={(slug) => setSelectedCategory(slug)}
-          />
+        {/* Category Horizontal Filter Pills Bar */}
+        <CategoryFilters
+          selectedCategory={selectedCategory}
+          onSelectCategory={(slug) => setSelectedCategory(slug)}
+        />
 
-          {/* Top 3 Tinted Cards */}
-          <TopThreeCards
-            topProjects={projects}
-            onSelectProject={handleSelectCardToOutbid}
-          />
+        {/* Top 3 Tinted Crown Cards */}
+        <TopThreeCards
+          topProjects={displayProjects}
+          onSelectProject={handleSelectCardToOutbid}
+        />
 
-          {/* Latest Activity Ticker */}
-          <LatestActivityTicker
-            recentBids={recentBids}
-            onSelectBid={(bid) => {
-              const proj = projects.find((p) => p.id === bid.projectId);
-              if (proj) handleSelectCardToOutbid(proj, proj.totalBid + 5);
-            }}
-          />
+        {/* Latest Activity Ticker */}
+        <LatestActivityTicker
+          recentBids={recentBids}
+          onSelectBid={(bid) => {
+            const proj = projects.find((p) => p.id === bid.projectId);
+            if (proj) handleSelectCardToOutbid(proj, proj.totalBid + 1);
+          }}
+        />
 
-          {/* Complete Paginated Leaderboard */}
-          <RankedList
-            projects={projects}
-            onSelectProject={handleSelectCardToOutbid}
-            onRefresh={() => fetchData()}
-          />
+        {/* Complete Paginated Leaderboard */}
+        <RankedList
+          projects={displayProjects}
+          onSelectProject={handleSelectCardToOutbid}
+          onRefresh={() => fetchData()}
+        />
 
-          {/* Bottom Revenue Counter */}
-          <BottomRevenueCounter
-            stats={stats}
-          />
+        {/* Bottom Revenue Counter */}
+        <BottomRevenueCounter
+          stats={stats}
+        />
 
-          {/* Footer */}
-          <Footer
-            onOpenRules={() => setIsRulesOpen(true)}
-            onOpenStats={() => setIsStatsOpen(true)}
-          />
-        </main>
-
-      {/* Right Slide-in Command Side Drawer */}
-      <CommandSideDrawer
-        territory={selectedTerritory}
-        isOpen={isCommandDrawerOpen}
-        onClose={() => {
-          setIsCommandDrawerOpen(false);
-          setSelectedTerritory(null);
-        }}
-        onConquerSuccess={() => {
-          fetchTerritories();
-          fetchData();
-        }}
-      />
+        {/* Footer */}
+        <Footer
+          onOpenRules={() => setIsRulesOpen(true)}
+          onOpenStats={() => setIsStatsOpen(true)}
+        />
+      </main>
 
       {/* Interactive Modals */}
       <BidModal

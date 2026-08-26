@@ -4,13 +4,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Minus, Plus, ChevronDown, Globe } from 'lucide-react';
 import { CATEGORIES } from '@/lib/categories';
 import { PlatformStats } from '@/lib/types';
-import { CategoryIcon } from './CategoryIcon';
 import { StatsPill } from './StatsPill';
 
 interface HeroBiddingBarProps {
   stats: PlatformStats;
   currentBidAmount: number;
   targetRank?: number;
+  timeFilter?: 'week' | 'all';
+  onTimeFilterChange?: (filter: 'week' | 'all') => void;
   onBidAmountChange: (amount: number) => void;
   onSubmitBid: (params: { url: string; category: string; bidAmount: number; logoUrl?: string; isHandle?: boolean }) => void;
   onOpenStats?: () => void;
@@ -20,12 +21,14 @@ export function HeroBiddingBar({
   stats,
   currentBidAmount,
   targetRank = 1,
+  timeFilter = 'week',
+  onTimeFilterChange,
   onBidAmountChange,
   onSubmitBid,
   onOpenStats,
 }: HeroBiddingBarProps) {
   const [url, setUrl] = useState('');
-  const [category, setCategory] = useState('ai-agents-infrastructure');
+  const [category, setCategory] = useState('agencies-studios-services');
   const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
   const [isXHandle, setIsXHandle] = useState(false);
   const [isInstagram, setIsInstagram] = useState(false);
@@ -81,12 +84,9 @@ export function HeroBiddingBar({
     onBidAmountChange(currentBidAmount + 1);
   };
 
-  // Allow submitting
-  const isFormValid = url.trim().length > 0;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) return;
+    if (!url.trim()) return;
 
     let finalUrl = url.trim();
     if (finalUrl.startsWith('@')) {
@@ -95,7 +95,7 @@ export function HeroBiddingBar({
 
     onSubmitBid({
       url: finalUrl,
-      category: category || 'ai-agents-infrastructure',
+      category: category || 'agencies-studios-services',
       bidAmount: currentBidAmount || 1,
       logoUrl: faviconUrl || undefined,
       isHandle: isXHandle,
@@ -103,32 +103,32 @@ export function HeroBiddingBar({
   };
 
   return (
-    <section className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-5 sm:pt-7 pb-4 flex flex-col items-center text-center">
+    <section className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2 flex flex-col items-center text-center">
       {/* Realtime StatsPill: Live Online Presence + Cumulative Visitors */}
-      <StatsPill onOpenStats={onOpenStats} className="mb-5 sm:mb-6" />
+      <StatsPill onOpenStats={onOpenStats} className="mb-4 sm:mb-5" />
 
-      {/* Upscaled Headline: Grab [ #1 ] for ( - $14028 + ) ? */}
+      {/* Stepper Headline: Grab [ #1 ] for ( - $1 + ) ? */}
       <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-2xl xs:text-3xl sm:text-5xl font-extrabold text-zinc-900 dark:text-white leading-tight">
         <span>Grab</span>
 
         {/* 3D #1 Pill Badge */}
-        <div className="inline-flex items-center px-3.5 sm:px-4.5 py-0.5 sm:py-1 rounded-2xl border-2 border-zinc-400/80 dark:border-zinc-500 bg-white dark:bg-[#181613] text-zinc-900 dark:text-white font-mono text-xl xs:text-2xl sm:text-4xl font-black shadow-[0_3px_0_0_#cbd5e1] dark:shadow-[0_3px_0_0_#4a453e] sm:shadow-[0_4px_0_0_#cbd5e1] sm:dark:shadow-[0_4px_0_0_#4a453e]">
+        <div className="inline-flex items-center px-3 sm:px-4 py-0.5 sm:py-1 rounded-2xl border-2 border-zinc-400/80 dark:border-zinc-500 bg-white dark:bg-[#181613] text-zinc-900 dark:text-white font-mono text-xl xs:text-2xl sm:text-4xl font-black shadow-[0_3px_0_0_#cbd5e1] dark:shadow-[0_3px_0_0_#4a453e]">
           #{targetRank}
         </div>
 
         <span>for</span>
 
-        {/* Oval Stepper Container with direct editable typing */}
-        <div className="inline-flex items-center gap-2 sm:gap-3 px-3.5 sm:px-5 py-1 sm:py-1.5 rounded-full bg-zinc-100 dark:bg-[#1a1815] border border-zinc-200 dark:border-[#2e2a24] shadow-inner group">
+        {/* Oval Stepper Container */}
+        <div className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-zinc-100 dark:bg-[#1a1815] border border-zinc-200 dark:border-[#2e2a24] shadow-inner group">
           <button
             type="button"
             onClick={handleDecrement}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-[#12100e] border border-zinc-300 dark:border-[#2e2a24] flex items-center justify-center text-zinc-600 dark:text-zinc-400 font-bold text-xs hover:border-zinc-500 active:scale-90 transition-all cursor-pointer flex-shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-[#12100e] border border-zinc-300 dark:border-[#2e2a24] flex items-center justify-center text-zinc-600 dark:text-zinc-400 font-bold text-xs hover:border-zinc-500 active:scale-90 transition-all cursor-pointer shrink-0"
           >
             <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
-          {/* Directly editable number input */}
+          {/* Editable number input */}
           <div className="flex items-center font-mono text-xl xs:text-2xl sm:text-4xl font-black text-zinc-900 dark:text-[#f4f3ef]">
             <span>$</span>
             <input
@@ -138,17 +138,17 @@ export function HeroBiddingBar({
               value={currentBidAmount === 0 ? '' : currentBidAmount}
               onChange={(e) => {
                 const val = parseInt(e.target.value);
-                onBidAmountChange(isNaN(val) ? 0 : val);
+                onBidAmountChange(isNaN(val) ? 1 : Math.max(1, val));
               }}
-              placeholder="0"
-              className="w-24 xs:w-28 sm:w-40 bg-transparent text-center font-mono font-black outline-none border-b-2 border-transparent focus:border-amber-400 dark:focus:border-amber-400 transition-colors"
+              placeholder="1"
+              className="w-20 xs:w-24 sm:w-32 bg-transparent text-center font-mono font-black outline-none border-b-2 border-transparent focus:border-[#ea6c52] transition-colors"
             />
           </div>
 
           <button
             type="button"
             onClick={handleIncrement}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-[#12100e] border border-zinc-300 dark:border-[#2e2a24] flex items-center justify-center text-zinc-600 dark:text-zinc-400 font-bold text-xs hover:border-zinc-500 active:scale-90 transition-all cursor-pointer flex-shrink-0"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-[#12100e] border border-zinc-300 dark:border-[#2e2a24] flex items-center justify-center text-zinc-600 dark:text-zinc-400 font-bold text-xs hover:border-zinc-500 active:scale-90 transition-all cursor-pointer shrink-0"
           >
             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
@@ -157,100 +157,105 @@ export function HeroBiddingBar({
         <span>?</span>
       </div>
 
-      {/* Subtitle matching media_1787458001988.png */}
-      <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#f87171] dark:text-[#f87171] max-w-lg font-medium leading-relaxed px-2">
+      {/* Subtitle */}
+      <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm text-[#f87171] max-w-lg font-medium leading-relaxed px-2">
         New spots start at $1. Paying less than the #1 price still puts you on the board at whatever place that bid can take.
       </p>
 
-      {/* Main Responsive Input Form stretched to full max-w-4xl navbar alignment */}
+      {/* Unified Hero Input Card matching media_1787760908931.png */}
       <form
         onSubmit={handleSubmit}
-        className="mt-6 sm:mt-7 w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3"
+        className="mt-5 sm:mt-6 w-full max-w-2xl mx-auto"
       >
-        {/* URL Input with rounded-full pill styling and matching navbar width */}
-        <div className="flex-1 flex items-center gap-3 px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] shadow-xs focus-within:border-[#f87171] transition-colors">
-          {isXHandle ? (
-            <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black flex-shrink-0">
-              𝕏
-            </div>
-          ) : isInstagram ? (
-            <div className="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center flex-shrink-0">
-              <svg viewBox="0 0 24 24" className="w-full h-full" fill="none">
-                <defs>
-                  <radialGradient id="ig-hero-full-grad" cx="25%" cy="110%" r="130%">
-                    <stop offset="0%" stopColor="#fdf497" />
-                    <stop offset="10%" stopColor="#fdf497" />
-                    <stop offset="45%" stopColor="#fd5949" />
-                    <stop offset="65%" stopColor="#d6249f" />
-                    <stop offset="95%" stopColor="#285AEB" />
-                  </radialGradient>
-                </defs>
-                <rect width="24" height="24" rx="5" fill="url(#ig-hero-full-grad)" />
-                <rect x="4" y="4" width="16" height="16" rx="4" stroke="#ffffff" strokeWidth="2" fill="none" />
-                <circle cx="12" cy="12" r="3.5" stroke="#ffffff" strokeWidth="2" fill="none" />
-                <circle cx="16.5" cy="7.5" r="1" fill="#ffffff" />
-              </svg>
-            </div>
-          ) : faviconUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={faviconUrl}
-              alt=""
-              className="w-5 h-5 rounded-md object-contain flex-shrink-0"
-              onError={() => setFaviconUrl(null)}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 sm:p-2 rounded-2xl sm:rounded-3xl bg-white dark:bg-[#181613] border border-zinc-200/90 dark:border-[#2e2a24] shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_25px_rgba(0,0,0,0.35)]">
+          {/* URL Input */}
+          <div className="flex-1 flex items-center gap-2.5 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-zinc-50/80 dark:bg-[#12100e] border border-transparent focus-within:border-zinc-300 dark:focus-within:border-zinc-700 transition-colors">
+            {isXHandle ? (
+              <div className="w-4 h-4 rounded-full bg-black text-white flex items-center justify-center text-[9px] font-black shrink-0">
+                𝕏
+              </div>
+            ) : isInstagram ? (
+              <div className="w-4 h-4 rounded-sm overflow-hidden flex items-center justify-center shrink-0">
+                <svg viewBox="0 0 24 24" className="w-full h-full" fill="none">
+                  <rect width="24" height="24" rx="5" fill="#e1306c" />
+                  <rect x="4" y="4" width="16" height="16" rx="4" stroke="#ffffff" strokeWidth="2" fill="none" />
+                  <circle cx="12" cy="12" r="3.5" stroke="#ffffff" strokeWidth="2" fill="none" />
+                </svg>
+              </div>
+            ) : faviconUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={faviconUrl}
+                alt=""
+                className="w-4 h-4 rounded object-contain shrink-0"
+                onError={() => setFaviconUrl(null)}
+              />
+            ) : (
+              <Globe className="w-4 h-4 text-zinc-400 shrink-0" />
+            )}
+
+            <input
+              ref={urlInputRef}
+              type="text"
+              required
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="URL, @handle, or an X post"
+              className="w-full bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none font-medium"
             />
-          ) : (
-            <Globe className="w-4 h-4 text-zinc-400 flex-shrink-0" />
-          )}
-
-          <input
-            ref={urlInputRef}
-            type="text"
-            required
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="Your product URL or @handle"
-            className="w-full bg-transparent text-sm sm:text-base text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none font-medium"
-          />
-        </div>
-
-        {/* Category Dropdown with rounded-full pill styling */}
-        <div className="relative w-full sm:w-72 flex items-center">
-          <div className="absolute left-4 pointer-events-none z-10">
-            <CategoryIcon slug={category || 'ai-agents-infrastructure'} size="sm" />
           </div>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full py-3 sm:py-3.5 pl-12 pr-9 rounded-full bg-white dark:bg-[#181613] border border-zinc-200 dark:border-[#2e2a24] text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium focus:outline-none cursor-pointer appearance-none shadow-xs"
-          >
-            {CATEGORIES.filter((c) => c.slug !== 'all').map((c) => (
-              <option key={c.slug} value={c.slug} className="dark:bg-[#181613] text-zinc-900 dark:text-zinc-200">
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-        </div>
 
-        {/* Tactile Orange "Rankbid" Button - Light orange when empty, Solid bright orange when filled */}
-        <button
-          type="submit"
-          disabled={!isFormValid}
-          className={`w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center ${
-            isFormValid
-              ? 'bg-[#ea6c52] hover:bg-[#d95b41] text-white border border-[#d95b41] shadow-[0_4px_0_0_#b8452e] active:translate-y-[2px] active:shadow-[0_2px_0_0_#b8452e] cursor-pointer opacity-100'
-              : 'bg-[#ea6c52]/25 text-[#ea6c52]/60 border border-[#ea6c52]/20 cursor-not-allowed opacity-40 shadow-none pointer-events-none'
-          }`}
-        >
-          Rankbid
-        </button>
+          {/* Niche Dropdown */}
+          <div className="relative sm:w-44 flex items-center">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full py-2.5 sm:py-3 pl-3.5 pr-8 rounded-xl sm:rounded-2xl bg-zinc-50/80 dark:bg-[#12100e] border border-transparent text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium focus:outline-none cursor-pointer appearance-none"
+            >
+              {CATEGORIES.filter((c) => c.slug !== 'all').map((c) => (
+                <option key={c.slug} value={c.slug} className="dark:bg-[#181613] text-zinc-900 dark:text-zinc-200">
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+          </div>
+
+          {/* Premium Orange CTA Button */}
+          <button
+            type="submit"
+            className="px-6 sm:px-7 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#ea6c52] to-[#f97316] hover:from-[#e05d44] hover:to-[#ea580c] text-white font-black text-xs sm:text-sm tracking-tight shadow-md shadow-[#ea6c52]/30 hover:shadow-lg hover:shadow-[#ea6c52]/50 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center shrink-0"
+          >
+            Grab it
+          </button>
+        </div>
       </form>
 
-      {/* Subtext matching media_1787458001988.png */}
-      <p className="mt-3.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-normal">
-        Already on the list? Enter the same URL or @handle and up your bid.
-      </p>
+      {/* Time Filter Switch Pill matching media_1787760908931.png */}
+      <div className="mt-5 sm:mt-6 inline-flex items-center p-1 rounded-full bg-zinc-100 dark:bg-[#181613] border border-zinc-200/80 dark:border-[#2e2a24] text-xs font-semibold shadow-inner">
+        <button
+          type="button"
+          onClick={() => onTimeFilterChange?.('week')}
+          className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+            timeFilter === 'week'
+              ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs font-bold'
+              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          This week
+        </button>
+        <button
+          type="button"
+          onClick={() => onTimeFilterChange?.('all')}
+          className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+            timeFilter === 'all'
+              ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs font-bold'
+              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+        >
+          All-time
+        </button>
+      </div>
     </section>
   );
 }

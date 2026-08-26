@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Moon, Sun, ArrowUpRight } from 'lucide-react';
+import { Moon, Sun, Trophy } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 
 interface HeaderProps {
@@ -35,9 +35,20 @@ export function Header({
         </span>
       </Link>
 
-      {/* Prominent World Map War CTA + Nav Links */}
+      {/* Nav Links + Prominent Leaderboard CTA */}
       <nav className="flex items-center gap-1.5 sm:gap-3 text-[11px] sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 shrink-0">
-        {/* Prominent Highlighted World Map Button */}
+        {/* Prominent Leaderboard Button in place of World Map */}
+        <Link
+          href="/"
+          className="group relative inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] text-white shadow-md shadow-[#ea6c52]/25 hover:shadow-lg hover:shadow-[#ea6c52]/40 hover:scale-[1.03] active:scale-[0.98] transition-all font-black text-xs sm:text-sm tracking-tight cursor-pointer"
+          title="Leaderboard: Outbid competitors and grab #1"
+        >
+          <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-200" />
+          <span>Leaderboard</span>
+        </Link>
+
+        {/* 
+        PRESERVED FOR FUTURE USE: World War Map Feature
         <Link
           href="/map"
           className="group relative inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-gradient-to-r from-[#ea6c52] to-[#f97316] text-white shadow-md shadow-[#ea6c52]/25 hover:shadow-lg hover:shadow-[#ea6c52]/40 hover:scale-[1.03] active:scale-[0.98] transition-all font-black text-xs sm:text-sm tracking-tight cursor-pointer"
@@ -50,6 +61,7 @@ export function Header({
           </span>
           <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
         </Link>
+        */}
 
         <Link
           href="/categories"
