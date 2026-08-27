@@ -519,7 +519,58 @@ class Store {
 
   public getRecentBids(limit = 20): BidTransaction[] {
     this.init();
-    return this.db.transactions.slice(0, limit);
+    if (this.db.transactions && this.db.transactions.length > 0) {
+      return this.db.transactions.slice(0, limit);
+    }
+    // Fallback: construct activity from existing active projects
+    return this.db.projects.slice(0, limit).map((p, idx) => ({
+      id: `tx_${p.id}`,
+      projectId: p.id,
+      projectTitle: p.title,
+      projectUrl: p.url,
+      amount: p.totalBid,
+      newTotal: p.totalBid,
+      isTopUp: false,
+      newRank: idx + 1,
+      paymentStatus: 'completed',
+      paymentProvider: 'dodo',
+      createdAt: p.createdAt,
+    }));
+  }
+
+  public async getRecentBidsAsync(limit = 20): Promise<BidTransaction[]> {
+    try {
+      const { data, error } = await supabase
+        .from('bid_transactions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (!error && data && data.length > 0) {
+        return data.map((row: any) => ({
+          id: row.id,
+          projectId: row.project_id,
+          projectTitle: row.project_title || row.project_url,
+          projectUrl: row.project_url,
+          amount: Number(row.amount || 0),
+          previousTotal: Number(row.previous_total || 0),
+          newTotal: Number(row.new_total || 0),
+          isTopUp: row.is_top_up || false,
+          newRank: row.new_rank || 1,
+          previousRank: row.previous_rank,
+          paymentStatus: row.payment_status || 'completed',
+          paymentProvider: row.payment_provider || 'dodo',
+          paymentIntentId: row.payment_intent_id,
+          ownerEmail: row.owner_email,
+          twitterHandle: row.twitter_handle,
+          createdAt: row.created_at,
+        }));
+      }
+    } catch (err) {
+      console.error('[Supabase getRecentBidsAsync Error]', err);
+    }
+
+    return this.getRecentBids(limit);
   }
 
   public getRankForBid(bidAmount: number, existingProjectId?: string): number {

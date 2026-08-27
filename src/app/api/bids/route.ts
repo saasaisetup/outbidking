@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     totalClicksDelivered: Math.max(baseStats.totalClicksDelivered, totalClicksDelivered),
   };
 
-  const recentBids = store.getRecentBids(20);
+  const recentBids = await store.getRecentBidsAsync(20);
 
   let predictedRank: number | undefined;
   if (predictBid) {

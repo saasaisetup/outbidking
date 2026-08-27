@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/Header';
 import { HeroBiddingBar } from '@/components/HeroBiddingBar';
 import { CategoryFilters } from '@/components/CategoryFilters';
@@ -36,6 +36,7 @@ export default function HomePage() {
   const [recentBids, setRecentBids] = useState<BidTransaction[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategorySlug>('all');
   const [currentBidAmount, setCurrentBidAmount] = useState<number>(1);
+  const userEditedAmountRef = useRef<boolean>(false);
 
   // Modals state
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
@@ -50,7 +51,7 @@ export default function HomePage() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [toastEvent, setToastEvent] = useState<SSEEventData | null>(null);
 
-  const fetchData = useCallback(async (cat = selectedCategory) => {
+  const fetchData = useCallback(async (cat = selectedCategory, forcePriceReset = false) => {
     try {
       const url = `/api/bids?category=${cat}`;
       const res = await fetch(url);
@@ -59,7 +60,13 @@ export default function HomePage() {
       if (data.projects) {
         setProjects(data.projects);
         const topPrice = data.projects.length > 0 ? data.projects[0].totalBid + 1 : 1;
-        setCurrentBidAmount(topPrice);
+        // Only set default if user hasn't actively edited or if category changed
+        if (!userEditedAmountRef.current || forcePriceReset) {
+          setCurrentBidAmount(topPrice);
+          if (forcePriceReset) {
+            userEditedAmountRef.current = false;
+          }
+        }
       }
 
       if (data.stats) {
@@ -73,7 +80,7 @@ export default function HomePage() {
   }, [selectedCategory]);
 
   useEffect(() => {
-    fetchData(selectedCategory);
+    fetchData(selectedCategory, true);
 
     // Handle Dodo Payments checkout return
     if (typeof window !== 'undefined') {
@@ -108,7 +115,7 @@ export default function HomePage() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'projects' },
         () => {
-          fetchData();
+          fetchData(selectedCategory, false);
         }
       )
       .on(
@@ -116,13 +123,13 @@ export default function HomePage() {
         { event: 'INSERT', schema: 'public', table: 'bid_transactions' },
         () => {
           soundManager.playCashChing();
-          fetchData();
+          fetchData(selectedCategory, false);
         }
       )
       .subscribe();
 
     const pollTimer = setInterval(() => {
-      fetchData();
+      fetchData(selectedCategory, false);
     }, 4000);
 
     return () => {
@@ -171,7 +178,7 @@ export default function HomePage() {
 
   const handleSelectCategory = (slug: CategorySlug) => {
     setSelectedCategory(slug);
-    fetchData(slug);
+    fetchData(slug, true);
   };
 
   return (
@@ -180,11 +187,19 @@ export default function HomePage() {
       <Header />
 
       <main className="w-full pb-16">
-        {/* Hero Section */}
+        {/* Hero Section with Interactive Dynamic Price Controls */}
         <HeroBiddingBar
           stats={stats}
           currentBidAmount={currentBidAmount}
-          onBidAmountChange={(amt) => setCurrentBidAmount(amt)}
+          projects={projects}
+          selectedCategory={selectedCategory === 'all' ? 'ai-agents-infrastructure' : selectedCategory}
+          onBidAmountChange={(amt) => {
+            userEditedAmountRef.current = true;
+            setCurrentBidAmount(amt);
+          }}
+          onCategoryChange={(cat) => {
+            handleSelectCategory(cat as CategorySlug);
+          }}
           onSubmitBid={handleHeroSubmitBid}
           onOpenStats={() => setIsStatsOpen(true)}
         />
@@ -202,7 +217,7 @@ export default function HomePage() {
           onViewDetails={handleOpenDetails}
         />
 
-        {/* Latest Activity Ticker */}
+        {/* Latest Activity Feed (Real-Time Bids & Rank Changes) */}
         <LatestActivityTicker
           recentBids={recentBids}
           onSelectBid={(bid) => {
@@ -216,7 +231,7 @@ export default function HomePage() {
           projects={projects}
           onSelectProject={handleSelectCardToOutbid}
           onViewDetails={handleOpenDetails}
-          onRefresh={() => fetchData()}
+          onRefresh={() => fetchData(selectedCategory, false)}
         />
 
         {/* Bottom Revenue Counter */}
@@ -236,7 +251,7 @@ export default function HomePage() {
         initialBidAmount={prefillBid || currentBidAmount}
         initialCategory={prefillCategory}
         stats={stats}
-        onBidSuccess={() => fetchData()}
+        onBidSuccess={() => fetchData(selectedCategory, false)}
       />
 
       <ProjectDetailsModal
@@ -255,7 +270,7 @@ export default function HomePage() {
       <OutbidToast
         event={toastEvent}
         onClose={() => setToastEvent(null)}
-        onOutbid={(proj, nextAmt) => handleSelectCardToOutbid(proj, nextAmt)}
+        onOutbid={(p, minAmt) => handleSelectCardToOutbid(p, minAmt)}
       />
     </div>
   );
