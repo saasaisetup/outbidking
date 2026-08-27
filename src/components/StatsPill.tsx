@@ -18,7 +18,7 @@ export function StatsPill({
   showStatsLink = true,
 }: StatsPillProps) {
   const { onlineCount } = useOnlinePresence();
-  const [totalVisitors, setTotalVisitors] = useState<number>(58);
+  const [totalVisitors, setTotalVisitors] = useState<number>(135);
 
   useEffect(() => {
     let active = true;

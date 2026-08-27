@@ -132,16 +132,18 @@ export default function StatsPage() {
       <Header />
 
       <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-20">
-        {/* Navigation Breadcrumb & Page Header */}
+        {/* Back to Leaderboard Button */}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-[#181822] hover:bg-zinc-200 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors mb-5 border border-zinc-200 dark:border-zinc-800 cursor-pointer shadow-2xs group"
+        >
+          <span className="group-hover:-translate-x-0.5 transition-transform">←</span>
+          <span>Back to Leaderboard</span>
+        </Link>
+
+        {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200/80 dark:border-[#272732]">
           <div>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-[#ea6c52] transition-colors mb-2 group"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-              <span>Back to Leaderboard</span>
-            </Link>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
                 Live Platform Analytics
@@ -551,8 +553,15 @@ export default function StatsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-zinc-400">
-                      No transactions recorded yet. Place the first bid to initialize the ledger.
+                    <td colSpan={6} className="py-10 text-center text-zinc-400">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-xs">
+                          ✨ Coming Soon
+                        </span>
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                          Live verified transactions will stream here in real time as bids are placed
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 )}

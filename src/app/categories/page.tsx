@@ -33,9 +33,18 @@ export default function CategoriesPage() {
 
         <main className="w-full max-w-4xl mx-auto px-4 pt-6 sm:pt-8 pb-16 flex flex-col items-start">
           {/* Visitor Pill */}
-          <div className="w-full flex justify-center mb-8 sm:mb-10">
+          <div className="w-full flex justify-center mb-6">
             <StatsPill onOpenStats={() => setIsStatsOpen(true)} />
           </div>
+
+          {/* Back to Leaderboard Button */}
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-[#181822] hover:bg-zinc-200 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors mb-5 border border-zinc-200 dark:border-zinc-800 cursor-pointer shadow-2xs group"
+          >
+            <span className="group-hover:-translate-x-0.5 transition-transform">←</span>
+            <span>Back to Leaderboard</span>
+          </Link>
 
           {/* Top Title & CTA Button */}
           <div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-6">

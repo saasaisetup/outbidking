@@ -5,12 +5,14 @@ import './globals.css';
 
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-sans',
+  display: 'swap',
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -52,9 +54,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-white dark:bg-[#0e0d0b] text-zinc-900 dark:text-white min-h-screen selection:bg-[#ea6c52]/20 selection:text-[#ea6c52]`}
+        className="font-sans antialiased bg-white dark:bg-[#09090b] text-zinc-900 dark:text-white min-h-screen selection:bg-[#ea6c52]/20 selection:text-[#ea6c52]"
       >
         {children}
         <Analytics />

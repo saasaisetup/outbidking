@@ -1,15 +1,15 @@
 import { supabase } from './supabase';
 
-const VISITED_KEY = 'outbid_visited_site_v2';
-const REALISTIC_BASELINE = 58;
+const VISITED_KEY = 'outbid_visited_site_v3';
+const BASELINE_DEFAULT = 135;
 
 /**
  * Records or retrieves cumulative unique site visitors from Supabase.
- * Uses a realistic baseline (~50-70) and increments atomically.
+ * Increments each unique visit from baseline 135 (135, 136, 137, 138...).
  */
 export async function recordVisitor(): Promise<number> {
   if (typeof window === 'undefined') {
-    return REALISTIC_BASELINE;
+    return BASELINE_DEFAULT;
   }
 
   try {
@@ -19,7 +19,7 @@ export async function recordVisitor(): Promise<number> {
       // 1. Atomically increment visitor count in Supabase
       const { data, error } = await supabase.rpc('increment_visitor_count');
 
-      // 2. Flag in localStorage to prevent duplicate increments for the same browser
+      // 2. Flag in localStorage to prevent duplicate increments for the same browser session
       try {
         localStorage.setItem(VISITED_KEY, 'true');
       } catch {
@@ -28,8 +28,7 @@ export async function recordVisitor(): Promise<number> {
 
       if (!error && data) {
         const count = typeof data === 'number' ? data : Number(data);
-        // If Supabase was reset or returned low/unseeded value, normalize to realistic range
-        return count >= 1 && count < 10000 ? Math.max(count, REALISTIC_BASELINE) : REALISTIC_BASELINE;
+        return count >= 135 ? count : BASELINE_DEFAULT;
       }
 
       return await fetchCurrentVisitorCount();
@@ -54,15 +53,15 @@ export async function fetchCurrentVisitorCount(): Promise<number> {
       .single();
 
     if (error || !data) {
-      return REALISTIC_BASELINE;
+      return BASELINE_DEFAULT;
     }
 
     const count = Number(data.total_visitors);
-    if (count > 0 && count < 10000) {
+    if (count >= 135) {
       return count;
     }
-    return REALISTIC_BASELINE;
+    return BASELINE_DEFAULT;
   } catch {
-    return REALISTIC_BASELINE;
+    return BASELINE_DEFAULT;
   }
 }
