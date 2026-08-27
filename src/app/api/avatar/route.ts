@@ -113,13 +113,21 @@ export async function GET(req: NextRequest) {
     }
     // 5. Standard Website Domain
     else {
-      const domain = cleanInput.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0].trim();
+      // Normalize domain: strips protocol, www, ports, paths, query params
+      const domain = cleanInput
+        .replace(/^(https?:\/\/)?(www\.)?/, '')
+        .split('/')[0]
+        .split('?')[0]
+        .split('#')[0]
+        .trim();
+
       title = domain;
 
       if (domain.includes('.')) {
+        // High quality Google S2 favicon as instant default
         logoUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 
-        // Optional scrape for high-res og:image, title, and description
+        // Scrape for high-res logo/og:image, title, and description
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 2500);
@@ -131,7 +139,10 @@ export async function GET(req: NextRequest) {
 
           if (microRes.ok) {
             const microData = await microRes.json();
-            const ogLogo = microData?.data?.logo?.url || microData?.data?.image?.url;
+            const ogLogo =
+              microData?.data?.logo?.url ||
+              microData?.data?.image?.url ||
+              microData?.data?.icon?.url;
             if (ogLogo) {
               logoUrl = ogLogo;
             }
@@ -143,7 +154,7 @@ export async function GET(req: NextRequest) {
             }
           }
         } catch {
-          // keep Google S2 favicon
+          // fallback remains Google S2 favicon
         }
 
         if (!description) {

@@ -5,6 +5,7 @@ import { X, Loader2, ShieldCheck, Globe, Crown, Upload, Image as ImageIcon, Cred
 import { PlatformStats } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
 import { CategoryIcon } from './CategoryIcon';
+import { CategorySelectDropdown } from './CategorySelectDropdown';
 
 interface BidModalProps {
   isOpen: boolean;
@@ -330,28 +331,16 @@ export function BidModal({
             />
           </div>
 
-          {/* Category Dropdown with Unified CategoryIcon */}
+          {/* Category Dropdown with Unified CategoryIcon & Custom Menu */}
           <div>
             <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block mb-1">
               Category <span className="text-[#ea6c52]">*</span>
             </label>
-            <div className="relative flex items-center">
-              <div className="absolute left-3.5 pointer-events-none z-10">
-                <CategoryIcon slug={category || 'ai-agents-infrastructure'} size="xs" />
-              </div>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full py-2.5 pl-10 pr-9 rounded-2xl bg-zinc-50 dark:bg-[#181822] border border-zinc-200 dark:border-[#272732] text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-[#ea6c52] cursor-pointer appearance-none"
-              >
-                {CATEGORIES.filter((c) => c.slug !== 'all').map((c) => (
-                  <option key={c.slug} value={c.slug} className="dark:bg-[#121217] text-zinc-900 dark:text-zinc-200">
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-            </div>
+            <CategorySelectDropdown
+              value={category}
+              onChange={setCategory}
+              className="w-full"
+            />
           </div>
 
           {/* Amount Customizer & "Take #1" Action */}

@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Minus, Plus, ChevronDown, Globe, Loader2, Trophy } from 'lucide-react';
+import { Minus, Plus, Globe, Loader2, Trophy } from 'lucide-react';
 import { CATEGORIES } from '@/lib/categories';
 import { PlatformStats, Project } from '@/lib/types';
-import { CategoryIcon } from './CategoryIcon';
+import { CategorySelectDropdown } from './CategorySelectDropdown';
 import { StatsPill } from './StatsPill';
 
 interface HeroBiddingBarProps {
@@ -67,7 +67,7 @@ export function HeroBiddingBar({
     const isTwitter = trimmed.startsWith('@') || trimmed.includes('x.com/') || trimmed.includes('twitter.com/');
     setIsHandle(isTwitter);
 
-    // 1. Immediate Instant Synchronous Preview
+    // 1. Immediate Instant Synchronous Preview (works for outbidking.lol, https://www.outbidking.lol, @handles, etc.)
     if (isTwitter) {
       const handle = trimmed
         .replace(/^@/, '')
@@ -81,11 +81,19 @@ export function HeroBiddingBar({
     } else if (trimmed.includes('instagram.com/')) {
       const handle = trimmed.replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').split('/')[0].replace(/^@/, '');
       setAvatarUrl(`https://unavatar.io/instagram/${handle}`);
-    } else if (trimmed.includes('.')) {
-      const domain = trimmed.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
-      setAvatarUrl(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
     } else {
-      setAvatarUrl(null);
+      // Normalize domain: strips https://, http://, www., trailing slashes, paths
+      const domain = trimmed
+        .replace(/^(https?:\/\/)?(www\.)?/, '')
+        .split('/')[0]
+        .split('?')[0]
+        .trim();
+
+      if (domain.includes('.')) {
+        setAvatarUrl(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
+      } else {
+        setAvatarUrl(null);
+      }
     }
 
     // 2. High-Res Live Server Resolution via /api/avatar
@@ -151,6 +159,8 @@ export function HeroBiddingBar({
     let finalUrl = url.trim();
     if (finalUrl.startsWith('@')) {
       finalUrl = `https://x.com/${finalUrl.substring(1)}`;
+    } else if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+      finalUrl = `https://${finalUrl}`;
     }
 
     onSubmitBid({
@@ -336,28 +346,14 @@ export function HeroBiddingBar({
           />
         </div>
 
-        {/* Category Dropdown (All 28 SaaS Categories Supported) */}
-        <div className="relative w-full sm:w-72 flex items-center">
-          <div className="absolute left-4 pointer-events-none z-10">
-            <CategoryIcon slug={category || 'ai-agents-infrastructure'} size="sm" />
-          </div>
-          <select
-            value={category}
-            onChange={(e) => {
-              const newCat = e.target.value;
-              setCategory(newCat);
-              onCategoryChange?.(newCat);
-            }}
-            className="w-full py-3 sm:py-3.5 pl-12 pr-9 rounded-full bg-white dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 font-medium focus:outline-none cursor-pointer appearance-none shadow-xs"
-          >
-            {CATEGORIES.filter((c) => c.slug !== 'all').map((c) => (
-              <option key={c.slug} value={c.slug} className="dark:bg-[#121217] text-zinc-900 dark:text-zinc-200">
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-        </div>
+        {/* Custom Category Dropdown with Category Icons & Name (Matches Reference Image) */}
+        <CategorySelectDropdown
+          value={category}
+          onChange={(newCat) => {
+            setCategory(newCat);
+            onCategoryChange?.(newCat);
+          }}
+        />
 
         {/* 3D Tactile Highlighted Rankbid Button (Clean label without money sign) */}
         <button
