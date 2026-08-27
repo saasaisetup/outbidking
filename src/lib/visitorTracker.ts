@@ -1,11 +1,10 @@
 import { supabase } from './supabase';
 
-const VISITED_KEY = 'outbid_visited_site_v3';
 const BASELINE_DEFAULT = 135;
 
 /**
- * Records or retrieves cumulative unique site visitors from Supabase.
- * Increments each unique visit from baseline 135 (135, 136, 137, 138...).
+ * Records a page visit on EVERY page load / refresh and returns the live incremented count.
+ * Increments each visit atomically in Supabase from baseline (e.g. 148 -> 149 -> 150...).
  */
 export async function recordVisitor(): Promise<number> {
   if (typeof window === 'undefined') {
@@ -13,32 +12,35 @@ export async function recordVisitor(): Promise<number> {
   }
 
   try {
-    const hasVisited = localStorage.getItem(VISITED_KEY);
+    // 1. Call server-side track-visit API for guaranteed atomic increment
+    const res = await fetch('/api/track-visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
 
-    if (!hasVisited) {
-      // 1. Atomically increment visitor count in Supabase
-      const { data, error } = await supabase.rpc('increment_visitor_count');
-
-      // 2. Flag in localStorage to prevent duplicate increments for the same browser session
-      try {
-        localStorage.setItem(VISITED_KEY, 'true');
-      } catch {
-        // storage quota safe
+    if (res.ok) {
+      const data = await res.json();
+      if (data.totalVisitors && typeof data.totalVisitors === 'number') {
+        return data.totalVisitors;
       }
-
-      if (!error && data) {
-        const count = typeof data === 'number' ? data : Number(data);
-        return count >= 135 ? count : BASELINE_DEFAULT;
-      }
-
-      return await fetchCurrentVisitorCount();
-    } else {
-      // 3. Returning visitor: fetch current total
-      return await fetchCurrentVisitorCount();
     }
   } catch (err) {
-    return await fetchCurrentVisitorCount();
+    console.warn('[VisitorTracker] POST /api/track-visit failed, falling back to direct RPC:', err);
   }
+
+  // 2. Direct Supabase RPC fallback
+  try {
+    const { data, error } = await supabase.rpc('increment_visitor_count');
+    if (!error && data) {
+      const count = Number(data);
+      return count >= 135 ? count : BASELINE_DEFAULT;
+    }
+  } catch (rpcErr) {
+    console.warn('[VisitorTracker] Direct RPC failed:', rpcErr);
+  }
+
+  // 3. Read current total fallback
+  return await fetchCurrentVisitorCount();
 }
 
 /**

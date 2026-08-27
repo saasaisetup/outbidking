@@ -1,0 +1,11 @@
+[0827/123430.709:ERROR:headless\lib\browser\headless_browser_impl.cc:348] Failed to read prefs in 'C:\Users\aryaa\Documents\antigravity\blissful-mendel\scratch\..\.linkedin_session\Local State', error: 4
+[0827/123430.837:ERROR:net\disk_cache\simple\simple_backend_impl.cc:749] Simple Cache Backend: wrong file structure on disk: 2 path: C:\Users\aryaa\Documents\antigravity\blissful-mendel\scratch\..\.linkedin_session\Default\Code Cache\js
+[0827/123430.838:ERROR:net\disk_cache\simple\simple_backend_impl.cc:749] Simple Cache Backend: wrong file structure on disk: 2 path: C:\Users\aryaa\Documents\antigravity\blissful-mendel\scratch\..\.linkedin_session\Default\Code Cache\wasm
+[0827/123430.869:ERROR:net\disk_cache\simple\simple_backend_impl.cc:749] Simple Cache Backend: wrong file structure on disk: 2 path: C:\Users\aryaa\Documents\antigravity\blissful-mendel\scratch\..\.linkedin_session\Default\Code Cache\js
+[0827/123430.869:ERROR:net\disk_cache\disk_cache.cc:284] Unable to create cache
+[0827/123430.872:ERROR:net\disk_cache\simple\simple_backend_impl.cc:749] Simple Cache Backend: wrong file structure on disk: 2 path: C:\Users\aryaa\Documents\antigravity\blissful-mendel\scratch\..\.linkedin_session\Default\Code Cache\wasm
+[0827/123430.872:ERROR:net\disk_cache\disk_cache.cc:284] Unable to create cache
+[0827/123430.906:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is denied. (0x5)
+[0827/123430.906:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is denied. (0x5)
+[0827/123430.906:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is denied. (0x5)
+[0827/123431.855:WARNING:components\leveldb_proto\internal\leveldb_database.cc:102] Unable to open C:\Users\aryaa\Documents\antigravity\blissful-mendel\scratch\..\.linkedin_session\Default\PersistentOriginTrials: IO error: C:\Users\aryaa\Documents\antigravity\blissful-mendel\scratch\..\.linkedin_session\Default\PersistentOriginTrials/LOCK: Access denied. (ChromeMethodBFE: 15::LockFile::5)
