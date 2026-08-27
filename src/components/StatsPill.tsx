@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useOnlinePresence } from '@/hooks/useOnlinePresence';
-import { recordVisitor } from '@/lib/visitorTracker';
+import { recordVisitor, getInitialVisitorCount } from '@/lib/visitorTracker';
 import { supabase } from '@/lib/supabase';
 
 interface StatsPillProps {
@@ -13,17 +13,19 @@ interface StatsPillProps {
 }
 
 export function StatsPill({
-  onOpenStats,
   className = '',
   showStatsLink = true,
 }: StatsPillProps) {
   const { onlineCount } = useOnlinePresence();
-  const [totalVisitors, setTotalVisitors] = useState<number>(135);
+  const [totalVisitors, setTotalVisitors] = useState<number>(154);
 
   useEffect(() => {
     let active = true;
 
-    // Record unique visitor & fetch latest count from Supabase
+    // Set immediate cached count on client mount
+    setTotalVisitors(getInitialVisitorCount());
+
+    // Record visitor on every visit/refresh and update state
     recordVisitor().then((count) => {
       if (active && count) {
         setTotalVisitors(count);
@@ -39,7 +41,7 @@ export function StatsPill({
         (payload: any) => {
           if (payload.new && payload.new.total_visitors) {
             const raw = Number(payload.new.total_visitors);
-            if (raw > 0 && raw < 10000) {
+            if (raw >= 135) {
               setTotalVisitors(raw);
             }
           }
