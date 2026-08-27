@@ -220,6 +220,7 @@ export default function HomePage() {
         {/* Latest Activity Feed (Real-Time Bids & Rank Changes) */}
         <LatestActivityTicker
           recentBids={recentBids}
+          projects={projects}
           onSelectBid={(bid) => {
             const proj = projects.find((p) => p.id === bid.projectId);
             if (proj) handleSelectCardToOutbid(proj, proj.totalBid + 1);

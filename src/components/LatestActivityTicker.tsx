@@ -2,17 +2,22 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { BidTransaction } from '@/lib/types';
+import { BidTransaction, Project } from '@/lib/types';
 import { ProductLogo } from './ProductLogo';
 import { formatProjectTitle } from './TopThreeCards';
 import { Zap, ArrowUpRight, TrendingUp } from 'lucide-react';
 
 interface LatestActivityTickerProps {
   recentBids: BidTransaction[];
+  projects?: Project[];
   onSelectBid?: (tx: BidTransaction) => void;
 }
 
-export function LatestActivityTicker({ recentBids, onSelectBid }: LatestActivityTickerProps) {
+export function LatestActivityTicker({
+  recentBids,
+  projects = [],
+  onSelectBid,
+}: LatestActivityTickerProps) {
   if (!recentBids || recentBids.length === 0) return null;
 
   const formatTimeAgo = (dateStr: string) => {
@@ -21,6 +26,22 @@ export function LatestActivityTicker({ recentBids, onSelectBid }: LatestActivity
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     return `${Math.floor(diff / 86400)}d ago`;
+  };
+
+  // Get accurate real rank for each transaction
+  const getAccurateRank = (tx: BidTransaction, fallbackIdx: number): number => {
+    if (projects && projects.length > 0) {
+      const matchIdx = projects.findIndex(
+        (p) =>
+          p.id === tx.projectId ||
+          p.url.toLowerCase() === tx.projectUrl.toLowerCase() ||
+          p.normalizedUrl.toLowerCase() === tx.projectUrl.toLowerCase()
+      );
+      if (matchIdx !== -1) {
+        return matchIdx + 1;
+      }
+    }
+    return tx.newRank && tx.newRank > 1 ? tx.newRank : fallbackIdx + 1;
   };
 
   return (
@@ -42,10 +63,11 @@ export function LatestActivityTicker({ recentBids, onSelectBid }: LatestActivity
           </Link>
         </div>
 
-        {/* Horizontal Ticker with Responsive Cards */}
+        {/* Horizontal Ticker with Correct Dynamic Ranks */}
         <div className="flex items-center gap-2.5 sm:gap-3 overflow-x-auto no-scrollbar py-1 -mx-3 px-3 sm:mx-0 sm:px-0">
-          {recentBids.slice(0, 15).map((tx) => {
+          {recentBids.slice(0, 15).map((tx, idx) => {
             const displayTitle = formatProjectTitle({ title: tx.projectTitle, url: tx.projectUrl });
+            const accurateRank = getAccurateRank(tx, idx);
 
             return (
               <div
@@ -61,17 +83,23 @@ export function LatestActivityTicker({ recentBids, onSelectBid }: LatestActivity
                   size="sm"
                 />
 
-                {/* Content */}
+                {/* Content with Accurate Dynamic Rank */}
                 <div className="flex flex-col min-w-0 flex-1">
                   <div className="font-extrabold text-xs text-zinc-900 dark:text-white truncate group-hover:text-[#ea6c52] transition-colors">
                     {displayTitle}
                   </div>
                   <div className="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">
-                    <span className="font-bold text-zinc-700 dark:text-zinc-300 font-mono">#{tx.newRank || 1}</span>
+                    <span className="font-bold text-zinc-700 dark:text-zinc-300 font-mono">
+                      #{accurateRank}
+                    </span>
                     <span>·</span>
-                    <span className="font-extrabold text-[#ea6c52] font-mono">+${tx.amount.toLocaleString()}</span>
+                    <span className="font-extrabold text-[#ea6c52] font-mono">
+                      +${tx.amount.toLocaleString()}
+                    </span>
                     <span>·</span>
-                    <span className="text-[10px] text-zinc-400 font-mono">{formatTimeAgo(tx.createdAt)}</span>
+                    <span className="text-[10px] text-zinc-400 font-mono">
+                      {formatTimeAgo(tx.createdAt)}
+                    </span>
                   </div>
                 </div>
               </div>

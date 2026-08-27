@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Minus, Plus, ChevronDown, Globe, Loader2, Sparkles, Trophy, Zap } from 'lucide-react';
+import { Minus, Plus, ChevronDown, Globe, Loader2, Trophy } from 'lucide-react';
 import { CATEGORIES } from '@/lib/categories';
 import { PlatformStats, Project } from '@/lib/types';
 import { CategoryIcon } from './CategoryIcon';
@@ -191,7 +191,7 @@ export function HeroBiddingBar({
             <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
-          {/* Directly editable number input with zero lag */}
+          {/* Directly editable number input with auto-select on focus */}
           <div className="flex items-center font-mono text-xl xs:text-2xl sm:text-4xl font-black text-zinc-900 dark:text-[#f4f4f5]">
             <span className="text-[#ea6c52] mr-0.5">$</span>
             <input
@@ -200,6 +200,7 @@ export function HeroBiddingBar({
               max={999999}
               step={1}
               value={currentBidAmount === 0 ? '' : currentBidAmount}
+              onFocus={(e) => e.target.select()}
               onChange={(e) => {
                 const raw = e.target.value;
                 if (raw === '') {
@@ -210,7 +211,7 @@ export function HeroBiddingBar({
                 onBidAmountChange(isNaN(val) ? 1 : Math.max(1, val));
               }}
               placeholder="1"
-              className="w-16 xs:w-24 sm:w-32 bg-transparent text-center font-mono font-black outline-none border-b-2 border-transparent focus:border-[#ea6c52] transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-16 xs:w-24 sm:w-32 bg-transparent text-center font-mono font-black outline-none border-b-2 border-transparent focus:border-[#ea6c52] transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text"
             />
           </div>
 
@@ -227,7 +228,7 @@ export function HeroBiddingBar({
         <span>?</span>
       </div>
 
-      {/* Quick Amount Selection Chips ($1, $5, $10, Take #1) */}
+      {/* Quick Amount Selection Chips ($1, $2, $5, $10, Take #1) */}
       <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
         <button
           type="button"
@@ -293,17 +294,9 @@ export function HeroBiddingBar({
         )}
       </div>
 
-      {/* Dynamic Subtitle Explanation */}
-      <p className="mt-2.5 sm:mt-3 text-xs sm:text-sm text-[#f87171] max-w-xl font-medium leading-relaxed px-2">
-        {projectedRank === 1 ? (
-          <>
-            Paying <span className="font-bold text-zinc-900 dark:text-white font-mono">${currentBidAmount}</span> claims the <span className="font-bold text-[#ea6c52]">#1 Throne</span>. New spots start at $1.
-          </>
-        ) : (
-          <>
-            Paying <span className="font-bold text-zinc-900 dark:text-white font-mono">${currentBidAmount}</span> secures spot <span className="font-bold text-zinc-900 dark:text-white font-mono">#{projectedRank}</span> on the board. New spots start at $1.
-          </>
-        )}
+      {/* Subtitle */}
+      <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-[#f87171] max-w-lg font-medium leading-relaxed px-2">
+        New spots start at $1. Paying less than the #1 price still puts you on the board at whatever place that bid can take.
       </p>
 
       {/* Main Responsive Input Form */}
@@ -366,14 +359,12 @@ export function HeroBiddingBar({
           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
         </div>
 
-        {/* 3D Tactile Highlighted Rankbid Button */}
+        {/* 3D Tactile Highlighted Rankbid Button (Clean label without money sign) */}
         <button
           type="submit"
           className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white shadow-[0_4px_0_0_#b8432a,0_8px_18px_rgba(234,108,82,0.4)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[3px] cursor-pointer opacity-100"
         >
-          <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">
-            Rankbid ${currentBidAmount.toLocaleString()}
-          </span>
+          <span className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)]">Rankbid</span>
         </button>
       </form>
 
