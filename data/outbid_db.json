@@ -1,9 +1,73 @@
 {
-  "projects": [],
-  "transactions": [],
+  "projects": [
+    {
+      "id": "@shipxankit",
+      "url": "https://x.com/shipxankit",
+      "normalizedUrl": "@shipxankit",
+      "title": "@shipxankit",
+      "description": "Founder & builder shipping AI agents, viral micro-SaaS, and attention markets. Reigning #1 Gold King.",
+      "category": "ai-agents-infrastructure",
+      "logoUrl": "https://unavatar.io/x/shipxankit",
+      "totalBid": 2,
+      "initialBid": 2,
+      "clicks": 18,
+      "totalKingDurationSeconds": 0,
+      "rank": 1,
+      "isVerified": true,
+      "createdAt": "2026-08-27T06:15:31.771Z",
+      "updatedAt": "2026-08-27T06:15:31.771Z"
+    },
+    {
+      "id": "ankit-singh-linkedin",
+      "url": "https://www.linkedin.com/in/ankit-singh-63022b3a5/",
+      "normalizedUrl": "linkedin.com/in/ankit-singh-63022b3a5",
+      "title": "Ankit Singh (LinkedIn)",
+      "description": "Building in public, shipping high-velocity AI products, and connecting with founders & builders.",
+      "category": "people-profiles",
+      "logoUrl": "https://unavatar.io/linkedin/ankit-singh-63022b3a5",
+      "totalBid": 1,
+      "initialBid": 1,
+      "clicks": 12,
+      "totalKingDurationSeconds": 0,
+      "rank": 2,
+      "isVerified": true,
+      "createdAt": "2026-08-27T06:15:31.771Z",
+      "updatedAt": "2026-08-27T06:15:31.771Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx_shipx_1",
+      "projectId": "@shipxankit",
+      "projectTitle": "@shipxankit",
+      "projectUrl": "https://x.com/shipxankit",
+      "amount": 2,
+      "previousTotal": 0,
+      "newTotal": 2,
+      "isTopUp": false,
+      "newRank": 1,
+      "paymentStatus": "completed",
+      "paymentProvider": "dodo",
+      "createdAt": "2026-08-27T06:15:31.771Z"
+    },
+    {
+      "id": "tx_linkedin_2",
+      "projectId": "ankit-singh-linkedin",
+      "projectTitle": "Ankit Singh (LinkedIn)",
+      "projectUrl": "https://www.linkedin.com/in/ankit-singh-63022b3a5/",
+      "amount": 1,
+      "previousTotal": 0,
+      "newTotal": 1,
+      "isTopUp": false,
+      "newRank": 2,
+      "paymentStatus": "completed",
+      "paymentProvider": "dodo",
+      "createdAt": "2026-08-27T06:15:31.771Z"
+    }
+  ],
   "stats": {
-    "totalClicks": 0,
-    "highestBid": 0,
+    "totalClicks": 30,
+    "highestBid": 2,
     "launchTime": "2026-08-25T16:00:00.000Z"
   }
 }
