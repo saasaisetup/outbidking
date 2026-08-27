@@ -10,16 +10,11 @@ function resolveEnvironment(apiKey: string): 'test_mode' | 'live_mode' {
     ''
   ).toLowerCase();
 
-  if (envVar === 'live_mode' || envVar === 'live' || envVar === 'production' || envVar === 'prod') {
-    return 'live_mode';
-  }
   if (envVar === 'test_mode' || envVar === 'test') {
     return 'test_mode';
   }
-  if (apiKey.startsWith('live_') || apiKey.includes('live')) {
-    return 'live_mode';
-  }
-  return 'test_mode';
+  // Default to live_mode for production reliability
+  return 'live_mode';
 }
 
 /**
@@ -28,7 +23,7 @@ function resolveEnvironment(apiKey: string): 'test_mode' | 'live_mode' {
 export function getDodoClient(): DodoPayments {
   const apiKey =
     process.env.DODO_PAYMENTS_API_KEY ||
-    'RbIcmEh5DE8947hN.aUM8mEqcI34KVEw_xMO-19Zqh1xkSYZ05IldzJXKqAnauzFd';
+    'YFsO_CwPCxMhrBne.ovbEtsLFjvNK2aE3M6HNf2rCn0hTZ6C2oV_E4Wzzr0uFchow';
   const environment = resolveEnvironment(apiKey);
 
   return new DodoPayments({
@@ -43,6 +38,7 @@ export const dodo = getDodoClient();
 // Dynamic bidding product cache per environment
 const cachedProductIds: { test_mode?: string; live_mode?: string } = {
   test_mode: 'pdt_0NmFFINaNKCg0hGTN6H1x',
+  live_mode: 'pdt_0NmHLVSwxdlUpibvaMeXf',
 };
 
 /**
@@ -52,7 +48,7 @@ export async function getOrCreateBiddingProduct(): Promise<string> {
   const client = getDodoClient();
   const apiKey =
     process.env.DODO_PAYMENTS_API_KEY ||
-    'RbIcmEh5DE8947hN.aUM8mEqcI34KVEw_xMO-19Zqh1xkSYZ05IldzJXKqAnauzFd';
+    'YFsO_CwPCxMhrBne.ovbEtsLFjvNK2aE3M6HNf2rCn0hTZ6C2oV_E4Wzzr0uFchow';
   const env = resolveEnvironment(apiKey);
 
   if (cachedProductIds[env]) {
