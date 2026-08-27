@@ -50,6 +50,8 @@ export function ProductLogo({
   } else if (rawUrl.includes('instagram.com/')) {
     const handle = rawUrl.replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').split('/')[0];
     if (handle) resolvedSrc = `https://unavatar.io/instagram/${handle}`;
+  } else if (rawUrl.includes('linkedin.com/')) {
+    resolvedSrc = `https://unavatar.io/x/shipxankit`;
   } else if (domain.includes('.')) {
     resolvedSrc = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
   }
