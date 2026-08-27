@@ -7,6 +7,7 @@ import { CATEGORIES } from '@/lib/categories';
 import { PlatformStats, Project } from '@/lib/types';
 import { CategorySelectDropdown } from './CategorySelectDropdown';
 import { StatsPill } from './StatsPill';
+import { RealisticCrown } from './RealisticCrown';
 
 interface HeroBiddingBarProps {
   stats: PlatformStats;
@@ -183,9 +184,9 @@ export function HeroBiddingBar({
       <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-2xl xs:text-3xl sm:text-5xl font-extrabold text-zinc-900 dark:text-white leading-tight">
         <span>Grab</span>
 
-        {/* 3D Dynamic Target Rank Badge with Crown Indicators */}
+        {/* 3D Dynamic Target Rank Badge with Realistic Crowns */}
         <div
-          className={`inline-flex items-center gap-1.5 px-3.5 sm:px-4.5 py-0.5 sm:py-1 rounded-2xl border-2 font-mono text-xl xs:text-2xl sm:text-4xl font-black transition-all ${
+          className={`inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4.5 py-0.5 sm:py-1 rounded-2xl border-2 font-mono text-xl xs:text-2xl sm:text-4xl font-black transition-all ${
             projectedRank === 1
               ? 'border-amber-400/90 bg-amber-500/10 text-amber-600 dark:text-amber-300 shadow-[0_4px_0_0_#f59e0b]'
               : projectedRank === 2
@@ -195,7 +196,9 @@ export function HeroBiddingBar({
               : 'border-zinc-400/80 dark:border-zinc-500 bg-white dark:bg-[#121217] text-zinc-900 dark:text-white shadow-[0_4px_0_0_#cbd5e1] dark:shadow-[0_4px_0_0_#272732]'
           }`}
         >
-          <span>{projectedRank === 1 ? '👑' : projectedRank === 2 ? '🥈' : projectedRank === 3 ? '🥉' : ''}</span>
+          {projectedRank === 1 && <RealisticCrown size="sm" variant="gold" glow={false} className="shrink-0 scale-105" />}
+          {projectedRank === 2 && <RealisticCrown size="sm" variant="silver" glow={false} className="shrink-0 scale-105" />}
+          {projectedRank === 3 && <RealisticCrown size="sm" variant="bronze" glow={false} className="shrink-0 scale-105" />}
           <span>#{projectedRank}</span>
         </div>
 

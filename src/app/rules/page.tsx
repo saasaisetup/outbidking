@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer';
 import { StatsModal } from '@/components/StatsModal';
 import { PlatformStats } from '@/lib/types';
 import { StatsPill } from '@/components/StatsPill';
+import { RealisticCrown } from '@/components/RealisticCrown';
 import { Trophy, ArrowRight, ShieldCheck, Crown, Medal, Award, Flame, ExternalLink, Zap } from 'lucide-react';
 
 export default function RulesPage() {
@@ -80,8 +81,8 @@ export default function RulesPage() {
             {/* Rank 1: Gold Crown */}
             <div className="p-4 rounded-3xl bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-transparent border-2 border-amber-500/40 relative overflow-hidden">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">👑</span>
+                <div className="flex items-center gap-2.5">
+                  <RealisticCrown size="sm" variant="gold" glow={false} className="scale-110 shrink-0" />
                   <div>
                     <h3 className="text-base font-black text-amber-600 dark:text-amber-400">
                       Rank #1 — The King
@@ -114,8 +115,8 @@ export default function RulesPage() {
             {/* Rank 2: Silver Crown */}
             <div className="p-4 rounded-3xl bg-gradient-to-br from-slate-200/50 via-zinc-100/30 to-transparent dark:from-slate-800/40 dark:via-zinc-900/40 dark:to-transparent border-2 border-slate-300 dark:border-slate-700 relative overflow-hidden">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🥈</span>
+                <div className="flex items-center gap-2.5">
+                  <RealisticCrown size="sm" variant="silver" glow={false} className="scale-110 shrink-0" />
                   <div>
                     <h3 className="text-base font-black text-slate-700 dark:text-slate-200">
                       Rank #2 — The Viceroy
@@ -148,8 +149,8 @@ export default function RulesPage() {
             {/* Rank 3: Bronze Crown */}
             <div className="p-4 rounded-3xl bg-gradient-to-br from-amber-900/15 via-orange-950/10 to-transparent border-2 border-amber-800/30 dark:border-amber-700/40 relative overflow-hidden">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🥉</span>
+                <div className="flex items-center gap-2.5">
+                  <RealisticCrown size="sm" variant="bronze" glow={false} className="scale-110 shrink-0" />
                   <div>
                     <h3 className="text-base font-black text-amber-800 dark:text-amber-500">
                       Rank #3 — The Knight
