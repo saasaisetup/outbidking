@@ -393,18 +393,24 @@ export function BidModal({
               </div>
             </div>
 
-            {/* Real-time Rank Forecast */}
-            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium pt-1 flex items-center gap-1.5 border-t border-zinc-200/60 dark:border-zinc-800">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#ea6c52]" />
-              {bidAmount >= takeNumberOneAmount ? (
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                  👑 Puts you at RANK #1 on the board!
-                </span>
-              ) : (
-                <span>
-                  Your bid of <span className="font-bold text-zinc-900 dark:text-white font-mono">${bidAmount}</span> puts you on the live leaderboard.
-                </span>
-              )}
+            {/* Real-time Rank & Crown Perk Forecast */}
+            <div className="text-[11px] font-medium pt-2 border-t border-zinc-200/60 dark:border-zinc-800 space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                {bidAmount >= takeNumberOneAmount ? (
+                  <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                    👑 Unlocks #1 Gold King Crown (Top Spotlight & 10x Exposure)
+                  </span>
+                ) : (
+                  <span className="text-zinc-600 dark:text-zinc-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#ea6c52]" />
+                    Your bid of <strong className="text-zinc-900 dark:text-white font-mono">${bidAmount}</strong> places you on the live leaderboard.
+                  </span>
+                )}
+              </div>
+              <div className="p-2 rounded-xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/15 text-[10px] text-zinc-600 dark:text-zinc-400 flex items-center justify-between">
+                <span>👑 #1 Gold · 🥈 #2 Silver · 🥉 #3 Bronze</span>
+                <span className="font-bold text-[#ea6c52]">+ Permanent Backlink</span>
+              </div>
             </div>
           </div>
 

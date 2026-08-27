@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Minus, Plus, Globe, Loader2, Trophy } from 'lucide-react';
 import { CATEGORIES } from '@/lib/categories';
 import { PlatformStats, Project } from '@/lib/types';
@@ -67,7 +68,7 @@ export function HeroBiddingBar({
     const isTwitter = trimmed.startsWith('@') || trimmed.includes('x.com/') || trimmed.includes('twitter.com/');
     setIsHandle(isTwitter);
 
-    // 1. Immediate Instant Synchronous Preview (works for outbidking.lol, https://www.outbidking.lol, @handles, etc.)
+    // 1. Immediate Instant Synchronous Preview
     if (isTwitter) {
       const handle = trimmed
         .replace(/^@/, '')
@@ -82,7 +83,6 @@ export function HeroBiddingBar({
       const handle = trimmed.replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').split('/')[0].replace(/^@/, '');
       setAvatarUrl(`https://unavatar.io/instagram/${handle}`);
     } else {
-      // Normalize domain: strips https://, http://, www., trailing slashes, paths
       const domain = trimmed
         .replace(/^(https?:\/\/)?(www\.)?/, '')
         .split('/')[0]
@@ -183,9 +183,20 @@ export function HeroBiddingBar({
       <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-2xl xs:text-3xl sm:text-5xl font-extrabold text-zinc-900 dark:text-white leading-tight">
         <span>Grab</span>
 
-        {/* 3D Dynamic Target Rank Badge */}
-        <div className="inline-flex items-center px-3.5 sm:px-4.5 py-0.5 sm:py-1 rounded-2xl border-2 border-zinc-400/80 dark:border-zinc-500 bg-white dark:bg-[#121217] text-zinc-900 dark:text-white font-mono text-xl xs:text-2xl sm:text-4xl font-black shadow-[0_3px_0_0_#cbd5e1] dark:shadow-[0_3px_0_0_#272732] sm:shadow-[0_4px_0_0_#cbd5e1] sm:dark:shadow-[0_4px_0_0_#272732] transition-all">
-          #{projectedRank}
+        {/* 3D Dynamic Target Rank Badge with Crown Indicators */}
+        <div
+          className={`inline-flex items-center gap-1.5 px-3.5 sm:px-4.5 py-0.5 sm:py-1 rounded-2xl border-2 font-mono text-xl xs:text-2xl sm:text-4xl font-black transition-all ${
+            projectedRank === 1
+              ? 'border-amber-400/90 bg-amber-500/10 text-amber-600 dark:text-amber-300 shadow-[0_4px_0_0_#f59e0b]'
+              : projectedRank === 2
+              ? 'border-slate-400 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-[0_4px_0_0_#94a3b8]'
+              : projectedRank === 3
+              ? 'border-amber-700/60 bg-amber-900/10 text-amber-800 dark:text-amber-500 shadow-[0_4px_0_0_#b45309]'
+              : 'border-zinc-400/80 dark:border-zinc-500 bg-white dark:bg-[#121217] text-zinc-900 dark:text-white shadow-[0_4px_0_0_#cbd5e1] dark:shadow-[0_4px_0_0_#272732]'
+          }`}
+        >
+          <span>{projectedRank === 1 ? '👑' : projectedRank === 2 ? '🥈' : projectedRank === 3 ? '🥉' : ''}</span>
+          <span>#{projectedRank}</span>
         </div>
 
         <span>for</span>
@@ -312,7 +323,7 @@ export function HeroBiddingBar({
       {/* Main Responsive Input Form */}
       <form
         onSubmit={handleSubmit}
-        className="mt-5 sm:mt-6 w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3"
+        className="mt-4 sm:mt-5 w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3"
       >
         {/* URL Input with Live Profile Avatar / Logo renderer */}
         <div className="flex-1 flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 rounded-full bg-white dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] shadow-xs focus-within:border-[#ea6c52] transition-colors">
@@ -346,7 +357,7 @@ export function HeroBiddingBar({
           />
         </div>
 
-        {/* Custom Category Dropdown with Category Icons & Name (Matches Reference Image) */}
+        {/* Custom Category Dropdown with Category Icons & Name */}
         <CategorySelectDropdown
           value={category}
           onChange={(newCat) => {
@@ -355,7 +366,7 @@ export function HeroBiddingBar({
           }}
         />
 
-        {/* 3D Tactile Highlighted Rankbid Button (Clean label without money sign) */}
+        {/* 3D Tactile Highlighted Rankbid Button */}
         <button
           type="submit"
           className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-3.5 rounded-full font-black text-sm sm:text-base tracking-tight transition-all duration-150 flex-shrink-0 select-none flex items-center justify-center bg-gradient-to-b from-[#ff7a59] via-[#ea6c52] to-[#d95b41] hover:brightness-105 border-t border-[#ff9e80] text-white shadow-[0_4px_0_0_#b8432a,0_8px_18px_rgba(234,108,82,0.4)] active:shadow-[0_1px_0_0_#b8432a] active:translate-y-[3px] cursor-pointer opacity-100"
@@ -364,8 +375,31 @@ export function HeroBiddingBar({
         </button>
       </form>
 
+      {/* Gamified Crown Perks & FOMO Incentive Ribbon */}
+      <div className="mt-3.5 w-full p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 dark:from-amber-950/30 dark:via-[#181822] dark:to-amber-950/30 border border-amber-500/25 dark:border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-left">
+        <div className="flex items-center gap-2">
+          <span className="text-lg shrink-0">👑</span>
+          <div className="leading-snug">
+            <span className="font-extrabold text-zinc-900 dark:text-white">Crown Perks: </span>
+            <span className="text-zinc-600 dark:text-zinc-400">
+              <strong className="text-amber-600 dark:text-amber-400 font-bold">#1 Gold King</strong> (Spotlight & 10x Clicks) ·{' '}
+              <strong className="text-slate-600 dark:text-slate-300 font-bold">#2 Silver</strong> ·{' '}
+              <strong className="text-amber-800 dark:text-amber-500 font-bold">#3 Bronze</strong> ·{' '}
+              <span className="text-zinc-500 dark:text-zinc-400">All spots get dofollow backlink & live stats</span>
+            </span>
+          </div>
+        </div>
+        <Link
+          href="/rules"
+          className="text-xs font-bold text-[#ea6c52] hover:text-[#d95b41] hover:underline whitespace-nowrap shrink-0 flex items-center gap-0.5"
+        >
+          <span>Rules & Perks</span>
+          <span>→</span>
+        </Link>
+      </div>
+
       {/* Subtext */}
-      <p className="mt-3.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-normal">
+      <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400 font-normal">
         Already on the list? Enter the same URL or @handle and up your bid.
       </p>
     </section>
