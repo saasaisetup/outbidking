@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { X, ExternalLink, Trophy, TrendingUp, MousePointer, ShieldCheck, ArrowRight, Copy, Check, Calendar } from 'lucide-react';
 import { Project } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
@@ -35,15 +36,15 @@ export function ProjectDetailsModal({
   const exactDate = formatExactDate(project.createdAt);
 
   const getCrown = (rank: number) => {
-    if (rank === 1) return <RealisticCrown size="md" variant="gold" />;
-    if (rank === 2) return <RealisticCrown size="md" variant="silver" />;
-    if (rank === 3) return <RealisticCrown size="md" variant="bronze" />;
+    if (rank === 1) return <RealisticCrown size="sm" variant="gold" />;
+    if (rank === 2) return <RealisticCrown size="sm" variant="silver" />;
+    if (rank === 3) return <RealisticCrown size="sm" variant="bronze" />;
     return null;
   };
 
   const handleCopyLink = () => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://outbidking.lol';
-    const link = `${origin}/r/${project.id}`;
+    const link = `${origin}/product/${project.id}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -60,27 +61,32 @@ export function ProjectDetailsModal({
       >
         {/* Top Header */}
         <div className="flex items-start justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
-          <div className="flex items-center gap-3.5 flex-1 min-w-0">
-            {/* Logo */}
-            <ProductLogo
-              url={project.url}
-              normalizedUrl={project.normalizedUrl}
-              title={displayTitle}
-              logoUrl={project.logoUrl}
-              size="lg"
-            />
+          <div className="flex items-start gap-3.5 flex-1 min-w-0">
+            {/* Logo with Tilted Upward Crown */}
+            <div className="relative shrink-0 pt-1.5">
+              <ProductLogo
+                url={project.url}
+                normalizedUrl={project.normalizedUrl}
+                title={displayTitle}
+                logoUrl={project.logoUrl}
+                size="lg"
+              />
+              {project.rank <= 3 && (
+                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 -rotate-12 pointer-events-none drop-shadow-md">
+                  {getCrown(project.rank)}
+                </div>
+              )}
+            </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <a
-                  href={`/r/${project.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href={`/product/${project.id}`}
                   className="text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white hover:underline flex items-center gap-1.5 truncate group"
                 >
                   <span className="truncate">{displayTitle}</span>
                   <ExternalLink className="w-4 h-4 text-zinc-400 group-hover:text-[#ea6c52] transition-colors shrink-0" />
-                </a>
+                </Link>
               </div>
 
               {/* Category & Joined Date */}
@@ -115,7 +121,7 @@ export function ProjectDetailsModal({
             <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
               Total Spend / Bids
             </span>
-            <span className="mt-1 text-xl sm:text-2xl font-black font-mono text-[#ea6c52]">
+            <span className="mt-1 text-xl sm:text-2xl font-extrabold font-sans text-[#ea6c52]">
               ${project.totalBid.toLocaleString()}
             </span>
             <span className="text-[10px] text-zinc-400 mt-0.5">Verified Dodo Payments</span>
@@ -130,7 +136,7 @@ export function ProjectDetailsModal({
               {getCrown(project.rank)}
             </div>
             <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white">
+              <span className="text-xl sm:text-2xl font-extrabold font-sans text-zinc-900 dark:text-white">
                 #{project.rank}
               </span>
               <span className="text-[11px] text-zinc-400">Global</span>
@@ -144,7 +150,7 @@ export function ProjectDetailsModal({
               Category Rank
             </span>
             <div className="mt-1 flex items-center gap-1.5">
-              <span className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white">
+              <span className="text-xl sm:text-2xl font-extrabold font-sans text-zinc-900 dark:text-white">
                 #{project.rank}
               </span>
               <CategoryIcon slug={project.category} size="xs" />
@@ -159,7 +165,7 @@ export function ProjectDetailsModal({
             <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
               Clicks Delivered
             </span>
-            <span className="mt-1 text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
+            <span className="mt-1 text-xl sm:text-2xl font-extrabold font-sans text-emerald-600 dark:text-emerald-400">
               {(project.clicks || 0).toLocaleString()}
             </span>
             <span className="text-[10px] text-zinc-400 mt-0.5">Tracked redirects</span>

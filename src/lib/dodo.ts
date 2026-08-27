@@ -1,15 +1,30 @@
 import DodoPayments from 'dodopayments';
 
-const apiKey = process.env.DODO_PAYMENTS_API_KEY || 'RbIcmEh5DE8947hN.aUM8mEqcI34KVEw_xMO-19Zqh1xkSYZ05IldzJXKqAnauzFd';
-const environment = (process.env.DODO_PAYMENTS_ENVIRONMENT as 'test_mode' | 'live_mode') || 'test_mode';
+const rawApiKey = process.env.DODO_PAYMENTS_API_KEY || 'RbIcmEh5DE8947hN.aUM8mEqcI34KVEw_xMO-19Zqh1xkSYZ05IldzJXKqAnauzFd';
+
+// Automatically detect live mode vs test mode
+function resolveEnvironment(): 'test_mode' | 'live_mode' {
+  if (process.env.DODO_PAYMENTS_ENVIRONMENT === 'live_mode' || process.env.DODO_PAYMENTS_ENVIRONMENT === 'live') {
+    return 'live_mode';
+  }
+  if (process.env.DODO_PAYMENTS_ENVIRONMENT === 'test_mode' || process.env.DODO_PAYMENTS_ENVIRONMENT === 'test') {
+    return 'test_mode';
+  }
+  if (rawApiKey.startsWith('live_') || rawApiKey.includes('live')) {
+    return 'live_mode';
+  }
+  return 'test_mode';
+}
+
+const environment = resolveEnvironment();
 
 export const dodo = new DodoPayments({
-  bearerToken: apiKey,
+  bearerToken: rawApiKey,
   environment,
 });
 
-// Verified $1 minimum dynamic bidding product in Dodo Payments
-let cachedProductId: string | null = 'pdt_0NmFFINaNKCg0hGTN6H1x';
+// Dynamic bidding product cache
+let cachedProductId: string | null = environment === 'live_mode' ? null : 'pdt_0NmFFINaNKCg0hGTN6H1x';
 
 /**
  * Ensures a reusable dynamic-amount product ($1 USD minimum) exists in Dodo Payments.
@@ -19,7 +34,7 @@ export async function getOrCreateBiddingProduct(): Promise<string> {
 
   try {
     const list = await dodo.products.list();
-    const existing = list.items?.find((p) => p.name?.includes('Outbid King'));
+    const existing = list.items?.find((p) => p.name?.includes('Outbid King') || p.name?.includes('Dynamic Rank Bid'));
     if (existing) {
       cachedProductId = existing.product_id;
       return cachedProductId;
@@ -43,8 +58,8 @@ export async function getOrCreateBiddingProduct(): Promise<string> {
     return cachedProductId;
   } catch (err: any) {
     console.error('[Dodo] Error getting/creating product:', err);
-    // Fallback to verified $1 min product id
-    return 'pdt_0NmFFINaNKCg0hGTN6H1x';
+    // Fallback to verified test product ID if in test mode
+    return cachedProductId || 'pdt_0NmFFINaNKCg0hGTN6H1x';
   }
 }
 

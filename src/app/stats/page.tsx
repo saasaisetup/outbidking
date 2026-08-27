@@ -10,6 +10,7 @@ import { CategoryIcon } from '@/components/CategoryIcon';
 import { formatProjectTitle } from '@/components/TopThreeCards';
 import { formatJoinedTime } from '@/lib/format';
 import { PlatformStats, Project, BidTransaction } from '@/lib/types';
+import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft,
   TrendingUp,
@@ -75,8 +76,31 @@ export default function StatsPage() {
 
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 5000);
-    return () => clearInterval(interval);
+
+    // Supabase real-time channel for live 0ms updates
+    const channel = supabase
+      .channel('realtime-stats-dashboard')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'projects' },
+        () => {
+          fetchStats();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bid_transactions' },
+        () => {
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    const interval = setInterval(fetchStats, 4000);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
   }, []);
 
   const totalVol = stats?.totalVolume || 0;
@@ -190,7 +214,7 @@ export default function StatsPage() {
             </p>
           </div>
 
-          {/* 3. Total Ranked Projects */}
+          {/* 3. Total Ranked Products */}
           <div className="p-5 rounded-3xl bg-white dark:bg-[#121217] border border-zinc-200/80 dark:border-[#272732] shadow-xs relative overflow-hidden group hover:border-blue-500/40 transition-all">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
@@ -233,7 +257,7 @@ export default function StatsPage() {
                 />
                 <div className="min-w-0 flex-1">
                   <Link
-                    href={`/project/${currentKing.id}`}
+                    href={`/product/${currentKing.id}`}
                     className="font-extrabold text-sm sm:text-base text-zinc-900 dark:text-white hover:text-[#ea6c52] transition-colors truncate block"
                   >
                     {formatProjectTitle(currentKing)}
@@ -437,7 +461,7 @@ export default function StatsPage() {
                       />
                       <div className="min-w-0">
                         <Link
-                          href={`/project/${p.id}`}
+                          href={`/product/${p.id}`}
                           className="font-bold text-xs sm:text-sm text-zinc-900 dark:text-white hover:text-[#ea6c52] truncate block"
                         >
                           {formatProjectTitle(p)}
@@ -486,7 +510,7 @@ export default function StatsPage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-zinc-200/60 dark:border-zinc-800 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="py-3 px-3">Project / Handle</th>
+                  <th className="py-3 px-3">Product / Handle</th>
                   <th className="py-3 px-3">Amount</th>
                   <th className="py-3 px-3">Rank Change</th>
                   <th className="py-3 px-3">Gateway</th>
@@ -499,7 +523,7 @@ export default function StatsPage() {
                   recentBids.slice(0, 15).map((tx) => (
                     <tr key={tx.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors">
                       <td className="py-3 px-3 font-semibold text-zinc-900 dark:text-white max-w-[200px] truncate">
-                        <Link href={`/project/${tx.projectId}`} className="hover:text-[#ea6c52] transition-colors">
+                        <Link href={`/product/${tx.projectId}`} className="hover:text-[#ea6c52] transition-colors">
                           {tx.projectTitle || tx.projectUrl}
                         </Link>
                       </td>

@@ -93,22 +93,17 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
             )}
 
             <div className="flex items-start justify-between gap-3 sm:gap-6">
-              {/* Left Side: Rank Badge + Crown + Product Logo */}
+              {/* Left Side: Rank Badge + Crown Sitting Above Logo + Content */}
               <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                {/* Terracotta Rank Badge + Realistic Crown with Refined Typography */}
-                <div className="relative flex-shrink-0 mt-0.5">
+                {/* Terracotta Rank Badge */}
+                <div className="relative flex-shrink-0 mt-2">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#e05d44] text-white flex items-center justify-center font-sans font-extrabold text-xs sm:text-sm tracking-tight shadow-xs">
                     #{displayRank}
                   </div>
-                  {displayRank <= 3 && (
-                    <div className="absolute -top-3.5 -left-1.5 pointer-events-none">
-                      {getRankCrown(displayRank)}
-                    </div>
-                  )}
                 </div>
 
-                {/* Product Logo */}
-                <div className="mt-0.5">
+                {/* Product Logo with Tilted Upward Crown Above */}
+                <div className="relative shrink-0 mt-2">
                   <ProductLogo
                     url={project.url}
                     normalizedUrl={project.normalizedUrl}
@@ -116,10 +111,15 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
                     logoUrl={project.logoUrl}
                     size="xl"
                   />
+                  {displayRank <= 3 && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 -rotate-12 pointer-events-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.2)] z-20">
+                      {getRankCrown(displayRank)}
+                    </div>
+                  )}
                 </div>
 
                 {/* Content: Title, Description, and Rich Metadata */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 pt-0.5">
                   {/* Top Line: Title */}
                   <div className="flex items-center gap-2">
                     <a
@@ -178,9 +178,9 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
 
                     <span>·</span>
 
-                    {/* "see details" Link to full-screen route */}
+                    {/* "see details" Link to full-screen /product/[id] route */}
                     <Link
-                      href={`/project/${project.id}`}
+                      href={`/product/${project.id}`}
                       onClick={(e) => e.stopPropagation()}
                       className="text-zinc-500 hover:text-[#ea6c52] hover:underline font-semibold cursor-pointer transition-colors"
                     >
@@ -191,7 +191,7 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
               </div>
 
               {/* Right Side: Refined Modern Typography Price */}
-              <div className="text-right flex-shrink-0 pt-0.5 pr-1 sm:pr-2">
+              <div className="text-right flex-shrink-0 pt-2 pr-1 sm:pr-2">
                 <div className="text-lg sm:text-2xl font-extrabold text-[#ea6c52] font-sans tracking-tight">
                   ${project.totalBid.toLocaleString()}
                 </div>
