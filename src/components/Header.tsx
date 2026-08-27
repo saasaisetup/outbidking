@@ -22,7 +22,7 @@ export function Header({
   const toggleTheme = propToggleTheme || hookToggleTheme;
 
   return (
-    <header className="w-full max-w-4xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2 flex items-center justify-between gap-2">
+    <header className="w-full max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6 pb-2 flex items-center justify-between gap-2">
       {/* Brand Logo with 3 stacked lines & Prominent Enlarged 'O' */}
       <Link href="/" className="flex items-center gap-1.5 sm:gap-2.5 group shrink-0">
         <div className="w-4 sm:w-6 h-3.5 sm:h-5 flex flex-col justify-between py-0.5">
@@ -37,8 +37,8 @@ export function Header({
         </span>
       </Link>
 
-      {/* Clean Nav Links (Leaderboard is a clean link, NOT a button) */}
-      <nav className="flex items-center gap-3.5 sm:gap-6 text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 shrink-0">
+      {/* Clean Nav Links */}
+      <nav className="flex items-center gap-3 sm:gap-5 text-xs sm:text-sm font-semibold text-zinc-600 dark:text-zinc-400 shrink-0">
         <Link
           href="/"
           className="hover:text-zinc-950 dark:hover:text-white transition-colors"
@@ -46,14 +46,21 @@ export function Header({
           Leaderboard
         </Link>
         <Link
+          href="/stats"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors flex items-center gap-1"
+        >
+          <span>Stats</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 hidden xs:inline-block" />
+        </Link>
+        <Link
           href="/categories"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors hidden xs:inline"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors hidden sm:inline"
         >
           Categories
         </Link>
         <Link
           href="/about"
-          className="hover:text-zinc-950 dark:hover:text-white transition-colors"
+          className="hover:text-zinc-950 dark:hover:text-white transition-colors hidden xs:inline"
         >
           About
         </Link>

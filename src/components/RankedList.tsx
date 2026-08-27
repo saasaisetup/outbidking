@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Project } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
 import { ProductLogo } from './ProductLogo';
@@ -136,8 +137,8 @@ export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh
               <div className="flex items-start justify-between gap-3 sm:gap-6">
                 {/* Left Side: Rank Number + Product Logo */}
                 <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                  {/* Rank Number */}
-                  <div className="w-6 sm:w-8 font-mono text-zinc-400 dark:text-zinc-500 font-bold text-sm sm:text-base shrink-0 mt-1">
+                  {/* Rank Number with Sleek Sans Typography */}
+                  <div className="w-6 sm:w-8 font-sans text-zinc-400 dark:text-zinc-500 font-extrabold text-sm sm:text-base shrink-0 mt-1">
                     #{displayRank}
                   </div>
 
@@ -161,7 +162,7 @@ export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="font-bold text-sm sm:text-base text-zinc-900 dark:text-white hover:underline flex items-center gap-1.5 transition-colors truncate group-hover:text-[#ea6c52]"
+                        className="font-bold text-sm sm:text-base text-zinc-900 dark:text-white hover:underline flex items-center gap-1.5 transition-colors truncate group-hover:text-[#ea6c52] tracking-tight"
                         title="Visit destination site"
                       >
                         <span className="truncate">{displayTitle}</span>
@@ -212,24 +213,21 @@ export function RankedList({ projects, onSelectProject, onViewDetails, onRefresh
 
                       <span>·</span>
 
-                      {/* "see details" trigger */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (onViewDetails) onViewDetails(project);
-                        }}
+                      {/* "see details" link to full screen route */}
+                      <Link
+                        href={`/project/${project.id}`}
+                        onClick={(e) => e.stopPropagation()}
                         className="text-zinc-400 hover:text-[#ea6c52] hover:underline font-semibold cursor-pointer transition-colors"
                       >
                         see details
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
 
                 {/* Right Side: Clean Price */}
                 <div className="text-right shrink-0 pt-0.5 pr-1 sm:pr-2">
-                  <div className="text-base sm:text-xl font-bold text-[#ea6c52] font-mono group-hover:brightness-110 transition-colors">
+                  <div className="text-base sm:text-xl font-extrabold text-[#ea6c52] font-sans group-hover:brightness-110 transition-colors tracking-tight">
                     ${project.totalBid.toLocaleString()}
                   </div>
                 </div>

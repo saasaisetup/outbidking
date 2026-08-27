@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Project } from '@/lib/types';
 import { CATEGORIES } from '@/lib/categories';
 import { ProductLogo } from './ProductLogo';
@@ -94,9 +95,9 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
             <div className="flex items-start justify-between gap-3 sm:gap-6">
               {/* Left Side: Rank Badge + Crown + Product Logo */}
               <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
-                {/* Terracotta Rank Badge + Realistic Crown */}
+                {/* Terracotta Rank Badge + Realistic Crown with Refined Typography */}
                 <div className="relative flex-shrink-0 mt-0.5">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#e05d44] text-white flex items-center justify-center font-black text-xs sm:text-base shadow-xs">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#e05d44] text-white flex items-center justify-center font-sans font-extrabold text-xs sm:text-sm tracking-tight shadow-xs">
                     #{displayRank}
                   </div>
                   {displayRank <= 3 && (
@@ -126,7 +127,7 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="font-extrabold text-base sm:text-lg text-zinc-900 dark:text-white hover:underline flex items-center gap-1.5 transition-colors truncate group-hover:text-[#ea6c52]"
+                      className="font-bold text-base sm:text-lg text-zinc-900 dark:text-white hover:underline flex items-center gap-1.5 transition-colors truncate group-hover:text-[#ea6c52] tracking-tight"
                       title="Visit destination site"
                     >
                       <span className="truncate">{displayTitle}</span>
@@ -177,24 +178,21 @@ export function TopThreeCards({ topProjects, onSelectProject, onViewDetails }: T
 
                     <span>·</span>
 
-                    {/* "see details" trigger */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onViewDetails) onViewDetails(project);
-                      }}
+                    {/* "see details" Link to full-screen route */}
+                    <Link
+                      href={`/project/${project.id}`}
+                      onClick={(e) => e.stopPropagation()}
                       className="text-zinc-500 hover:text-[#ea6c52] hover:underline font-semibold cursor-pointer transition-colors"
                     >
                       see details
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
 
-              {/* Right Side: Bold Orange Price */}
+              {/* Right Side: Refined Modern Typography Price */}
               <div className="text-right flex-shrink-0 pt-0.5 pr-1 sm:pr-2">
-                <div className="text-lg sm:text-2xl font-black text-[#ea6c52] font-mono tracking-tight">
+                <div className="text-lg sm:text-2xl font-extrabold text-[#ea6c52] font-sans tracking-tight">
                   ${project.totalBid.toLocaleString()}
                 </div>
               </div>

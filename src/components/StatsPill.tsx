@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useOnlinePresence } from '@/hooks/useOnlinePresence';
 import { recordVisitor } from '@/lib/visitorTracker';
 import { supabase } from '@/lib/supabase';
@@ -53,10 +54,9 @@ export function StatsPill({
   }, []);
 
   return (
-    <button
-      type="button"
-      onClick={onOpenStats}
-      className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-100 dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] text-[11px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors shadow-2xs cursor-pointer select-none max-w-full group ${className}`}
+    <Link
+      href="/stats"
+      className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-100 dark:bg-[#121217] border border-zinc-200 dark:border-[#272732] text-[11px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:border-[#ea6c52]/40 hover:text-zinc-900 dark:hover:text-white transition-colors shadow-2xs cursor-pointer select-none max-w-full group ${className}`}
     >
       {/* Pulsing Green Live Dot */}
       <span className="relative flex h-2 w-2 shrink-0">
@@ -76,7 +76,7 @@ export function StatsPill({
         {totalVisitors.toLocaleString()} visitors
       </span>
 
-      {showStatsLink && onOpenStats && (
+      {showStatsLink && (
         <>
           <span className="text-zinc-400 dark:text-zinc-600">·</span>
           <span className="text-[#ea6c52] font-semibold flex items-center group-hover:translate-x-0.5 transition-transform">
@@ -84,6 +84,6 @@ export function StatsPill({
           </span>
         </>
       )}
-    </button>
+    </Link>
   );
 }
