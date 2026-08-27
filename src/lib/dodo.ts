@@ -1,46 +1,75 @@
 import DodoPayments from 'dodopayments';
 
-const rawApiKey = process.env.DODO_PAYMENTS_API_KEY || 'RbIcmEh5DE8947hN.aUM8mEqcI34KVEw_xMO-19Zqh1xkSYZ05IldzJXKqAnauzFd';
+/**
+ * Automatically detect live mode vs test mode from env or key prefix.
+ */
+function resolveEnvironment(apiKey: string): 'test_mode' | 'live_mode' {
+  const envVar = (
+    process.env.DODO_PAYMENTS_ENVIRONMENT ||
+    process.env.NEXT_PUBLIC_DODO_ENVIRONMENT ||
+    ''
+  ).toLowerCase();
 
-// Automatically detect live mode vs test mode
-function resolveEnvironment(): 'test_mode' | 'live_mode' {
-  if (process.env.DODO_PAYMENTS_ENVIRONMENT === 'live_mode' || process.env.DODO_PAYMENTS_ENVIRONMENT === 'live') {
+  if (envVar === 'live_mode' || envVar === 'live' || envVar === 'production' || envVar === 'prod') {
     return 'live_mode';
   }
-  if (process.env.DODO_PAYMENTS_ENVIRONMENT === 'test_mode' || process.env.DODO_PAYMENTS_ENVIRONMENT === 'test') {
+  if (envVar === 'test_mode' || envVar === 'test') {
     return 'test_mode';
   }
-  if (rawApiKey.startsWith('live_') || rawApiKey.includes('live')) {
+  if (apiKey.startsWith('live_') || apiKey.includes('live')) {
     return 'live_mode';
   }
   return 'test_mode';
 }
 
-const environment = resolveEnvironment();
+/**
+ * Dynamically instantiates the DodoPayments SDK on every request with the freshest runtime environment keys.
+ */
+export function getDodoClient(): DodoPayments {
+  const apiKey =
+    process.env.DODO_PAYMENTS_API_KEY ||
+    'RbIcmEh5DE8947hN.aUM8mEqcI34KVEw_xMO-19Zqh1xkSYZ05IldzJXKqAnauzFd';
+  const environment = resolveEnvironment(apiKey);
 
-export const dodo = new DodoPayments({
-  bearerToken: rawApiKey,
-  environment,
-});
+  return new DodoPayments({
+    bearerToken: apiKey,
+    environment,
+  });
+}
 
-// Dynamic bidding product cache
-let cachedProductId: string | null = environment === 'live_mode' ? null : 'pdt_0NmFFINaNKCg0hGTN6H1x';
+// Fallback export for existing imports
+export const dodo = getDodoClient();
+
+// Dynamic bidding product cache per environment
+const cachedProductIds: { test_mode?: string; live_mode?: string } = {
+  test_mode: 'pdt_0NmFFINaNKCg0hGTN6H1x',
+};
 
 /**
  * Ensures a reusable dynamic-amount product ($1 USD minimum) exists in Dodo Payments.
  */
 export async function getOrCreateBiddingProduct(): Promise<string> {
-  if (cachedProductId) return cachedProductId;
+  const client = getDodoClient();
+  const apiKey =
+    process.env.DODO_PAYMENTS_API_KEY ||
+    'RbIcmEh5DE8947hN.aUM8mEqcI34KVEw_xMO-19Zqh1xkSYZ05IldzJXKqAnauzFd';
+  const env = resolveEnvironment(apiKey);
+
+  if (cachedProductIds[env]) {
+    return cachedProductIds[env]!;
+  }
 
   try {
-    const list = await dodo.products.list();
-    const existing = list.items?.find((p) => p.name?.includes('Outbid King') || p.name?.includes('Dynamic Rank Bid'));
+    const list = await client.products.list();
+    const existing = list.items?.find(
+      (p) => p.name?.includes('Outbid King') || p.name?.includes('Dynamic Rank Bid')
+    );
     if (existing) {
-      cachedProductId = existing.product_id;
-      return cachedProductId;
+      cachedProductIds[env] = existing.product_id;
+      return existing.product_id;
     }
 
-    const created = await dodo.products.create({
+    const created = await client.products.create({
       name: 'Outbid King Dynamic Rank Bid',
       description: 'Dynamic rank bid on outbidking.lol starting at $1 USD',
       price: {
@@ -54,12 +83,12 @@ export async function getOrCreateBiddingProduct(): Promise<string> {
       tax_category: 'digital_products',
     });
 
-    cachedProductId = created.product_id;
-    return cachedProductId;
+    cachedProductIds[env] = created.product_id;
+    return created.product_id;
   } catch (err: any) {
-    console.error('[Dodo] Error getting/creating product:', err);
-    // Fallback to verified test product ID if in test mode
-    return cachedProductId || 'pdt_0NmFFINaNKCg0hGTN6H1x';
+    console.error('[Dodo] Error getting/creating product in environment:', env, err);
+    // Fallback to test product ID if in test mode
+    return cachedProductIds.test_mode || 'pdt_0NmFFINaNKCg0hGTN6H1x';
   }
 }
 
@@ -107,13 +136,14 @@ export function resolveSafeAppUrl(origin?: string): string {
  * Creates a Dodo Payments hosted checkout session for any amount starting at $1 USD.
  */
 export async function createDodoCheckoutSession(params: CreateCheckoutParams) {
+  const client = getDodoClient();
   const productId = await getOrCreateBiddingProduct();
   const amountInCents = Math.round(Math.max(1, params.bidAmount) * 100);
 
   const baseAppUrl = resolveSafeAppUrl(params.origin);
   const returnUrl = params.returnUrl || `${baseAppUrl}/payment/success`;
 
-  const payment = await dodo.payments.create({
+  const payment = await client.payments.create({
     billing: {
       country: 'US',
     },
