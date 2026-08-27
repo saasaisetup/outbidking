@@ -529,6 +529,7 @@ class Store {
       projectTitle: p.title,
       projectUrl: p.url,
       amount: p.totalBid,
+      previousTotal: 0,
       newTotal: p.totalBid,
       isTopUp: false,
       newRank: idx + 1,
