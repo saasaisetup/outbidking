@@ -40,8 +40,8 @@ export function TopNavbar({
   }, []);
 
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between p-3 sm:p-4">
-      {/* Brand & Badge */}
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between p-2.5 sm:p-4 gap-2">
+      {/* Brand Header */}
       <div className="pointer-events-auto flex items-center gap-2">
         <Link
           href="/"
@@ -55,13 +55,13 @@ export function TopNavbar({
           <span className="text-sm font-extrabold tracking-tight text-[var(--pin-ink)]">
             pinit<span className="text-[var(--pin-coral-ink)]">.lol</span>
           </span>
-          <span className="rounded bg-[var(--pin-gold-soft)] px-1.5 py-0.5 text-[9px] font-mono font-bold text-[var(--pin-gold-ink)]">
+          <span className="hidden xs:inline-block rounded bg-[var(--pin-gold-soft)] px-1.5 py-0.5 text-[9px] font-mono font-bold text-[var(--pin-gold-ink)]">
             #1 PER COUNTRY
           </span>
         </Link>
       </div>
 
-      {/* Center Live Stats Pill */}
+      {/* Center Live Stats Pill (Real-Time $12 raised) */}
       <div className="pointer-events-auto hidden md:flex items-center gap-2 rounded-full border border-[var(--pin-border)] bg-[var(--pin-card)]/95 px-4 py-1.5 text-xs font-semibold shadow-pin-sm backdrop-blur-sm">
         <span className="flex items-center gap-1.5 text-[var(--pin-ink)]">
           <span className="relative flex h-2 w-2">
@@ -83,13 +83,13 @@ export function TopNavbar({
 
         <span className="text-[var(--pin-border-strong)]">·</span>
 
-        <span className="font-bold text-emerald-600">
+        <span className="font-extrabold text-emerald-600">
           ${totalRaised} raised
         </span>
       </div>
 
-      {/* Right Controls: Search, Claim CTA, Info */}
-      <div className="pointer-events-auto flex items-center gap-2">
+      {/* Right Actions: Search + Pin CTA + Rules */}
+      <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
         {/* Search Input */}
         <div ref={searchRef} className="relative hidden sm:block">
           <div className="flex items-center rounded-full border border-[var(--pin-border)] bg-[var(--pin-card)] px-3 py-1 shadow-pin-sm focus-within:border-[var(--pin-coral)] transition-colors">
@@ -105,7 +105,7 @@ export function TopNavbar({
                 setIsSearchOpen(true);
               }}
               onFocus={() => setIsSearchOpen(true)}
-              className="w-24 md:w-32 bg-transparent px-2 py-0.5 text-xs text-[var(--pin-ink)] placeholder:text-[var(--pin-muted)] focus:outline-none"
+              className="w-20 md:w-32 bg-transparent px-2 py-0.5 text-xs text-[var(--pin-ink)] placeholder:text-[var(--pin-muted)] focus:outline-none"
             />
             <kbd className="hidden md:inline rounded bg-[var(--pin-paper)] px-1.5 py-0.5 text-[9px] font-mono font-bold text-[var(--pin-muted)] border border-[var(--pin-border)]">
               /
@@ -147,13 +147,13 @@ export function TopNavbar({
         <button
           type="button"
           onClick={onPinClick}
-          className="flex items-center gap-1.5 rounded-full bg-amber-400 hover:bg-amber-500 text-amber-950 px-4 py-1.5 text-xs font-extrabold shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="flex items-center gap-1.5 rounded-full bg-amber-400 hover:bg-amber-500 text-amber-950 px-3.5 sm:px-4 py-1.5 text-xs font-extrabold shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           <span>📍</span>
           <span>Claim $1</span>
         </button>
 
-        {/* Info & Rules Button */}
+        {/* Rules Link */}
         <Link
           href="/rules"
           title="Game Rules & Mechanics"

@@ -2,7 +2,7 @@
 
 import React, { use } from 'react';
 import Link from 'next/link';
-import { SAMPLE_PRODUCTS } from '@/lib/pinitData';
+import { SAMPLE_PRODUCTS, getProductFavicon } from '@/lib/pinitData';
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -10,19 +10,31 @@ interface ProductPageProps {
 
 export default function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = use(params);
+
+  // Fallback dynamic generation if not in dictionary
   const product = SAMPLE_PRODUCTS[slug] || {
     id: slug,
     slug,
     name: slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
     tagline: 'High-growth indie product',
-    url: `https://${slug}.com`,
-    logo: '/globe.svg',
-    category: 'Marketing',
-    description: 'A cutting-edge indie product launched and staked on pinit.lol.',
-    launchDate: 'August 2026',
-    totalStaked: 1,
-    allTimeClicks: 50,
-    countriesClaimed: [],
+    url: `https://${slug.replace(/-/g, '')}.com`,
+    logo: getProductFavicon(slug),
+    category: 'SaaS',
+    description: 'A fast-growing product launched and staked on the pinit.lol 3D world map.',
+    launchDate: 'September 2026',
+    totalStaked: 2,
+    allTimeClicks: 54,
+    countriesClaimed: [
+      {
+        countryName: 'Global',
+        countryFlag: '🌍',
+        countrySlug: 'canada',
+        rank: 1,
+        staked: 2,
+        date: 'Recent',
+        status: 'active' as const,
+      }
+    ],
   };
 
   return (
@@ -31,10 +43,10 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         {/* Navigation Header */}
         <div className="flex items-center justify-between pb-6 border-b border-[var(--pin-border)]">
           <Link
-            href="/hall-of-fame"
+            href="/"
             className="inline-flex items-center gap-2 text-xs font-bold text-[var(--pin-coral-ink)] hover:underline"
           >
-            ← Back to Hall of Fame
+            ← Back to Globe
           </Link>
 
           <Link
@@ -50,14 +62,14 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           </Link>
         </div>
 
-        {/* Product Profile Header */}
+        {/* Product Profile Header Card */}
         <div className="mt-8 rounded-pin-lg border border-[var(--pin-border)] bg-[var(--pin-card)] p-6 sm:p-8 shadow-pin-lg">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <img
                 src={product.logo}
                 alt=""
-                className="h-16 w-16 rounded-2xl object-cover border border-[var(--pin-border)] p-1 bg-white shadow-sm"
+                className="h-16 w-16 rounded-2xl object-cover border border-[var(--pin-border)] p-1 bg-white shadow-sm shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/globe.svg';
                 }}
@@ -77,19 +89,21 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               </div>
             </div>
 
+            {/* Prominent Visit Website Button */}
             <a
               href={product.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--pin-coral)] px-6 py-2.5 text-xs font-bold text-white shadow-pin-coral hover:bg-[var(--pin-coral-ink)] transition-transform hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--pin-coral)] px-6 py-2.5 text-xs font-extrabold text-white shadow-pin-coral hover:bg-[var(--pin-coral-ink)] transition-transform hover:scale-105 cursor-pointer shrink-0"
             >
-              Visit Website ↗
+              <span>Visit Website</span>
+              <span>↗</span>
             </a>
           </div>
 
           <div className="mt-6 pt-6 border-t border-[var(--pin-border)]">
             <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--pin-muted)] mb-2">
-              About
+              About Product
             </h2>
             <p className="text-sm text-[var(--pin-ink)] leading-relaxed">
               {product.description}
@@ -97,9 +111,9 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
           </div>
 
           {/* Stats Grid */}
-          <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[var(--pin-border)] pt-6">
+          <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[var(--pin-border)] pt-6 text-center sm:text-left">
             <div>
-              <div className="text-lg font-extrabold text-[var(--pin-ink)]">
+              <div className="text-xl font-extrabold text-[var(--pin-ink)]">
                 ${product.totalStaked}
               </div>
               <div className="text-[10px] uppercase font-bold text-[var(--pin-muted)]">
@@ -107,7 +121,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               </div>
             </div>
             <div>
-              <div className="text-lg font-extrabold text-[var(--pin-coral-ink)]">
+              <div className="text-xl font-extrabold text-emerald-600">
                 {product.allTimeClicks}
               </div>
               <div className="text-[10px] uppercase font-bold text-[var(--pin-muted)]">
@@ -115,7 +129,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
               </div>
             </div>
             <div>
-              <div className="text-lg font-extrabold text-[var(--pin-ink)]">
+              <div className="text-xl font-extrabold text-[var(--pin-ink)]">
                 {product.countriesClaimed.length || 1}
               </div>
               <div className="text-[10px] uppercase font-bold text-[var(--pin-muted)]">
@@ -128,29 +142,39 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
         {/* Territory History */}
         <div className="mt-8">
           <h2 className="text-base font-bold text-[var(--pin-ink)] mb-4">
-            Country Placements & History
+            Country Placements & Rankings
           </h2>
 
           <div className="rounded-pin-lg border border-[var(--pin-border)] bg-[var(--pin-card)] overflow-hidden shadow-pin-sm divide-y divide-[var(--pin-border)]">
             {product.countriesClaimed.length > 0 ? (
               product.countriesClaimed.map((c, i) => (
                 <div key={i} className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{c.countryFlag}</span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl">{c.countryFlag}</span>
                     <div>
                       <Link
                         href={`/country/${c.countrySlug}`}
-                        className="font-bold text-xs text-[var(--pin-ink)] hover:underline"
+                        className="font-bold text-sm text-[var(--pin-ink)] hover:underline"
                       >
                         {c.countryName}
                       </Link>
-                      <div className="text-[11px] text-[var(--pin-muted)]">{c.date}</div>
+                      <div className="text-[11px] text-[var(--pin-muted)]">
+                        Rank #{c.rank} · {c.date}
+                      </div>
                     </div>
                   </div>
 
-                  <span className="rounded-full bg-[var(--pin-paper)] px-2.5 py-0.5 text-xs font-bold text-[var(--pin-muted)]">
-                    ${c.staked}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-[var(--pin-gold-soft)] px-2.5 py-0.5 text-xs font-bold text-[var(--pin-gold-ink)]">
+                      👑 ${c.staked}
+                    </span>
+                    <Link
+                      href={`/country/${c.countrySlug}`}
+                      className="rounded-full bg-[var(--pin-coral-soft)] px-3 py-1 text-xs font-bold text-[var(--pin-coral-ink)] hover:bg-[var(--pin-coral)] hover:text-white transition-colors"
+                    >
+                      View on Globe →
+                    </Link>
+                  </div>
                 </div>
               ))
             ) : (

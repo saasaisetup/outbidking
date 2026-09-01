@@ -19,12 +19,11 @@ export default function HomePage() {
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Calculate live claimed countries & total raised
-  const activeCountries = Object.values(COUNTRIES_DATA).filter((c) => !!c.currentLeader);
-  const totalClaimed = activeCountries.length;
-  const totalRaised = activeCountries.reduce((sum, c) => sum + (c.currentLeader?.stake || 0), 0);
+  // Dynamic live states for real-time updates
+  const [liveClaimedCount, setLiveClaimedCount] = useState<number>(4);
+  const [liveRaisedAmount, setLiveRaisedAmount] = useState<number>(12);
 
-  // Handle Country Selection on Globe or from Search / Hot List
+  // Handle Country Selection on Globe, Search, or Hot List
   const handleSelectCountry = (country: CountryInfo) => {
     setSelectedCountry(country);
   };
@@ -37,12 +36,19 @@ export default function HomePage() {
     setIsStakeModalOpen(true);
   };
 
-  // Handle Successful Stake
+  // Handle Successful Stake in Real Time
   const handleStakeSuccess = (countrySlug: string, placement: any) => {
     const target = COUNTRIES_DATA[countrySlug];
     if (target) {
+      const wasClaimed = !!target.currentLeader;
       target.currentLeader = placement;
       setSelectedCountry({ ...target });
+
+      // Increment live stats in real-time
+      if (!wasClaimed) {
+        setLiveClaimedCount((prev) => prev + 1);
+      }
+      setLiveRaisedAmount((prev) => prev + (placement.stake || 1));
     }
   };
 
@@ -71,26 +77,24 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Top Navbar with Live Counter, Search, and Claim CTA */}
+      {/* Top Navbar with Real-Time Stats ($12 raised), Search, and Claim CTA */}
       <TopNavbar
         onPinClick={() => handleOpenStake(selectedCountry || undefined)}
         onSelectCountry={handleSelectCountry}
-        totalClaimed={totalClaimed}
-        totalRaised={totalRaised}
+        totalClaimed={liveClaimedCount}
+        totalRaised={liveRaisedAmount}
         liveOnlineCount={1}
       />
 
-      {/* Top Left: Collapsible Hero Card & Category Filter */}
-      <div className="pt-12 sm:pt-14">
-        <HeroCard
-          onPinClick={() => handleOpenStake(selectedCountry || undefined)}
-          onSelectCountry={handleSelectCountry}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        />
-      </div>
+      {/* Top Left: Collapsible Hero Card */}
+      <HeroCard
+        onPinClick={() => handleOpenStake(selectedCountry || undefined)}
+        onSelectCountry={handleSelectCountry}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
 
       {/* Bottom Left: Collapsible LIVE REPORT Drawer */}
       <LiveReportDrawer onSelectCountry={handleSelectCountry} />
@@ -101,7 +105,7 @@ export default function HomePage() {
         onClaimCountry={(c) => handleOpenStake(c)}
       />
 
-      {/* Bottom Right: Country Claim Drawer when a Country is Selected */}
+      {/* Bottom Right: Country Claim Drawer with Real-Time VISIT button */}
       {selectedCountry && (
         <CountryClaimCard
           country={selectedCountry}
@@ -110,15 +114,15 @@ export default function HomePage() {
         />
       )}
 
-      {/* Bottom Right: Zoom Controls with strict bounds */}
+      {/* Bottom Right: Zoom Controls */}
       <div className="hidden sm:block">
         <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
       </div>
 
-      {/* Bottom Center: Navigation Pill & Footer */}
+      {/* Bottom Center: Navigation Pill */}
       <BottomBar />
 
-      {/* Modal: Pin on Country with Logo Preview */}
+      {/* Modal: Pin on Country */}
       {isStakeModalOpen && (
         <StakeModal
           country={selectedCountry}
