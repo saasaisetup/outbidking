@@ -19,12 +19,12 @@ export function CountryClaimCard({
   const minStake = isClaimed ? country.currentLeader!.stake + 1 : 1;
 
   return (
-    <div className="pointer-events-auto absolute right-3 bottom-14 z-30 w-84 max-w-[calc(100vw-1.5rem)] sm:right-6 sm:bottom-14 animate-in fade-in slide-in-from-bottom-4 duration-200">
+    <div className="pointer-events-auto absolute right-3 bottom-14 z-40 w-84 max-w-[calc(100vw-1.5rem)] sm:right-6 sm:bottom-14 animate-in fade-in slide-in-from-bottom-4 duration-200">
       <div className="rounded-pin-lg border border-[var(--pin-border)] bg-[var(--pin-card)] p-4 shadow-pin-lg">
-        {/* Header: Flag + Code + Name + Close Button */}
+        {/* Header: Flag + Name + Close Button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-base">{country.flag}</span>
+            <span className="text-lg">{country.flag}</span>
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--pin-muted)]">
               {country.code}
             </span>
@@ -54,11 +54,11 @@ export function CountryClaimCard({
             <div className="rounded-pin-md border border-[var(--pin-border)] bg-[var(--pin-paper)] p-3">
               {/* Leader Avatar, Name, Stake, and VISIT Button */}
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <img
                     src={country.currentLeader!.logo}
                     alt=""
-                    className="h-8 w-8 rounded-full object-cover bg-white border border-[var(--pin-border)] shrink-0"
+                    className="h-8 w-8 rounded-full object-cover bg-white border border-[var(--pin-border)] shrink-0 shadow-xs"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = '/globe.svg';
                     }}
@@ -66,7 +66,7 @@ export function CountryClaimCard({
                   <div className="min-w-0">
                     <Link
                       href={`/p/${country.currentLeader!.id}`}
-                      className="font-extrabold text-sm text-[var(--pin-ink)] hover:underline truncate block"
+                      className="font-extrabold text-sm text-[var(--pin-ink)] hover:underline truncate block leading-tight"
                     >
                       {country.currentLeader!.name}
                     </Link>
@@ -96,7 +96,7 @@ export function CountryClaimCard({
               {/* Expiration & Clicks */}
               <div className="mt-2 pt-2 border-t border-[var(--pin-border)] flex items-center justify-between text-[11px] text-[var(--pin-muted)]">
                 <span>Expires in <strong className="text-[var(--pin-ink)]">{country.currentLeader!.expiresIn}</strong></span>
-                <span className="font-semibold text-emerald-600">{country.currentLeader!.clicks} clicks</span>
+                <span className="font-bold text-emerald-600">{country.currentLeader!.clicks} clicks</span>
               </div>
             </div>
           ) : (
@@ -120,7 +120,7 @@ export function CountryClaimCard({
             : `Pin ${country.name} from $1`}
         </button>
 
-        {/* Deep Link to Country Page & Product Page */}
+        {/* Deep Links */}
         <div className="mt-2 flex items-center justify-center gap-3 text-[11px] font-semibold text-[var(--pin-muted)]">
           <Link
             href={`/country/${country.slug}`}
