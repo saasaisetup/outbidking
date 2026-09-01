@@ -28,33 +28,47 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Rotation angles [lambda (yaw/long), phi (pitch/lat), gamma (roll)]
   const [rotation, setRotation] = useState<[number, number, number]>([-40, -30, 0]);
   const [isDragging, setIsDragging] = useState(false);
   const [lastMousePos, setLastMousePos] = useState<{ x: number; y: number } | null>(null);
   const [worldData, setWorldData] = useState<any>(null);
   const [hoveredCountry, setHoveredCountry] = useState<{ name: string; info?: CountryInfo; x: number; y: number } | null>(null);
 
-  // Image Cache for pin pill icons
+  // Persistent Image Cache for pin pill icons
   const imageCacheRef = useRef<Record<string, HTMLImageElement>>({});
 
-  // Target rotation for smooth animated transition when clicking a country
   const targetRotationRef = useRef<[number, number, number] | null>(null);
 
-  // Preload logo images for active placements
+  // Helper to safely load and cache any logo
+  const loadLogoImage = useCallback((url: string) => {
+    if (!url || imageCacheRef.current[url]) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    img.onload = () => {
+      imageCacheRef.current[url] = img;
+      renderGlobe();
+    };
+    img.onerror = () => {
+      // Fallback try without crossOrigin
+      const fallbackImg = new Image();
+      fallbackImg.src = url;
+      fallbackImg.onload = () => {
+        imageCacheRef.current[url] = fallbackImg;
+        renderGlobe();
+      };
+    };
+    imageCacheRef.current[url] = img;
+  }, []);
+
+  // Preload logo images for all active countries
   useEffect(() => {
     Object.values(COUNTRIES_DATA).forEach((c) => {
-      if (c.currentLeader?.logo && !imageCacheRef.current[c.currentLeader.logo]) {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = c.currentLeader.logo;
-        img.onload = () => {
-          imageCacheRef.current[c.currentLeader!.logo] = img;
-          renderGlobe();
-        };
+      if (c.currentLeader?.logo) {
+        loadLogoImage(c.currentLeader.logo);
       }
     });
-  }, []);
+  }, [loadLogoImage]);
 
   // Load countries TopoJSON
   useEffect(() => {
@@ -68,7 +82,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       });
   }, []);
 
-  // When selectedCountry changes from outside, animate globe rotation to center on it
+  // Animate globe rotation on selected country
   useEffect(() => {
     if (selectedCountry) {
       const [lng, lat] = selectedCountry.coordinates;
@@ -76,7 +90,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     }
   }, [selectedCountry]);
 
-  // Smooth rotation animation loop
+  // Rotation animation frame
   useEffect(() => {
     let animationFrameId: number;
     const animate = () => {
@@ -121,10 +135,10 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    // Strict zoom clamping between 0.8 and 1.45
-    const clampedZoom = Math.min(1.45, Math.max(0.8, zoomLevel));
-    const radius = Math.min(width, height) * 0.40 * clampedZoom;
-    const center: [number, number] = [width / 2, height / 2];
+    // Strict zoom clamping between 0.85 and 1.45
+    const clampedZoom = Math.min(1.45, Math.max(0.85, zoomLevel));
+    const radius = Math.min(width, height) * 0.38 * clampedZoom;
+    const center: [number, number] = [width / 2, height / 2 + 10];
 
     const projection = d3Geo
       .geoOrthographic()
@@ -173,7 +187,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
         } else if (isHovered) {
           ctx.fillStyle = '#ffd54f';
         } else if (matchedCountry && matchedCountry.currentLeader) {
-          ctx.fillStyle = '#ffe082'; // Gold-tinted land for active claimed countries
+          ctx.fillStyle = '#ffe082'; // Gold highlight for claimed countries
         } else {
           ctx.fillStyle = PASTEL_COLORS[idx % PASTEL_COLORS.length];
         }
@@ -205,7 +219,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       });
     }
 
-    // 5. Draw Floating Active Pinned Placements with REAL LOGOS (e.g. Russia / @shipxankit, Canada / outoutbid.lol)
+    // 5. Draw Floating Active Pinned Placements with REAL LOGOS
     Object.values(COUNTRIES_DATA).forEach((c) => {
       if (c.currentLeader) {
         const point = projection(c.coordinates);
@@ -214,7 +228,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
           drawPinPillWithLogo(
             ctx,
             px,
-            py - 20,
+            py - 22,
             c.currentLeader.logo,
             `${c.currentLeader.name} — ev...`,
             c.currentLeader.name
@@ -268,11 +282,11 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
 
     const avatarX = x - pillWidth / 2 + 13;
     const avatarY = y;
-    const avatarRadius = 8;
+    const avatarRadius = 8.5;
 
     const cachedImg = imageCacheRef.current[logoUrl];
     if (cachedImg && cachedImg.complete && cachedImg.naturalWidth > 0) {
-      // Draw actual loaded image clipped in a circle
+      // Draw loaded image clipped in a circle
       ctx.save();
       ctx.beginPath();
       ctx.arc(avatarX, avatarY, avatarRadius, 0, 2 * Math.PI);
@@ -286,7 +300,9 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       );
       ctx.restore();
     } else {
-      // Fallback stylish avatar circle with letter
+      if (logoUrl && !imageCacheRef.current[logoUrl]) {
+        loadLogoImage(logoUrl);
+      }
       ctx.beginPath();
       ctx.arc(avatarX, avatarY, avatarRadius, 0, 2 * Math.PI);
       ctx.fillStyle = '#FF5722';
@@ -302,7 +318,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     // Border around avatar
     ctx.beginPath();
     ctx.arc(avatarX, avatarY, avatarRadius, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#e0e0e0';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
     ctx.lineWidth = 0.8;
     ctx.stroke();
 
@@ -315,7 +331,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     ctx.restore();
   }
 
-  // Handle Drag
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     setLastMousePos({ x: e.clientX, y: e.clientY });
@@ -328,7 +343,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     if (isDragging && lastMousePos) {
       const dx = e.clientX - lastMousePos.x;
       const dy = e.clientY - lastMousePos.y;
-      const clampedZoom = Math.min(1.45, Math.max(0.8, zoomLevel));
+      const clampedZoom = Math.min(1.45, Math.max(0.85, zoomLevel));
       const sensitivity = 0.35 / clampedZoom;
 
       setRotation((prev) => [
@@ -344,9 +359,9 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
 
       const width = container.clientWidth;
       const height = container.clientHeight;
-      const clampedZoom = Math.min(1.45, Math.max(0.8, zoomLevel));
-      const radius = Math.min(width, height) * 0.40 * clampedZoom;
-      const center: [number, number] = [width / 2, height / 2];
+      const clampedZoom = Math.min(1.45, Math.max(0.85, zoomLevel));
+      const radius = Math.min(width, height) * 0.38 * clampedZoom;
+      const center: [number, number] = [width / 2, height / 2 + 10];
 
       const projection = d3Geo
         .geoOrthographic()
@@ -390,7 +405,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     }
   };
 
-  // Wheel Zoom with tight bounds & event prevention
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     if (onWheelZoom) {
@@ -424,7 +438,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       {/* Floating Tooltip with Real Avatar */}
       {hoveredCountry && !isDragging && (
         <div
-          className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-pin-md border border-[#272732] bg-[#1a1614] px-3.5 py-2.5 text-white shadow-xl backdrop-blur-sm animate-in fade-in zoom-in-95 duration-100"
+          className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-full rounded-pin-md border border-[#272732] bg-[#1a1614] px-3.5 py-2.5 text-white shadow-xl backdrop-blur-sm animate-in fade-in zoom-in-95 duration-100"
           style={{
             left: `${hoveredCountry.x}px`,
             top: `${hoveredCountry.y - 14}px`,

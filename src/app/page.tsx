@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { Globe } from '@/components/pinit/Globe';
+import { TopNavbar } from '@/components/pinit/TopNavbar';
 import { HeroCard } from '@/components/pinit/HeroCard';
-import { GlobalStatsCard } from '@/components/pinit/GlobalStatsCard';
-import { LaunchOfferCard } from '@/components/pinit/LaunchOfferCard';
-import { LiveActivityFeed } from '@/components/pinit/LiveActivityFeed';
+import { LiveReportDrawer } from '@/components/pinit/LiveReportDrawer';
+import { HotCountriesDrawer } from '@/components/pinit/HotCountriesDrawer';
 import { CountryClaimCard } from '@/components/pinit/CountryClaimCard';
 import { StakeModal } from '@/components/pinit/StakeModal';
 import { BottomBar } from '@/components/pinit/BottomBar';
@@ -19,7 +19,12 @@ export default function HomePage() {
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Handle Country Selection on Globe or Search
+  // Calculate live claimed countries & total raised
+  const activeCountries = Object.values(COUNTRIES_DATA).filter((c) => !!c.currentLeader);
+  const totalClaimed = activeCountries.length;
+  const totalRaised = activeCountries.reduce((sum, c) => sum + (c.currentLeader?.stake || 0), 0);
+
+  // Handle Country Selection on Globe or from Search / Hot List
   const handleSelectCountry = (country: CountryInfo) => {
     setSelectedCountry(country);
   };
@@ -56,7 +61,7 @@ export default function HomePage() {
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[var(--pin-paper)] select-none">
-      {/* 3D Interactive Orthographic Globe */}
+      {/* 3D Interactive Orthographic Globe in Background */}
       <div className="absolute inset-0 z-0">
         <Globe
           selectedCountry={selectedCountry}
@@ -66,37 +71,37 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Top Left: Hero Card & Search with Hide Toggle */}
-      <HeroCard
+      {/* Top Navbar with Live Counter, Search, and Claim CTA */}
+      <TopNavbar
         onPinClick={() => handleOpenStake(selectedCountry || undefined)}
         onSelectCountry={handleSelectCountry}
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        totalClaimed={totalClaimed}
+        totalRaised={totalRaised}
+        liveOnlineCount={1}
       />
 
-      {/* Top Right: Global Stats & Trending */}
-      <GlobalStatsCard onSelectCountry={handleSelectCountry} />
-
-      {/* Middle Right: Launch Offer Card */}
-      <div className="pointer-events-none absolute right-3 top-44 z-10 hidden md:block md:right-4">
-        <LaunchOfferCard
-          onChooseCountry={() => {
-            const keys = Object.keys(COUNTRIES_DATA);
-            const randomKey = keys[Math.floor(Math.random() * keys.length)];
-            setSelectedCountry(COUNTRIES_DATA[randomKey]);
-          }}
+      {/* Top Left: Collapsible Hero Card & Category Filter */}
+      <div className="pt-12 sm:pt-14">
+        <HeroCard
+          onPinClick={() => handleOpenStake(selectedCountry || undefined)}
+          onSelectCountry={handleSelectCountry}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
       </div>
 
-      {/* Bottom Left: Live Activity Feed */}
-      <LiveActivityFeed
+      {/* Bottom Left: Collapsible LIVE REPORT Drawer */}
+      <LiveReportDrawer onSelectCountry={handleSelectCountry} />
+
+      {/* Bottom Right: Collapsible HOT COUNTRIES Drawer */}
+      <HotCountriesDrawer
         onSelectCountry={handleSelectCountry}
-        isSidebarCollapsed={isSidebarCollapsed}
+        onClaimCountry={(c) => handleOpenStake(c)}
       />
 
-      {/* Bottom Right: Country Claim Drawer */}
+      {/* Bottom Right: Country Claim Drawer when a Country is Selected */}
       {selectedCountry && (
         <CountryClaimCard
           country={selectedCountry}
@@ -106,12 +111,14 @@ export default function HomePage() {
       )}
 
       {/* Bottom Right: Zoom Controls with strict bounds */}
-      <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
+      <div className="hidden sm:block">
+        <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
+      </div>
 
       {/* Bottom Center: Navigation Pill & Footer */}
       <BottomBar />
 
-      {/* Modal: Pin on Country */}
+      {/* Modal: Pin on Country with Logo Preview */}
       {isStakeModalOpen && (
         <StakeModal
           country={selectedCountry}

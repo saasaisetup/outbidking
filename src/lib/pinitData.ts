@@ -39,6 +39,21 @@ export interface ActivityItem {
   placementSlug: string;
 }
 
+export interface HotCountryItem {
+  id: string;
+  rank: number;
+  countryName: string;
+  countrySlug: string;
+  countryFlag: string;
+  countryCode: string;
+  rulerName: string;
+  rulerLogo: string;
+  currentStake: number;
+  stealPrice: number;
+  multiplier: string;
+  isClaimed: boolean;
+}
+
 export interface ProductDetail {
   id: string;
   slug: string;
@@ -91,6 +106,26 @@ export function getProductFavicon(urlOrHandle: string): string {
 
 // Complete World Countries Registry mapping ISO numeric to info
 export const COUNTRIES_DATA: Record<string, CountryInfo> = {
+  russia: {
+    id: "643",
+    slug: "russia",
+    name: "Russia",
+    code: "RU",
+    flag: "🇷🇺",
+    coordinates: [105.3188, 61.524],
+    currentLeader: {
+      id: "shipxankit",
+      name: "@shipxankit",
+      tagline: "Founder & builder shipping AI agents and viral micro-SaaS",
+      url: "https://x.com/shipxankit",
+      logo: "https://unavatar.io/twitter/shipxankit",
+      stake: 2,
+      category: "AI",
+      claimedAt: "1h ago",
+      expiresIn: "23h 05m",
+      clicks: 34,
+    },
+  },
   canada: {
     id: "124",
     slug: "canada",
@@ -112,26 +147,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
       clicks: 42,
     },
   },
-  russia: {
-    id: "643",
-    slug: "russia",
-    name: "Russia",
-    code: "RU",
-    flag: "🇷🇺",
-    coordinates: [105.3188, 61.524],
-    currentLeader: {
-      id: "shipxankit",
-      name: "@shipxankit",
-      tagline: "Founder & builder shipping AI agents and viral micro-SaaS",
-      url: "https://x.com/shipxankit",
-      logo: "https://unavatar.io/twitter/shipxankit",
-      stake: 1,
-      category: "AI",
-      claimedAt: "1h ago",
-      expiresIn: "23h 05m",
-      clicks: 19,
-    },
-  },
   "united-states-of-america": {
     id: "840",
     slug: "united-states-of-america",
@@ -139,6 +154,38 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "US",
     flag: "🇺🇸",
     coordinates: [-95.7129, 37.0902],
+    currentLeader: {
+      id: "claude-ai",
+      name: "Claude",
+      tagline: "Next generation AI assistant by Anthropic",
+      url: "https://claude.ai",
+      logo: "https://www.google.com/s2/favicons?domain=claude.ai&sz=128",
+      stake: 3,
+      category: "AI",
+      claimedAt: "3d ago",
+      expiresIn: "18h 40m",
+      clicks: 98,
+    }
+  },
+  china: {
+    id: "156",
+    slug: "china",
+    name: "China",
+    code: "CN",
+    flag: "🇨🇳",
+    coordinates: [104.1954, 35.8617],
+    currentLeader: {
+      id: "deepseek-com",
+      name: "DeepSeek",
+      tagline: "Unraveling the mystery of AGI",
+      url: "https://deepseek.com",
+      logo: "https://www.google.com/s2/favicons?domain=deepseek.com&sz=128",
+      stake: 2,
+      category: "AI",
+      claimedAt: "2d ago",
+      expiresIn: "14h 15m",
+      clicks: 81,
+    }
   },
   turkey: {
     id: "792",
@@ -187,14 +234,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "IN",
     flag: "🇮🇳",
     coordinates: [78.9629, 20.5937],
-  },
-  china: {
-    id: "156",
-    slug: "china",
-    name: "China",
-    code: "CN",
-    flag: "🇨🇳",
-    coordinates: [104.1954, 35.8617],
   },
   kazakhstan: {
     id: "398",
@@ -377,7 +416,7 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     slug: "spain",
     name: "Spain",
     code: "ES",
-    flag: "🇪🇸",
+    flag: "ES",
     coordinates: [-3.7492, 40.4637],
   },
   italy: {
@@ -510,14 +549,117 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
   }
 };
 
+export const HOT_COUNTRIES: HotCountryItem[] = [
+  {
+    id: "hot-1",
+    rank: 1,
+    countryName: "United States",
+    countrySlug: "united-states-of-america",
+    countryFlag: "🇺🇸",
+    countryCode: "US",
+    rulerName: "Claude",
+    rulerLogo: "https://www.google.com/s2/favicons?domain=claude.ai&sz=128",
+    currentStake: 3,
+    stealPrice: 4,
+    multiplier: "8.5x",
+    isClaimed: true,
+  },
+  {
+    id: "hot-2",
+    rank: 2,
+    countryName: "Russia",
+    countrySlug: "russia",
+    countryFlag: "🇷🇺",
+    countryCode: "RU",
+    rulerName: "@shipxankit",
+    rulerLogo: "https://unavatar.io/twitter/shipxankit",
+    currentStake: 2,
+    stealPrice: 3,
+    multiplier: "7.3x",
+    isClaimed: true,
+  },
+  {
+    id: "hot-3",
+    rank: 3,
+    countryName: "China",
+    countrySlug: "china",
+    countryFlag: "🇨🇳",
+    countryCode: "CN",
+    rulerName: "DeepSeek",
+    rulerLogo: "https://www.google.com/s2/favicons?domain=deepseek.com&sz=128",
+    currentStake: 2,
+    stealPrice: 3,
+    multiplier: "6.1x",
+    isClaimed: true,
+  },
+  {
+    id: "hot-4",
+    rank: 4,
+    countryName: "Canada",
+    countrySlug: "canada",
+    countryFlag: "🇨🇦",
+    countryCode: "CA",
+    rulerName: "outoutbid.lol",
+    rulerLogo: "https://outoutbid.lol/favicon.svg",
+    currentStake: 1,
+    stealPrice: 2,
+    multiplier: "4.9x",
+    isClaimed: true,
+  },
+  {
+    id: "hot-5",
+    rank: 5,
+    countryName: "India",
+    countrySlug: "india",
+    countryFlag: "🇮🇳",
+    countryCode: "IN",
+    rulerName: "Unclaimed",
+    rulerLogo: "/globe.svg",
+    currentStake: 0,
+    stealPrice: 1,
+    multiplier: "9.2x",
+    isClaimed: false,
+  },
+  {
+    id: "hot-6",
+    rank: 6,
+    countryName: "Germany",
+    countrySlug: "germany",
+    countryFlag: "🇩🇪",
+    countryCode: "DE",
+    rulerName: "Unclaimed",
+    rulerLogo: "/globe.svg",
+    currentStake: 0,
+    stealPrice: 1,
+    multiplier: "5.8x",
+    isClaimed: false,
+  }
+];
+
 export const INITIAL_ACTIVITY: ActivityItem[] = [
   {
     id: "act-0",
+    productName: "Claude",
+    productSlug: "claude-ai",
+    productUrl: "https://claude.ai",
+    logo: "https://www.google.com/s2/favicons?domain=claude.ai&sz=128",
+    stake: 3,
+    countryName: "United States of America",
+    countryFlag: "🇺🇸",
+    countryCode: "US",
+    countrySlug: "united-states-of-america",
+    category: "AI",
+    action: "claimed",
+    timeAgo: "3d ago",
+    placementSlug: "claude-ai-us",
+  },
+  {
+    id: "act-1",
     productName: "@shipxankit",
     productSlug: "shipxankit",
     productUrl: "https://x.com/shipxankit",
     logo: "https://unavatar.io/twitter/shipxankit",
-    stake: 1,
+    stake: 2,
     countryName: "Russia",
     countryFlag: "🇷🇺",
     countryCode: "RU",
@@ -528,56 +670,23 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     placementSlug: "shipxankit-russia-20260901",
   },
   {
-    id: "act-1",
-    productName: "IndieTools",
-    productSlug: "indietools-app",
-    productUrl: "https://www.indietools.app",
-    logo: "https://www.indietools.app/favicon.ico",
-    stake: 1,
-    countryName: "Turkey",
-    countryFlag: "🇹🇷",
-    countryCode: "TR",
-    countrySlug: "turkey",
-    category: "Marketing",
-    action: "expired",
-    timeAgo: "8h ago",
-    placementSlug: "indietools-app-turkey-20260831",
-  },
-  {
     id: "act-2",
-    productName: "QueueForm",
-    productSlug: "queueform-com",
-    productUrl: "https://www.queueform.com",
-    logo: "https://framerusercontent.com/images/tfR1y96Rt21pquBZznoCbQMC5Qw.png",
-    stake: 1,
-    countryName: "United States of America",
-    countryFlag: "🇺🇸",
-    countryCode: "US",
-    countrySlug: "united-states-of-america",
-    category: "Marketing",
-    action: "expired",
-    timeAgo: "12h ago",
-    placementSlug: "queueform-com-us-20260831",
+    productName: "DeepSeek",
+    productSlug: "deepseek-com",
+    productUrl: "https://deepseek.com",
+    logo: "https://www.google.com/s2/favicons?domain=deepseek.com&sz=128",
+    stake: 2,
+    countryName: "China",
+    countryFlag: "🇨🇳",
+    countryCode: "CN",
+    countrySlug: "china",
+    category: "AI",
+    action: "claimed",
+    timeAgo: "2d ago",
+    placementSlug: "deepseek-china",
   },
   {
     id: "act-3",
-    productName: "QueueForm",
-    productSlug: "queueform-com",
-    productUrl: "https://www.queueform.com",
-    logo: "https://framerusercontent.com/images/tfR1y96Rt21pquBZznoCbQMC5Qw.png",
-    stake: 1,
-    isLaunchSponsored: true,
-    countryName: "India",
-    countryFlag: "🇮🇳",
-    countryCode: "IN",
-    countrySlug: "india",
-    category: "Marketing",
-    action: "expired",
-    timeAgo: "12h ago",
-    placementSlug: "queueform-com-india-20260831",
-  },
-  {
-    id: "act-4",
     productName: "outoutbid.lol",
     productSlug: "outoutbid-lol",
     productUrl: "https://outoutbid.lol",
@@ -594,7 +703,39 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     placementSlug: "outoutbid-lol-canada-20260831",
   },
   {
+    id: "act-4",
+    productName: "IndieTools",
+    productSlug: "indietools-app",
+    productUrl: "https://www.indietools.app",
+    logo: "https://www.indietools.app/favicon.ico",
+    stake: 1,
+    countryName: "Turkey",
+    countryFlag: "🇹🇷",
+    countryCode: "TR",
+    countrySlug: "turkey",
+    category: "Marketing",
+    action: "expired",
+    timeAgo: "8h ago",
+    placementSlug: "indietools-app-turkey-20260831",
+  },
+  {
     id: "act-5",
+    productName: "QueueForm",
+    productSlug: "queueform-com",
+    productUrl: "https://www.queueform.com",
+    logo: "https://framerusercontent.com/images/tfR1y96Rt21pquBZznoCbQMC5Qw.png",
+    stake: 1,
+    countryName: "United States of America",
+    countryFlag: "🇺🇸",
+    countryCode: "US",
+    countrySlug: "united-states-of-america",
+    category: "Marketing",
+    action: "expired",
+    timeAgo: "12h ago",
+    placementSlug: "queueform-com-us-20260831",
+  },
+  {
+    id: "act-6",
     productName: "LiftOff (@lift_off_sh) on X",
     productSlug: "x-lift-off-sh",
     productUrl: "https://x.com/lift_off_sh",
@@ -611,7 +752,7 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     placementSlug: "x-lift-off-sh-congo-20260830",
   },
   {
-    id: "act-6",
+    id: "act-7",
     productName: "Wafler DDoS Protection",
     productSlug: "wafler-one",
     productUrl: "https://wafler.one",
@@ -626,23 +767,6 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     action: "expired",
     timeAgo: "21h ago",
     placementSlug: "wafler-one-saudi-arabia-20260830",
-  },
-  {
-    id: "act-7",
-    productName: "LiftOff",
-    productSlug: "lift-off-sh",
-    productUrl: "https://lift-off.sh",
-    logo: "https://lift-off.sh/favicon.ico",
-    stake: 1,
-    isLaunchSponsored: true,
-    countryName: "Czechia",
-    countryFlag: "🇨🇿",
-    countryCode: "CZ",
-    countrySlug: "czechia",
-    category: "Marketing",
-    action: "expired",
-    timeAgo: "21h ago",
-    placementSlug: "lift-off-sh-czechia-20260830",
   }
 ];
 
@@ -675,16 +799,88 @@ export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
     category: "AI",
     description: "Building fast, high-impact AI products and attention markets in public.",
     launchDate: "September 2026",
-    totalStaked: 1,
-    allTimeClicks: 19,
+    totalStaked: 2,
+    allTimeClicks: 34,
     countriesClaimed: [
       {
         countryName: "Russia",
         countryFlag: "🇷🇺",
         countrySlug: "russia",
         rank: 1,
-        staked: 1,
+        staked: 2,
         date: "1h ago",
+        status: "active",
+      }
+    ]
+  },
+  "claude-ai": {
+    id: "claude-ai",
+    slug: "claude-ai",
+    name: "Claude",
+    tagline: "Next generation AI assistant by Anthropic",
+    url: "https://claude.ai",
+    logo: "https://www.google.com/s2/favicons?domain=claude.ai&sz=128",
+    category: "AI",
+    description: "State of the art AI reasoning, coding, and writing.",
+    launchDate: "August 2026",
+    totalStaked: 3,
+    allTimeClicks: 98,
+    countriesClaimed: [
+      {
+        countryName: "United States of America",
+        countryFlag: "🇺🇸",
+        countrySlug: "united-states-of-america",
+        rank: 1,
+        staked: 3,
+        date: "3d ago",
+        status: "active",
+      }
+    ]
+  },
+  "deepseek-com": {
+    id: "deepseek-com",
+    slug: "deepseek-com",
+    name: "DeepSeek",
+    tagline: "Unraveling the mystery of AGI",
+    url: "https://deepseek.com",
+    logo: "https://www.google.com/s2/favicons?domain=deepseek.com&sz=128",
+    category: "AI",
+    description: "Open source frontier AI models and intelligence research.",
+    launchDate: "August 2026",
+    totalStaked: 2,
+    allTimeClicks: 81,
+    countriesClaimed: [
+      {
+        countryName: "China",
+        countryFlag: "🇨🇳",
+        countrySlug: "china",
+        rank: 1,
+        staked: 2,
+        date: "2d ago",
+        status: "active",
+      }
+    ]
+  },
+  "outoutbid-lol": {
+    id: "outoutbid-lol",
+    slug: "outoutbid-lol",
+    name: "outoutbid.lol",
+    tagline: "every outbid.lol clone, in one directory",
+    url: "https://outoutbid.lol",
+    logo: "https://outoutbid.lol/favicon.svg",
+    category: "Marketing",
+    description: "The definitive open directory indexing all outbid and pay-to-rank game platforms.",
+    launchDate: "August 2026",
+    totalStaked: 1,
+    allTimeClicks: 42,
+    countriesClaimed: [
+      {
+        countryName: "Canada",
+        countryFlag: "🇨🇦",
+        countrySlug: "canada",
+        rank: 1,
+        staked: 1,
+        date: "21h ago",
         status: "active",
       }
     ]
@@ -734,39 +930,6 @@ export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
         staked: 1,
         date: "12h ago",
         status: "hall-of-fame",
-      },
-      {
-        countryName: "India",
-        countryFlag: "🇮🇳",
-        countrySlug: "india",
-        rank: 1,
-        staked: 1,
-        date: "12h ago",
-        status: "hall-of-fame",
-      }
-    ]
-  },
-  "outoutbid-lol": {
-    id: "outoutbid-lol",
-    slug: "outoutbid-lol",
-    name: "outoutbid.lol",
-    tagline: "every outbid.lol clone, in one directory",
-    url: "https://outoutbid.lol",
-    logo: "https://outoutbid.lol/favicon.svg",
-    category: "Marketing",
-    description: "The definitive open directory indexing all outbid and pay-to-rank game platforms.",
-    launchDate: "August 2026",
-    totalStaked: 1,
-    allTimeClicks: 88,
-    countriesClaimed: [
-      {
-        countryName: "Canada",
-        countryFlag: "🇨🇦",
-        countrySlug: "canada",
-        rank: 1,
-        staked: 1,
-        date: "21h ago",
-        status: "active",
       }
     ]
   }
