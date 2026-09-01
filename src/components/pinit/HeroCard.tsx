@@ -42,46 +42,30 @@ export function HeroCard({
   }, []);
 
   return (
-    <div className="pointer-events-none absolute left-3 top-3 z-30 sm:left-4 sm:top-4 w-[min(22rem,calc(100%-8.75rem))] sm:w-[min(22rem,calc(100%-2rem))]">
-      {/* Collapsible Header Toggle */}
+    <div className="pointer-events-none absolute left-3 top-16 z-30 sm:left-4 sm:top-16 w-[min(21rem,calc(100%-8.75rem))] sm:w-[min(21rem,calc(100%-2rem))]">
+      {/* Collapsed Pill Button */}
       {isCollapsed ? (
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="pointer-events-auto flex items-center gap-2 rounded-full border border-[var(--pin-border)] bg-[var(--pin-card)] px-3.5 py-2 text-xs font-bold text-[var(--pin-ink)] shadow-pin-lg hover:border-[var(--pin-coral)] hover:text-[var(--pin-coral-ink)] transition-transform hover:scale-105 cursor-pointer"
+          className="pointer-events-auto flex items-center gap-2 rounded-full border border-[var(--pin-border)] bg-[var(--pin-card)] px-3.5 py-1.5 text-xs font-bold text-[var(--pin-ink)] shadow-pin-lg hover:border-[var(--pin-coral)] hover:text-[var(--pin-coral-ink)] transition-transform hover:scale-105 cursor-pointer backdrop-blur-sm"
         >
-          <span className="flex h-5 w-5 items-center justify-center rounded-[6px] bg-[var(--pin-ink)] text-[var(--pin-coral)]">
-            <svg viewBox="0 0 100 100" width="10" height="10" fill="currentColor">
-              <path d="M20,8 L42,8 L82,32 L42,56 L42,92 L20,92 Z" />
-            </svg>
-          </span>
+          <span>📍</span>
           <span>Show Menu & Search</span>
         </button>
       ) : (
-        <div className="pointer-events-auto rounded-pin-lg border border-[var(--pin-border)] bg-[var(--pin-card)] p-4 shadow-pin-lg">
-          {/* Brand Header with Hide Button */}
+        <div className="pointer-events-auto rounded-pin-lg border border-[var(--pin-border)] bg-[var(--pin-card)]/95 p-4 shadow-pin-lg backdrop-blur-md">
+          {/* Header with Title and Hide Toggle */}
           <div className="flex items-center justify-between">
-            <Link
-              href="/"
-              className="group inline-flex items-center gap-2.5 rounded-lg outline-none"
-              aria-label="pinit.lol home"
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-[var(--pin-ink)] text-[var(--pin-coral)] transition-transform duration-200 ease-out group-hover:-rotate-6 group-hover:scale-105 shadow-sm">
-                <svg viewBox="0 0 100 100" width="18" height="18" fill="currentColor">
-                  <path d="M20,8 L42,8 L82,32 L42,56 L42,92 L20,92 Z" />
-                </svg>
-              </span>
-              <span className="text-lg font-extrabold tracking-tight text-[var(--pin-ink)]">
-                pinit<span className="font-semibold text-[var(--pin-coral-ink)]">.lol</span>
-              </span>
-            </Link>
+            <h1 className="text-lg font-extrabold leading-tight tracking-tight text-[var(--pin-ink)] sm:text-xl">
+              Put your product on the map.
+            </h1>
 
-            {/* Minimize / Hide Button */}
             <button
               type="button"
               onClick={onToggleCollapse}
               title="Hide sidebar to view full globe"
-              className="rounded-full border border-[var(--pin-border)] p-1.5 text-[var(--pin-muted)] hover:bg-[var(--pin-paper)] hover:text-[var(--pin-ink)] transition-colors cursor-pointer text-xs flex items-center gap-1 px-2"
+              className="rounded-full border border-[var(--pin-border)] p-1 text-[var(--pin-muted)] hover:bg-[var(--pin-paper)] hover:text-[var(--pin-ink)] transition-colors cursor-pointer text-xs flex items-center gap-1 px-2 shrink-0 ml-2"
             >
               <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor">
                 <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -90,16 +74,12 @@ export function HeroCard({
             </button>
           </div>
 
-          {/* Hero Title & Subtitle */}
-          <h1 className="mt-3 text-xl font-extrabold leading-tight tracking-tight text-[var(--pin-ink)] sm:text-2xl">
-            Put your product on the map.
-          </h1>
           <p className="mt-1 hidden text-xs leading-relaxed text-[var(--pin-muted)] sm:block">
             Stake on your product and compete for #1 for 24 hours.
           </p>
 
           {/* Country & Product Search Box */}
-          <div ref={searchRef} className="relative mt-3 block">
+          <div ref={searchRef} className="relative mt-2.5 block">
             <input
               type="search"
               placeholder="Search countries or products…"
@@ -109,12 +89,12 @@ export function HeroCard({
                 setIsSearchOpen(true);
               }}
               onFocus={() => setIsSearchOpen(true)}
-              className="w-full rounded-full border border-[var(--pin-border-strong)] bg-[var(--pin-card)] px-4 py-1.5 text-xs text-[var(--pin-ink)] placeholder:text-[var(--pin-muted)] focus:border-[var(--pin-coral)] focus:outline-none focus:ring-1 focus:ring-[var(--pin-coral)]"
+              className="w-full rounded-full border border-[var(--pin-border-strong)] bg-[var(--pin-card)] px-3.5 py-1.5 text-xs text-[var(--pin-ink)] placeholder:text-[var(--pin-muted)] focus:border-[var(--pin-coral)] focus:outline-none focus:ring-1 focus:ring-[var(--pin-coral)]"
             />
 
             {/* Autocomplete Search Dropdown */}
             {isSearchOpen && searchQuery.trim().length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1.5 max-h-56 overflow-y-auto rounded-pin-md border border-[var(--pin-border)] bg-[var(--pin-card)] py-1 shadow-pin-lg z-30 divide-y divide-[var(--pin-border)]">
+              <div className="absolute left-0 right-0 top-full mt-1.5 max-h-56 overflow-y-auto rounded-pin-md border border-[var(--pin-border)] bg-[var(--pin-card)] py-1 shadow-pin-lg z-50 divide-y divide-[var(--pin-border)]">
                 {filteredCountries.length > 0 ? (
                   filteredCountries.map((c) => (
                     <button
@@ -167,7 +147,7 @@ export function HeroCard({
           </button>
 
           {/* Feature Pills */}
-          <ul className="mt-3 hidden gap-1 sm:flex flex-wrap">
+          <ul className="mt-2.5 hidden gap-1 sm:flex flex-wrap">
             <li className="rounded-full bg-[var(--pin-paper)] px-2 py-0.5 text-[10px] font-semibold text-[var(--pin-muted)]">
               24h on country board
             </li>
@@ -180,7 +160,7 @@ export function HeroCard({
           </ul>
 
           {/* Category Dropdown */}
-          <div className="mt-3 pt-3 border-t border-[var(--pin-border)] flex items-center gap-2">
+          <div className="mt-2.5 pt-2.5 border-t border-[var(--pin-border)] flex items-center gap-2">
             <label htmlFor="category-select" className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-[var(--pin-muted)]">
               Category
             </label>
