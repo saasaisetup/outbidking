@@ -16,7 +16,7 @@ export function CountryClaimCard({
   onClaim,
 }: CountryClaimCardProps) {
   const isClaimed = !!country.currentLeader;
-  const minStake = isClaimed ? (country.currentLeader!.stake + 1) : 1;
+  const minStake = isClaimed ? country.currentLeader!.stake + 1 : 1;
 
   return (
     <div className="pointer-events-auto absolute right-3 bottom-14 z-30 w-80 md:right-6 md:bottom-14 animate-in fade-in slide-in-from-bottom-4 duration-200">
@@ -56,7 +56,7 @@ export function CountryClaimCard({
                 <img
                   src={country.currentLeader!.logo}
                   alt=""
-                  className="h-6 w-6 rounded-full object-cover bg-white"
+                  className="h-7 w-7 rounded-full object-cover bg-white border border-[var(--pin-border)]"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = '/globe.svg';
                   }}
@@ -86,7 +86,7 @@ export function CountryClaimCard({
           )}
         </div>
 
-        {/* Primary Action Button */}
+        {/* Action Button: Pin / Outbid */}
         <button
           type="button"
           onClick={() => onClaim(country)}
@@ -94,7 +94,7 @@ export function CountryClaimCard({
         >
           {isClaimed
             ? `Outbid ${country.currentLeader!.name} from $${minStake}`
-            : `Claim ${country.name} from $1`}
+            : `Pin ${country.name} from $1`}
         </button>
 
         {/* Deep Link to Country Page */}

@@ -17,13 +17,14 @@ export default function HomePage() {
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Handle Country Selection on Globe or from Search
+  // Handle Country Selection on Globe or Search
   const handleSelectCountry = (country: CountryInfo) => {
     setSelectedCountry(country);
   };
 
-  // Open Staking Modal
+  // Open Staking / Pinning Modal
   const handleOpenStake = (country?: CountryInfo) => {
     if (country) {
       setSelectedCountry(country);
@@ -40,31 +41,39 @@ export default function HomePage() {
     }
   };
 
+  // Strict Zoom Bounds: 0.85 (min) to 1.45 (max)
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(2.5, prev + 0.25));
+    setZoomLevel((prev) => Math.min(1.45, prev + 0.15));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(0.75, prev - 0.25));
+    setZoomLevel((prev) => Math.max(0.85, prev - 0.15));
+  };
+
+  const handleWheelZoom = (delta: number) => {
+    setZoomLevel((prev) => Math.min(1.45, Math.max(0.85, prev + delta)));
   };
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[var(--pin-paper)] select-none">
-      {/* 3D Interactive Orthographic Globe in Background */}
+      {/* 3D Interactive Orthographic Globe */}
       <div className="absolute inset-0 z-0">
         <Globe
           selectedCountry={selectedCountry}
           onSelectCountry={handleSelectCountry}
           zoomLevel={zoomLevel}
+          onWheelZoom={handleWheelZoom}
         />
       </div>
 
-      {/* Top Left: Hero Card & Country Search */}
+      {/* Top Left: Hero Card & Search with Hide Toggle */}
       <HeroCard
         onPinClick={() => handleOpenStake(selectedCountry || undefined)}
         onSelectCountry={handleSelectCountry}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
       {/* Top Right: Global Stats & Trending */}
@@ -82,7 +91,10 @@ export default function HomePage() {
       </div>
 
       {/* Bottom Left: Live Activity Feed */}
-      <LiveActivityFeed onSelectCountry={handleSelectCountry} />
+      <LiveActivityFeed
+        onSelectCountry={handleSelectCountry}
+        isSidebarCollapsed={isSidebarCollapsed}
+      />
 
       {/* Bottom Right: Country Claim Drawer */}
       {selectedCountry && (
@@ -93,13 +105,13 @@ export default function HomePage() {
         />
       )}
 
-      {/* Bottom Right: Zoom Controls */}
+      {/* Bottom Right: Zoom Controls with strict bounds */}
       <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
 
       {/* Bottom Center: Navigation Pill & Footer */}
       <BottomBar />
 
-      {/* Modal: Stake on Country */}
+      {/* Modal: Pin on Country */}
       {isStakeModalOpen && (
         <StakeModal
           country={selectedCountry}

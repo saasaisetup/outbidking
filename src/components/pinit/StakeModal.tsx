@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { CountryInfo, COUNTRIES_DATA, CATEGORIES_LIST } from '@/lib/pinitData';
+import { CountryInfo, COUNTRIES_DATA, CATEGORIES_LIST, getProductFavicon } from '@/lib/pinitData';
 
 interface StakeModalProps {
   country: CountryInfo | null;
@@ -17,22 +17,31 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
   const [claimType, setClaimType] = useState<'product' | 'social'>('product');
   const [step, setStep] = useState<1 | 2>(1);
   const [url, setUrl] = useState('');
+  const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [tagline, setTagline] = useState('');
   const [category, setCategory] = useState('Marketing');
   const [stakeAmount, setStakeAmount] = useState<number>(minStake);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Auto-derived logo
+  const logoPreview = getProductFavicon(url);
+
   // Handle URL Continue
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
 
-    // Auto-derive clean name from URL if empty
     try {
-      const clean = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
-      if (!name) setName(clean);
-      if (!tagline) setTagline(claimType === 'social' ? 'Social Profile' : 'High-growth indie product');
+      if (claimType === 'social') {
+        const clean = url.replace(/.*(?:twitter\.com|x\.com)\//, '').replace('@', '').split('/')[0].split('?')[0];
+        if (!name) setName(clean.startsWith('@') ? clean : `@${clean}`);
+        if (!tagline) setTagline('Founder & Builder on X');
+      } else {
+        const clean = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+        if (!name) setName(clean);
+        if (!tagline) setTagline('High-growth indie product');
+      }
     } catch {
       if (!name) setName('My Product');
     }
@@ -44,19 +53,18 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
     setIsSubmitting(true);
 
     try {
-      // Trigger confetti celebration
       confetti({
-        particleCount: 80,
+        particleCount: 90,
         spread: 70,
         origin: { y: 0.6 },
       });
 
       const newPlacement = {
         id: `stake-${Date.now()}`,
-        name: name || 'My Startup',
+        name: name || (claimType === 'social' ? '@founder' : 'My Startup'),
         tagline: tagline || 'Building in public',
         url: url.startsWith('http') ? url : `https://${url}`,
-        logo: '/globe.svg',
+        logo: logoPreview,
         stake: stakeAmount,
         category,
         claimedAt: 'Just now',
@@ -72,7 +80,7 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="relative w-full max-w-md rounded-pin-lg border border-[var(--pin-border)] bg-[var(--pin-card)] p-6 shadow-2xl">
         {/* Close Button */}
         <button
@@ -97,7 +105,7 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
           </span>
           <span className="text-xl">{targetCountry.flag}</span>
           <h2 className="text-lg font-extrabold text-[var(--pin-ink)]">
-            Stake on {targetCountry.name}
+            Pin on {targetCountry.name}
           </h2>
         </div>
         <p className="mt-1 text-xs text-[var(--pin-muted)]">
@@ -137,50 +145,71 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
               </div>
             </div>
 
-            {/* Section 2: URL Input Form */}
-            <form onSubmit={handleContinue} className="space-y-2">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)]">
-                {claimType === 'product' ? 'Product URL' : 'Social Profile URL / Handle'}
-              </label>
-              <p className="text-[11px] text-[var(--pin-muted)] leading-tight">
-                {claimType === 'product'
-                  ? 'The site people land on: your homepage, app, or landing page.'
-                  : 'Your X/Twitter, LinkedIn, GitHub, or YouTube profile link.'}
-              </p>
-
-              <div className="flex items-center gap-2 pt-1">
+            {/* Section 2: URL & Email Form */}
+            <form onSubmit={handleContinue} className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)]">
+                  {claimType === 'product' ? 'Product URL' : 'Social Profile URL / Handle'}
+                </label>
+                <p className="text-[11px] text-[var(--pin-muted)] leading-tight mt-0.5">
+                  {claimType === 'product'
+                    ? 'The site people land on: your homepage, app, or landing page.'
+                    : 'Your X/Twitter, LinkedIn, GitHub, or Instagram handle.'}
+                </p>
                 <input
                   type="text"
                   required
-                  placeholder={claimType === 'product' ? 'https://yourstartup.com' : 'https://x.com/yourhandle'}
+                  placeholder={claimType === 'product' ? 'https://yourstartup.com' : 'https://x.com/shipxankit'}
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="flex-1 rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3.5 py-2.5 text-xs text-[var(--pin-ink)] placeholder:text-[var(--pin-muted)] focus:border-[var(--pin-coral)] focus:outline-none focus:ring-1 focus:ring-[var(--pin-coral)]"
+                  className="mt-1.5 w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3.5 py-2 text-xs text-[var(--pin-ink)] placeholder:text-[var(--pin-muted)] focus:border-[var(--pin-coral)] focus:outline-none"
                 />
-                <button
-                  type="submit"
-                  className="rounded-pin-md bg-[var(--pin-coral)] px-5 py-2.5 text-xs font-bold text-white shadow-pin-coral hover:bg-[var(--pin-coral-ink)] transition-colors cursor-pointer"
-                >
-                  Continue
-                </button>
               </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)]">
+                  Login / Notification Email (Optional)
+                </label>
+                <input
+                  type="email"
+                  placeholder="you@domain.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3.5 py-2 text-xs text-[var(--pin-ink)] placeholder:text-[var(--pin-muted)] focus:border-[var(--pin-coral)] focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full rounded-pin-md bg-[var(--pin-coral)] py-2.5 text-xs font-bold text-white shadow-pin-coral hover:bg-[var(--pin-coral-ink)] transition-colors cursor-pointer"
+              >
+                Continue →
+              </button>
             </form>
           </div>
         ) : (
-          <div className="mt-5 space-y-4 animate-in fade-in duration-150">
-            {/* Step 2: Product Name & Category */}
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)] mb-1">
-                Product Name
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Product or Brand Name"
-                className="w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3.5 py-2 text-xs text-[var(--pin-ink)] focus:border-[var(--pin-coral)] focus:outline-none"
+          <div className="mt-5 space-y-3.5 animate-in fade-in duration-150">
+            {/* Logo Preview + Product Name */}
+            <div className="flex items-center gap-3 p-3 rounded-pin-md border border-[var(--pin-border)] bg-[var(--pin-paper)]">
+              <img
+                src={logoPreview}
+                alt="Logo preview"
+                className="h-10 w-10 rounded-full object-cover bg-white border border-[var(--pin-border)] shadow-xs"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/globe.svg';
+                }}
               />
+              <div className="min-w-0 flex-1">
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Product Name or @handle"
+                  className="w-full font-bold text-xs text-[var(--pin-ink)] bg-transparent border-b border-dashed border-[var(--pin-border-strong)] focus:border-[var(--pin-coral)] focus:outline-none py-0.5"
+                />
+                <span className="text-[10px] text-[var(--pin-muted)]">Logo automatically detected</span>
+              </div>
             </div>
 
             <div>
@@ -192,8 +221,8 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                 required
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
-                placeholder="One sentence description"
-                className="w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3.5 py-2 text-xs text-[var(--pin-ink)] focus:border-[var(--pin-coral)] focus:outline-none"
+                placeholder="One sentence pitch"
+                className="w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3.5 py-1.5 text-xs text-[var(--pin-ink)] focus:border-[var(--pin-coral)] focus:outline-none"
               />
             </div>
 
@@ -204,7 +233,7 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3 py-2 text-xs text-[var(--pin-ink)] outline-none"
+                className="w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3 py-1.5 text-xs text-[var(--pin-ink)] outline-none"
               >
                 {CATEGORIES_LIST.filter((c) => c.value).map((c) => (
                   <option key={c.value} value={c.label}>
@@ -216,9 +245,9 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
 
             {/* Stake Amount Selector */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center justify-between mb-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)]">
-                  Your 24h Stake Amount
+                  24h Stake Amount
                 </label>
                 <span className="text-[11px] font-bold text-[var(--pin-coral-ink)]">
                   Min: ${minStake}
@@ -258,7 +287,7 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                 disabled={isSubmitting}
                 className="flex-1 rounded-full bg-[var(--pin-coral)] py-2.5 text-center text-xs font-bold text-white shadow-pin-coral hover:bg-[var(--pin-coral-ink)] transition-transform hover:scale-[1.02] cursor-pointer"
               >
-                {isSubmitting ? 'Staking...' : `Confirm & Stake on ${targetCountry.name} ($${stakeAmount})`}
+                {isSubmitting ? 'Pinning...' : `Pin it for $${stakeAmount} on ${targetCountry.name}`}
               </button>
             </div>
           </div>

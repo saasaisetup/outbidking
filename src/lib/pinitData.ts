@@ -1,11 +1,11 @@
 export interface CountryInfo {
-  id: string; // ISO numeric or string ID (e.g. "124" for Canada, "840" for USA)
-  slug: string; // e.g. "canada", "united-states-of-america", "turkey", "libya"
+  id: string; // ISO numeric code string (e.g. "124" for Canada, "840" for USA, "643" for Russia)
+  slug: string;
   name: string;
-  code: string; // e.g. "CA", "US", "TR", "LY"
-  flag: string; // e.g. "🇨🇦", "🇺🇸", "🇹🇷", "🇱🇾"
+  code: string; // 2-letter ISO (e.g. "CA", "US", "RU")
+  flag: string;
   coordinates: [number, number]; // [longitude, latitude]
-  color: string;
+  color?: string;
   currentLeader?: {
     id: string;
     name: string;
@@ -62,6 +62,34 @@ export interface ProductDetail {
   }[];
 }
 
+// Logo resolver helper for any domain or social handle
+export function getProductFavicon(urlOrHandle: string): string {
+  if (!urlOrHandle) return '/globe.svg';
+  
+  if (urlOrHandle.includes('x.com') || urlOrHandle.includes('twitter.com') || urlOrHandle.startsWith('@')) {
+    const handle = urlOrHandle.replace(/.*(?:twitter\.com|x\.com)\//, '').replace('@', '').split('/')[0].split('?')[0];
+    return `https://unavatar.io/twitter/${handle}`;
+  }
+  if (urlOrHandle.includes('github.com')) {
+    const user = urlOrHandle.replace(/.*github\.com\//, '').split('/')[0];
+    return `https://unavatar.io/github/${user}`;
+  }
+  if (urlOrHandle.includes('linkedin.com')) {
+    return 'https://static.licdn.com/aero-v1/sc/h/al2o9zrvru7aqj8e1x2rzsrca';
+  }
+  
+  try {
+    let domain = urlOrHandle.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+    if (domain) {
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    }
+  } catch {
+    // fallback
+  }
+  return '/globe.svg';
+}
+
+// Complete World Countries Registry mapping ISO numeric to info
 export const COUNTRIES_DATA: Record<string, CountryInfo> = {
   canada: {
     id: "124",
@@ -70,7 +98,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "CA",
     flag: "🇨🇦",
     coordinates: [-106.3468, 56.1304],
-    color: "#ffcdd2",
     currentLeader: {
       id: "outoutbid-lol",
       name: "outoutbid.lol",
@@ -85,6 +112,26 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
       clicks: 42,
     },
   },
+  russia: {
+    id: "643",
+    slug: "russia",
+    name: "Russia",
+    code: "RU",
+    flag: "🇷🇺",
+    coordinates: [105.3188, 61.524],
+    currentLeader: {
+      id: "shipxankit",
+      name: "@shipxankit",
+      tagline: "Founder & builder shipping AI agents and viral micro-SaaS",
+      url: "https://x.com/shipxankit",
+      logo: "https://unavatar.io/twitter/shipxankit",
+      stake: 1,
+      category: "AI",
+      claimedAt: "1h ago",
+      expiresIn: "23h 05m",
+      clicks: 19,
+    },
+  },
   "united-states-of-america": {
     id: "840",
     slug: "united-states-of-america",
@@ -92,7 +139,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "US",
     flag: "🇺🇸",
     coordinates: [-95.7129, 37.0902],
-    color: "#c8e6c9",
   },
   turkey: {
     id: "792",
@@ -101,7 +147,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "TR",
     flag: "🇹🇷",
     coordinates: [35.2433, 38.9637],
-    color: "#f8bbd0",
   },
   libya: {
     id: "434",
@@ -110,7 +155,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "LY",
     flag: "🇱🇾",
     coordinates: [17.2283, 26.3351],
-    color: "#e1bee7",
   },
   algeria: {
     id: "012",
@@ -119,7 +163,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "DZ",
     flag: "🇩🇿",
     coordinates: [1.6596, 28.0339],
-    color: "#ffe0b2",
   },
   egypt: {
     id: "818",
@@ -128,7 +171,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "EG",
     flag: "🇪🇬",
     coordinates: [30.8025, 26.8206],
-    color: "#bbdefb",
   },
   "saudi-arabia": {
     id: "682",
@@ -137,7 +179,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "SA",
     flag: "🇸🇦",
     coordinates: [45.0792, 23.8859],
-    color: "#fff9c4",
   },
   india: {
     id: "356",
@@ -146,7 +187,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "IN",
     flag: "🇮🇳",
     coordinates: [78.9629, 20.5937],
-    color: "#b2dfdb",
   },
   china: {
     id: "156",
@@ -155,16 +195,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "CN",
     flag: "🇨🇳",
     coordinates: [104.1954, 35.8617],
-    color: "#ffcdd2",
-  },
-  russia: {
-    id: "643",
-    slug: "russia",
-    name: "Russia",
-    code: "RU",
-    flag: "🇷🇺",
-    coordinates: [105.3188, 61.524],
-    color: "#e1bee7",
   },
   kazakhstan: {
     id: "398",
@@ -173,7 +203,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "KZ",
     flag: "🇰🇿",
     coordinates: [66.9237, 48.0196],
-    color: "#bbdefb",
   },
   iran: {
     id: "364",
@@ -182,7 +211,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "IR",
     flag: "🇮🇷",
     coordinates: [53.688, 32.4279],
-    color: "#c8e6c9",
   },
   sudan: {
     id: "729",
@@ -191,7 +219,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "SD",
     flag: "🇸🇩",
     coordinates: [30.2176, 12.8628],
-    color: "#b2dfdb",
   },
   chad: {
     id: "148",
@@ -200,7 +227,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "TD",
     flag: "🇹🇩",
     coordinates: [18.7322, 15.4542],
-    color: "#ffe0b2",
   },
   niger: {
     id: "562",
@@ -209,7 +235,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "NE",
     flag: "🇳🇪",
     coordinates: [8.0817, 17.6078],
-    color: "#fff9c4",
   },
   nigeria: {
     id: "566",
@@ -218,7 +243,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "NG",
     flag: "🇳🇬",
     coordinates: [8.6753, 9.082],
-    color: "#f8bbd0",
   },
   mali: {
     id: "466",
@@ -227,7 +251,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "ML",
     flag: "🇲🇱",
     coordinates: [-3.9962, 17.5707],
-    color: "#c8e6c9",
   },
   mauritania: {
     id: "478",
@@ -236,7 +259,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "MR",
     flag: "🇲🇷",
     coordinates: [-10.9408, 21.0079],
-    color: "#bbdefb",
   },
   "dem-rep-congo": {
     id: "180",
@@ -245,7 +267,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "CD",
     flag: "🇨🇩",
     coordinates: [21.7587, -4.0383],
-    color: "#e1bee7",
   },
   angola: {
     id: "024",
@@ -254,7 +275,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "AO",
     flag: "🇦🇴",
     coordinates: [17.8739, -11.2027],
-    color: "#f8bbd0",
   },
   "south-africa": {
     id: "710",
@@ -263,7 +283,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "ZA",
     flag: "🇿🇦",
     coordinates: [22.9375, -30.5595],
-    color: "#c8e6c9",
   },
   ethiopia: {
     id: "231",
@@ -272,7 +291,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "ET",
     flag: "🇪🇹",
     coordinates: [40.4897, 9.145],
-    color: "#bbdefb",
   },
   brazil: {
     id: "076",
@@ -281,7 +299,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "BR",
     flag: "🇧🇷",
     coordinates: [-51.9253, -14.235],
-    color: "#c8e6c9",
   },
   australia: {
     id: "036",
@@ -290,7 +307,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "AU",
     flag: "🇦🇺",
     coordinates: [133.7751, -25.2744],
-    color: "#ffe0b2",
   },
   germany: {
     id: "276",
@@ -299,7 +315,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "DE",
     flag: "🇩🇪",
     coordinates: [10.4515, 51.1657],
-    color: "#fff9c4",
   },
   "united-kingdom": {
     id: "826",
@@ -308,7 +323,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "GB",
     flag: "🇬🇧",
     coordinates: [-3.436, 55.3781],
-    color: "#bbdefb",
   },
   france: {
     id: "250",
@@ -317,7 +331,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "FR",
     flag: "🇫🇷",
     coordinates: [2.2137, 46.2276],
-    color: "#f8bbd0",
   },
   japan: {
     id: "392",
@@ -326,7 +339,6 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "JP",
     flag: "🇯🇵",
     coordinates: [138.2529, 36.2048],
-    color: "#ffcdd2",
   },
   czechia: {
     id: "203",
@@ -335,11 +347,186 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "CZ",
     flag: "🇨🇿",
     coordinates: [15.473, 49.8175],
-    color: "#b2dfdb",
+  },
+  argentina: {
+    id: "032",
+    slug: "argentina",
+    name: "Argentina",
+    code: "AR",
+    flag: "🇦🇷",
+    coordinates: [-63.6167, -38.4161],
+  },
+  mexico: {
+    id: "484",
+    slug: "mexico",
+    name: "Mexico",
+    code: "MX",
+    flag: "🇲🇽",
+    coordinates: [-102.5528, 23.6345],
+  },
+  indonesia: {
+    id: "360",
+    slug: "indonesia",
+    name: "Indonesia",
+    code: "ID",
+    flag: "🇮🇩",
+    coordinates: [113.9213, -0.7893],
+  },
+  spain: {
+    id: "724",
+    slug: "spain",
+    name: "Spain",
+    code: "ES",
+    flag: "🇪🇸",
+    coordinates: [-3.7492, 40.4637],
+  },
+  italy: {
+    id: "380",
+    slug: "italy",
+    name: "Italy",
+    code: "IT",
+    flag: "🇮🇹",
+    coordinates: [12.5674, 41.8719],
+  },
+  sweden: {
+    id: "752",
+    slug: "sweden",
+    name: "Sweden",
+    code: "SE",
+    flag: "🇸🇪",
+    coordinates: [18.6435, 60.1282],
+  },
+  norway: {
+    id: "578",
+    slug: "norway",
+    name: "Norway",
+    code: "NO",
+    flag: "🇳🇴",
+    coordinates: [8.4689, 60.472],
+  },
+  poland: {
+    id: "616",
+    slug: "poland",
+    name: "Poland",
+    code: "PL",
+    flag: "🇵🇱",
+    coordinates: [19.1451, 51.9194],
+  },
+  ukraine: {
+    id: "804",
+    slug: "ukraine",
+    name: "Ukraine",
+    code: "UA",
+    flag: "🇺🇦",
+    coordinates: [31.1656, 48.3794],
+  },
+  pakistan: {
+    id: "586",
+    slug: "pakistan",
+    name: "Pakistan",
+    code: "PK",
+    flag: "🇵🇰",
+    coordinates: [69.3451, 30.3753],
+  },
+  thailand: {
+    id: "764",
+    slug: "thailand",
+    name: "Thailand",
+    code: "TH",
+    flag: "🇹🇭",
+    coordinates: [100.9925, 15.87],
+  },
+  vietnam: {
+    id: "704",
+    slug: "vietnam",
+    name: "Vietnam",
+    code: "VN",
+    flag: "🇻🇳",
+    coordinates: [108.2772, 14.0583],
+  },
+  "south-korea": {
+    id: "410",
+    slug: "south-korea",
+    name: "South Korea",
+    code: "KR",
+    flag: "🇰🇷",
+    coordinates: [127.7669, 35.9078],
+  },
+  kenya: {
+    id: "404",
+    slug: "kenya",
+    name: "Kenya",
+    code: "KE",
+    flag: "🇰🇪",
+    coordinates: [37.9062, -0.0236],
+  },
+  morocco: {
+    id: "504",
+    slug: "morocco",
+    name: "Morocco",
+    code: "MA",
+    flag: "🇲🇦",
+    coordinates: [-7.0926, 31.7917],
+  },
+  ghana: {
+    id: "288",
+    slug: "ghana",
+    name: "Ghana",
+    code: "GH",
+    flag: "🇬🇭",
+    coordinates: [-1.0232, 7.9465],
+  },
+  chile: {
+    id: "152",
+    slug: "chile",
+    name: "Chile",
+    code: "CL",
+    flag: "🇨🇱",
+    coordinates: [-71.543, -35.6751],
+  },
+  colombia: {
+    id: "170",
+    slug: "colombia",
+    name: "Colombia",
+    code: "CO",
+    flag: "🇨🇴",
+    coordinates: [-74.2973, 4.5709],
+  },
+  peru: {
+    id: "604",
+    slug: "peru",
+    name: "Peru",
+    code: "PE",
+    flag: "🇵🇪",
+    coordinates: [-75.0152, -9.1899],
+  },
+  "new-zealand": {
+    id: "554",
+    slug: "new-zealand",
+    name: "New Zealand",
+    code: "NZ",
+    flag: "🇳🇿",
+    coordinates: [174.886, -40.9006],
   }
 };
 
 export const INITIAL_ACTIVITY: ActivityItem[] = [
+  {
+    id: "act-0",
+    productName: "@shipxankit",
+    productSlug: "shipxankit",
+    productUrl: "https://x.com/shipxankit",
+    logo: "https://unavatar.io/twitter/shipxankit",
+    stake: 1,
+    countryName: "Russia",
+    countryFlag: "🇷🇺",
+    countryCode: "RU",
+    countrySlug: "russia",
+    category: "AI",
+    action: "claimed",
+    timeAgo: "1h ago",
+    placementSlug: "shipxankit-russia-20260901",
+  },
   {
     id: "act-1",
     productName: "IndieTools",
@@ -411,7 +598,7 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     productName: "LiftOff (@lift_off_sh) on X",
     productSlug: "x-lift-off-sh",
     productUrl: "https://x.com/lift_off_sh",
-    logo: "https://x.com/favicon.ico",
+    logo: "https://unavatar.io/twitter/lift_off_sh",
     stake: 1,
     isLaunchSponsored: true,
     countryName: "Dem. Rep. Congo",
@@ -478,6 +665,30 @@ export const CATEGORIES_LIST = [
 ];
 
 export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
+  "shipxankit": {
+    id: "shipxankit",
+    slug: "shipxankit",
+    name: "@shipxankit",
+    tagline: "Founder & builder shipping AI agents and viral micro-SaaS",
+    url: "https://x.com/shipxankit",
+    logo: "https://unavatar.io/twitter/shipxankit",
+    category: "AI",
+    description: "Building fast, high-impact AI products and attention markets in public.",
+    launchDate: "September 2026",
+    totalStaked: 1,
+    allTimeClicks: 19,
+    countriesClaimed: [
+      {
+        countryName: "Russia",
+        countryFlag: "🇷🇺",
+        countrySlug: "russia",
+        rank: 1,
+        staked: 1,
+        date: "1h ago",
+        status: "active",
+      }
+    ]
+  },
   "indietools-app": {
     id: "indietools-app",
     slug: "indietools-app",
