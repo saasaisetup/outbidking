@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
@@ -15,36 +15,42 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  themeColor: '#fff8ec',
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
-  title: 'outbidking.lol — The Public Pay-to-Rank Leaderboard',
+  title: 'pinit.lol: Put your product on the map',
   description:
-    'A public pay-to-rank leaderboard for modern AI agents, SaaS products, developer tools, and creators. $1 to join. Outbid to claim #1 rank.',
+    'Discover what people are building around the world. Pin your product and stake to compete for the top spot in any country.',
   keywords: [
-    'outbid',
-    'outbidking',
+    'pinit',
+    'pinit.lol',
+    'product map',
+    'indie hackers',
+    'startup directory',
     'pay to rank',
-    'leaderboard',
-    'ai tools directory',
-    'saas rankings',
-    'marketing attention market',
+    'ai tools map',
+    'interactive globe',
   ],
-  authors: [{ name: 'outbidking' }],
-  metadataBase: new URL('https://outbidking.lol'),
+  authors: [{ name: 'pinit' }],
+  metadataBase: new URL('https://pinit.lol'),
   openGraph: {
-    title: 'outbidking.lol — The Public Pay-to-Rank Leaderboard',
-    description: 'Claim your live rank on the public board. Outbid competitors to take #1.',
-    url: 'https://outbidking.lol',
-    siteName: 'outbidking.lol',
+    title: 'pinit.lol: Put your product on the map',
+    description:
+      'Discover what people are building around the world. Pin your product and stake to compete for the top spot in any country.',
+    url: 'https://pinit.lol',
+    siteName: 'pinit.lol',
     locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'outbidking.lol — The Public Pay-to-Rank Leaderboard',
-    description: 'Claim your live rank on the public board. Outbid competitors to take #1.',
-  },
-  icons: {
-    icon: '/icon',
+    title: 'pinit.lol: Put your product on the map',
+    description:
+      'Discover what people are building around the world. Pin your product and stake to compete for the top spot in any country.',
   },
 };
 
@@ -54,10 +60,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body
-        className="font-sans antialiased bg-white dark:bg-[#09090b] text-zinc-900 dark:text-white min-h-screen selection:bg-[#ea6c52]/20 selection:text-[#ea6c52]"
-      >
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetbrainsMono.variable} h-full`}>
+      <body className="h-full font-sans antialiased bg-[#fff8ec] text-[#1a1614] overflow-x-hidden selection:bg-[#FF5722]/20 selection:text-[#FF5722]">
         {children}
         <Analytics />
       </body>
