@@ -148,10 +148,10 @@ export function Globe({
     // 1. Ocean Sphere
     ctx.beginPath();
     ctx.arc(center[0], center[1], radius, 0, 2 * Math.PI);
-    ctx.fillStyle = isLightMode ? '#eef2f7' : '#090d16';
+    ctx.fillStyle = isLightMode ? '#f5f0e6' : '#090d16';
     ctx.fill();
     ctx.lineWidth = 1.5;
-    ctx.strokeStyle = isLightMode ? '#d5cbb9' : '#1e293b';
+    ctx.strokeStyle = isLightMode ? '#e6dfd1' : '#1e293b';
     ctx.stroke();
 
     // 2. Graticules

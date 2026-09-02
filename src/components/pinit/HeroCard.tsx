@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { CATEGORIES_LIST, CountryInfo, COUNTRIES_DATA } from '@/lib/pinitData';
 
 interface HeroCardProps {
@@ -58,7 +57,7 @@ export function HeroCard({
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h1 className="text-sm font-extrabold tracking-tight">
+              <h1 className="text-sm font-black tracking-tight">
                 Put your product on the map.
               </h1>
               <p className="mt-0.5 text-[11px] text-[#94a3b8] leading-tight">
@@ -122,20 +121,6 @@ export function HeroCard({
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Micro Status */}
-          <div className="mt-2.5 flex items-center justify-between text-[10px]">
-            <span className="flex items-center gap-1 font-semibold text-emerald-500">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live for 6d 4h
-            </span>
-            <Link
-              href="/categories"
-              className="text-[#ff7043] font-bold hover:underline"
-            >
-              Explore products →
-            </Link>
           </div>
 
           {/* Pin a Country CTA Button */}

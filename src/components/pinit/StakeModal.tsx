@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { CountryInfo, COUNTRIES_DATA, CATEGORIES_LIST, getProductFavicon } from '@/lib/pinitData';
+import { CountryInfo, COUNTRIES_DATA, CATEGORIES_LIST, COUNTRY_COLOR_PALETTE, getProductFavicon } from '@/lib/pinitData';
 
 interface StakeModalProps {
   country: CountryInfo | null;
@@ -27,13 +27,17 @@ export function StakeModal({
   const [name, setName] = useState('');
   const [tagline, setTagline] = useState('');
   const [category, setCategory] = useState('Marketing');
+  const [selectedColor, setSelectedColor] = useState<string>(targetCountry.color || '#ff5722');
   const [stakeAmount, setStakeAmount] = useState<number>(minStake);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Sync stake amount with target country
+  // Sync state with target country
   useEffect(() => {
     setStakeAmount(minStake);
-  }, [minStake]);
+    if (targetCountry.color) {
+      setSelectedColor(targetCountry.color);
+    }
+  }, [minStake, targetCountry]);
 
   // Auto-derived logo
   const logoPreview = getProductFavicon(url);
@@ -76,7 +80,7 @@ export function StakeModal({
     const cleanTagline = tagline.trim() || 'Building in public';
 
     try {
-      // 1. Persist directly to backend API (/api/territories)
+      // 1. Persist directly to backend API (/api/territories) with customColor
       fetch('/api/territories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,6 +89,7 @@ export function StakeModal({
           title: cleanTitle,
           url: fullUrl,
           warCry: cleanTagline,
+          customColor: selectedColor,
           bidAmount: stakeAmount,
           logoUrl: logoPreview,
           category,
@@ -102,6 +107,7 @@ export function StakeModal({
             title: cleanTitle,
             description: cleanTagline,
             category,
+            customColor: selectedColor,
             bidAmount: stakeAmount,
             logoUrl: logoPreview,
             isTerritory: true,
@@ -139,6 +145,7 @@ export function StakeModal({
         logo: logoPreview,
         stake: stakeAmount,
         category,
+        customColor: selectedColor,
         claimedAt: 'Just now',
         expiresIn: '24h 00m',
         clicks: 0,
@@ -278,15 +285,15 @@ export function StakeModal({
             </form>
           </div>
         ) : (
-          <div className="mt-5 space-y-3.5 animate-in fade-in duration-150">
+          <div className="mt-4 space-y-3 animate-in fade-in duration-150">
             {/* Logo Preview + Product Name */}
-            <div className={`flex items-center gap-3 p-3 rounded-pin-md border ${
+            <div className={`flex items-center gap-3 p-2.5 rounded-pin-md border ${
               isLightMode ? 'border-[#e6dfd1] bg-[#faf7f0]' : 'border-[#1e293b] bg-[#06090e]'
             }`}>
               <img
                 src={logoPreview}
                 alt="Logo preview"
-                className="h-10 w-10 rounded-full object-cover bg-white border border-[#1e293b] shadow-xs shrink-0"
+                className="h-9 w-9 rounded-full object-cover bg-white border border-[#1e293b] shadow-xs shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/globe.svg';
                 }}
@@ -316,12 +323,46 @@ export function StakeModal({
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
                 placeholder="One sentence pitch"
-                className={`w-full rounded-pin-md border px-3.5 py-1.5 text-xs focus:border-[#ff5722] focus:outline-none ${
+                className={`w-full rounded-pin-md border px-3 py-1.5 text-xs focus:border-[#ff5722] focus:outline-none ${
                   isLightMode
                     ? 'border-[#e6dfd1] bg-[#faf7f0] text-slate-900'
                     : 'border-[#1e293b] bg-[#06090e] text-white'
                 }`}
               />
+            </div>
+
+            {/* Country Territory Color Picker */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
+                  Country Color on Globe
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="h-3 w-3 rounded-full border border-white/40 shadow-xs inline-block"
+                    style={{ backgroundColor: selectedColor }}
+                  />
+                  <span className="font-mono text-[9px] font-bold text-[#94a3b8] uppercase">
+                    {selectedColor}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center flex-wrap gap-1.5">
+                {COUNTRY_COLOR_PALETTE.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setSelectedColor(color)}
+                    style={{ backgroundColor: color }}
+                    aria-label={`Select color ${color}`}
+                    className={`h-6 w-6 rounded-full transition-transform cursor-pointer shadow-xs ${
+                      selectedColor.toLowerCase() === color.toLowerCase()
+                        ? 'ring-2 ring-white scale-110 shadow-md'
+                        : 'hover:scale-105 opacity-85 hover:opacity-100'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
 
             <div>
@@ -417,7 +458,7 @@ export function StakeModal({
             </div>
 
             {/* Confirm & Stake Button */}
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex items-center gap-2 pt-1.5">
               <button
                 type="button"
                 onClick={() => setStep(1)}

@@ -35,12 +35,12 @@ export function TopNavbar({
 
   return (
     <header className="fixed top-0 inset-x-0 z-40 px-3 py-2.5 sm:px-6 pointer-events-none">
-      <div className="flex items-center justify-between gap-2 max-w-7xl mx-auto">
-        {/* Left: Brand Badge */}
-        <div className="flex items-center gap-2 pointer-events-auto">
+      <div className="flex items-center justify-between gap-3 max-w-7xl mx-auto">
+        {/* Left: Clean Brand Logo & Name (No extra #1 badge) */}
+        <div className="flex items-center pointer-events-auto">
           <Link
             href="/"
-            className={`flex items-center gap-2.5 rounded-pin-md border px-3 py-1.5 backdrop-blur-md transition-all shadow-pin-sm ${
+            className={`flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-md transition-all shadow-pin-sm ${
               isLightMode
                 ? 'border-[#e6dfd1] bg-white/95 text-slate-900 hover:border-slate-400'
                 : 'border-[#1e293b] bg-[#0b0f19]/95 text-white hover:border-[#334155]'
@@ -53,27 +53,24 @@ export function TopNavbar({
                 <path d="M2 12h20" />
               </svg>
             </div>
-            <span className="font-extrabold text-sm tracking-tight">worldpinit.lol</span>
-            <span className="rounded bg-[#ff5722]/15 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[#ff7043]">
-              #1 PER COUNTRY
-            </span>
+            <span className="font-black text-sm tracking-tight">worldpinit.lol</span>
           </Link>
         </div>
 
-        {/* Center: Live Stats HUD (Desktop / Tablet) */}
-        <div className="hidden md:flex items-center gap-2 rounded-pin-md border px-3.5 py-1.5 text-[11px] font-mono backdrop-blur-md shadow-pin-sm pointer-events-auto transition-colors duration-150 border-inherit bg-inherit">
-          <div className={`flex items-center gap-2.5 rounded-pin-md border px-3 py-1 ${
+        {/* Center: Sleek Live Stats HUD (Single Unified Bar, No bulky nested button borders) */}
+        <div className="hidden md:flex items-center pointer-events-auto">
+          <div className={`flex items-center gap-3 rounded-full border px-4 py-1.5 text-[11px] font-mono backdrop-blur-md shadow-pin-sm ${
             isLightMode
               ? 'border-[#e6dfd1] bg-white/95 text-slate-700'
               : 'border-[#1e293b] bg-[#0b0f19]/95 text-slate-300'
           }`}>
-            <span className="flex items-center gap-1 font-bold text-emerald-500">
+            <span className="flex items-center gap-1.5 font-bold text-emerald-500">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {liveOnlineCount} ONLINE
             </span>
             <span className="opacity-30">·</span>
             <span className="font-medium">
-              <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>2,140</strong> VISITORS
+              <strong className={isLightMode ? 'text-slate-900 font-bold' : 'text-white font-bold'}>2,140</strong> VISITORS
             </span>
             <span className="opacity-30">·</span>
             <span className="font-bold text-[#ff7043]">
@@ -81,7 +78,7 @@ export function TopNavbar({
             </span>
             <span className="opacity-30">·</span>
             <span className="font-medium">
-              <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>1,580</strong> CLICKS
+              <strong className={isLightMode ? 'text-slate-900 font-bold' : 'text-white font-bold'}>1,580</strong> CLICKS
             </span>
             <span className="opacity-30">·</span>
             <span className="font-bold text-amber-500">
@@ -90,9 +87,9 @@ export function TopNavbar({
           </div>
         </div>
 
-        {/* Right: Modern SVG Theme Toggle, Search, and Rules */}
+        {/* Right: Modern SVG Theme Toggle, Search Bar, and Rules */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          {/* Crisp Modern SVG Theme Toggle (Sun/Moon) */}
+          {/* Crisp Modern SVG Theme Toggle */}
           <button
             type="button"
             onClick={onToggleTheme}
@@ -105,12 +102,10 @@ export function TopNavbar({
             }`}
           >
             {isLightMode ? (
-              // Crisp Moon SVG
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
               </svg>
             ) : (
-              // Crisp Sun SVG
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="4" />
                 <path d="M12 2v2" />
@@ -125,16 +120,16 @@ export function TopNavbar({
             )}
           </button>
 
-          {/* Quick Search */}
+          {/* Elegant Search Input */}
           <div className="relative">
             <div
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs backdrop-blur-md transition-all ${
+              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs backdrop-blur-md transition-all ${
                 isLightMode
-                  ? 'border-[#e6dfd1] bg-white text-slate-800'
-                  : 'border-[#1e293b] bg-[#0b0f19] text-white'
+                  ? 'border-[#e6dfd1] bg-white text-slate-800 focus-within:border-[#ff5722]'
+                  : 'border-[#1e293b] bg-[#0b0f19] text-white focus-within:border-[#ff5722]'
               }`}
             >
-              <svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#94a3b8]">
                 <circle cx="9" cy="9" r="6" />
                 <path d="m13.5 13.5 4 4" />
               </svg>
@@ -144,13 +139,13 @@ export function TopNavbar({
                 value={searchQuery}
                 onFocus={() => setIsSearchOpen(true)}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-28 sm:w-44 bg-transparent text-xs focus:outline-none placeholder:text-[#94a3b8]"
+                className="w-28 sm:w-48 bg-transparent text-xs focus:outline-none placeholder:text-[#94a3b8]"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="text-[#94a3b8] hover:text-white"
+                  className="text-[#94a3b8] hover:text-slate-900 dark:hover:text-white"
                 >
                   ✕
                 </button>
