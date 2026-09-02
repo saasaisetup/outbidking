@@ -23,7 +23,8 @@ export function Globe({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const [rotation, setRotation] = useState<[number, number, number]>([-30, -25, 0]);
+  // Persistent continuous rotation state
+  const [rotation, setRotation] = useState<[number, number, number]>([-30, -20, 0]);
   const [isDragging, setIsDragging] = useState(false);
   const [worldData, setWorldData] = useState<any>(null);
   const [hoveredCountry, setHoveredCountry] = useState<{ name: string; info?: CountryInfo; x: number; y: number } | null>(null);
@@ -82,7 +83,7 @@ export function Globe({
     }
   }, [selectedCountry]);
 
-  // Continuous Gentle Auto-Rotation (Smooth revolving)
+  // Continuous Seamless 360° Auto-Rotation (Smooth revolving without reset)
   useEffect(() => {
     let animationFrameId: number;
     const animate = () => {
@@ -90,8 +91,8 @@ export function Globe({
         setRotation((prev) => {
           const [tLng, tLat] = targetRotationRef.current!;
           const [cLng, cLat] = prev;
-          const diffLng = (tLng - cLng) * 0.1;
-          const diffLat = (tLat - cLat) * 0.1;
+          const diffLng = (tLng - cLng) * 0.08;
+          const diffLat = (tLat - cLat) * 0.08;
 
           if (Math.abs(diffLng) < 0.05 && Math.abs(diffLat) < 0.05) {
             targetRotationRef.current = null;
@@ -100,7 +101,7 @@ export function Globe({
           return [cLng + diffLng, cLat + diffLat, 0];
         });
       } else if (!isDragging && !isTouchDraggingRef.current && !selectedCountry) {
-        setRotation((prev) => [prev[0] + 0.07, prev[1], 0]);
+        setRotation((prev) => [prev[0] + 0.08, prev[1], 0]);
       }
       animationFrameId = requestAnimationFrame(animate);
     };
@@ -132,7 +133,7 @@ export function Globe({
     ctx.fillStyle = isLightMode ? '#faf7f0' : '#06090e';
     ctx.fillRect(0, 0, width, height);
 
-    const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
+    const clampedZoom = Math.min(2.5, Math.max(0.5, zoomLevel));
     const radius = Math.min(width, height) * (width < 640 ? 0.46 : 0.44) * clampedZoom;
     const center: [number, number] = [width / 2, height / 2 + (width < 640 ? 0 : 10)];
 
@@ -314,7 +315,7 @@ export function Globe({
 
     const width = container.clientWidth;
     const height = container.clientHeight;
-    const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
+    const clampedZoom = Math.min(2.5, Math.max(0.5, zoomLevel));
     const radius = Math.min(width, height) * (width < 640 ? 0.46 : 0.44) * clampedZoom;
     const center: [number, number] = [width / 2, height / 2 + (width < 640 ? 0 : 10)];
 
@@ -374,7 +375,7 @@ export function Globe({
     if (isDragging && lastMousePosRef.current) {
       const dx = e.clientX - lastMousePosRef.current.x;
       const dy = e.clientY - lastMousePosRef.current.y;
-      const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
+      const clampedZoom = Math.min(2.5, Math.max(0.5, zoomLevel));
       const sensitivity = 0.35 / clampedZoom;
 
       setRotation((prev) => [
@@ -391,7 +392,7 @@ export function Globe({
 
       if (hit) {
         if (canvas) {
-          canvas.style.cursor = hit.clickedLogo ? 'pointer' : 'pointer';
+          canvas.style.cursor = 'pointer';
         }
         setHoveredCountry({
           name: hit.country.name,
@@ -456,7 +457,7 @@ export function Globe({
         isTouchDraggingRef.current = true;
       }
 
-      const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
+      const clampedZoom = Math.min(2.5, Math.max(0.5, zoomLevel));
       const sensitivity = 0.4 / clampedZoom;
 
       setRotation((prev) => [
@@ -502,7 +503,7 @@ export function Globe({
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     if (onWheelZoom) {
-      onWheelZoom(e.deltaY > 0 ? -0.08 : 0.08);
+      onWheelZoom(e.deltaY > 0 ? -0.15 : 0.15);
     }
   };
 

@@ -5,7 +5,6 @@ import { Globe } from '@/components/pinit/Globe';
 import { TopNavbar } from '@/components/pinit/TopNavbar';
 import { HeroCard } from '@/components/pinit/HeroCard';
 import { LiveReportDrawer } from '@/components/pinit/LiveReportDrawer';
-import { HotCountriesDrawer } from '@/components/pinit/HotCountriesDrawer';
 import { CountryClaimCard } from '@/components/pinit/CountryClaimCard';
 import { StakeModal } from '@/components/pinit/StakeModal';
 import { BottomBar } from '@/components/pinit/BottomBar';
@@ -24,7 +23,6 @@ export default function HomePage() {
   // Dynamic live stats
   const [liveClaimedCount, setLiveClaimedCount] = useState<number>(5);
   const [liveRaisedAmount, setLiveRaisedAmount] = useState<number>(22);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Synchronize dynamic territories from backend /api/territories on load & poll
   useEffect(() => {
@@ -79,14 +77,13 @@ export default function HomePage() {
         if (raised > 0) {
           setLiveRaisedAmount(raised);
         }
-        setRefreshTrigger((prev) => prev + 1);
       } catch (err) {
         console.warn('Could not sync territories with API:', err);
       }
     }
 
     fetchLiveTerritories();
-    const interval = setInterval(fetchLiveTerritories, 10000);
+    const interval = setInterval(fetchLiveTerritories, 12000);
 
     return () => {
       active = false;
@@ -132,35 +129,37 @@ export default function HomePage() {
     if (target) {
       const wasClaimed = !!target.currentLeader;
       target.currentLeader = placement;
+      if (placement.customColor) {
+        target.color = placement.customColor;
+      }
       setSelectedCountry({ ...target });
 
       if (!wasClaimed) {
         setLiveClaimedCount((prev) => prev + 1);
       }
       setLiveRaisedAmount((prev) => prev + (placement.stake || 1));
-      setRefreshTrigger((prev) => prev + 1);
     }
   };
 
-  // Zoom Controls
+  // Zoom Controls with responsive limits and clear steps
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(1.6, prev + 0.15));
+    setZoomLevel((prev) => Math.min(2.5, +(prev + 0.25).toFixed(2)));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(0.75, prev - 0.15));
+    setZoomLevel((prev) => Math.max(0.5, +(prev - 0.25).toFixed(2)));
   };
 
   const handleWheelZoom = (delta: number) => {
-    setZoomLevel((prev) => Math.min(1.6, Math.max(0.75, prev + delta)));
+    setZoomLevel((prev) => Math.min(2.5, Math.max(0.5, prev + delta)));
   };
 
   return (
     <main className={`relative h-screen w-screen overflow-hidden select-none touch-none ${
       isLightMode ? 'bg-[#faf7f0] text-slate-900' : 'bg-[#06090e] text-white'
     }`}>
-      {/* Background 3D Globe View with Dynamic Refresh */}
-      <div className="absolute inset-0 z-0" key={refreshTrigger}>
+      {/* Background 3D Globe View (Continuous 360 rotation without reset) */}
+      <div className="absolute inset-0 z-0">
         <Globe
           selectedCountry={selectedCountry}
           onSelectCountry={handleSelectCountry}
@@ -180,7 +179,7 @@ export default function HomePage() {
         liveOnlineCount={18}
       />
 
-      {/* Top Left: Collapsible Hero Card */}
+      {/* Top Right: Collapsible Hero Card */}
       <HeroCard
         onPinClick={() => handleOpenClaim(selectedCountry || undefined)}
         onSelectCountry={handleSelectCountry}
@@ -194,13 +193,6 @@ export default function HomePage() {
       {/* Bottom Left: Collapsible WAR REPORT Drawer */}
       <LiveReportDrawer
         onSelectCountry={handleSelectCountry}
-        isLightMode={isLightMode}
-      />
-
-      {/* Bottom Right: Collapsible HOT LAND Drawer */}
-      <HotCountriesDrawer
-        onSelectCountry={handleSelectCountry}
-        onClaimCountry={(c) => handleOpenClaim(c)}
         isLightMode={isLightMode}
       />
 
@@ -224,8 +216,12 @@ export default function HomePage() {
         />
       )}
 
-      {/* Bottom Right: Zoom Controls */}
-      <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
+      {/* Bottom Right: Responsive Zoom In / Out Buttons */}
+      <ZoomControls
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        isLightMode={isLightMode}
+      />
 
       {/* Bottom Center: Navigation Pill */}
       <BottomBar isLightMode={isLightMode} />
