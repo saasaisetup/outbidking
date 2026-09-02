@@ -19,12 +19,12 @@ export function CountryClaimCard({
   const minStake = isClaimed ? country.currentLeader!.stake + 1 : 1;
 
   return (
-    <div className="pointer-events-auto absolute right-3 bottom-14 z-40 w-84 max-w-[calc(100vw-1.5rem)] sm:right-6 sm:bottom-14 animate-in fade-in slide-in-from-bottom-4 duration-200">
+    <div className="pointer-events-auto absolute inset-x-3 bottom-14 z-40 sm:inset-x-auto sm:right-6 sm:bottom-14 sm:w-84 animate-in fade-in slide-in-from-bottom-4 duration-200">
       <div className="rounded-pin-lg border border-[#1e293b] bg-[#0b0f19]/95 p-4 shadow-2xl backdrop-blur-md">
         {/* Header: Flag + Code + Name + Close Button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg">{country.flag}</span>
+            <span className="text-xl">{country.flag}</span>
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#94a3b8]">
               {country.code}
             </span>
@@ -36,7 +36,7 @@ export function CountryClaimCard({
             type="button"
             onClick={onClose}
             aria-label="Close country details"
-            className="rounded-full p-1 text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors cursor-pointer"
+            className="rounded-full p-1.5 text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors cursor-pointer"
           >
             <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
               <path
@@ -101,7 +101,7 @@ export function CountryClaimCard({
             </div>
           ) : (
             <div className="p-2">
-              <p className="text-xs text-[#94a3b8]">Unclaimed sovereign territory.</p>
+              <p className="text-xs text-[#94a3b8]">Unclaimed territory. Tap below to claim!</p>
               <p className="mt-1 text-xs font-semibold text-white">
                 Starting stake: <span className="font-bold text-[#fbbf24]">$1</span>
               </p>

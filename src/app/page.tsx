@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Globe } from '@/components/pinit/Globe';
 import { FlatMap } from '@/components/pinit/FlatMap';
 import { TopNavbar } from '@/components/pinit/TopNavbar';
@@ -20,6 +20,13 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Auto collapse hero card on mobile screen load
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      setIsSidebarCollapsed(true);
+    }
+  }, []);
 
   // Dynamic live states for real-time updates
   const [liveClaimedCount, setLiveClaimedCount] = useState<number>(4);
@@ -55,24 +62,24 @@ export default function HomePage() {
 
   // Zoom Controls
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(viewMode === 'flat' ? 2.5 : 1.5, prev + 0.15));
+    setZoomLevel((prev) => Math.min(viewMode === 'flat' ? 3.0 : 1.6, prev + 0.15));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(viewMode === 'flat' ? 0.75 : 0.85, prev - 0.15));
+    setZoomLevel((prev) => Math.max(viewMode === 'flat' ? 0.65 : 0.75, prev - 0.15));
   };
 
   const handleWheelZoom = (delta: number) => {
     setZoomLevel((prev) =>
       Math.min(
-        viewMode === 'flat' ? 2.5 : 1.5,
-        Math.max(viewMode === 'flat' ? 0.75 : 0.85, prev + delta)
+        viewMode === 'flat' ? 3.0 : 1.6,
+        Math.max(viewMode === 'flat' ? 0.65 : 0.75, prev + delta)
       )
     );
   };
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-[#06090e] select-none text-white">
+    <main className="relative h-screen w-screen overflow-hidden bg-[#06090e] select-none text-white touch-none">
       {/* Background Interactive Map: 3D Globe vs 2D Flat Map */}
       <div className="absolute inset-0 z-0">
         {viewMode === 'globe' ? (
@@ -131,10 +138,8 @@ export default function HomePage() {
         />
       )}
 
-      {/* Bottom Right: Zoom Controls */}
-      <div className="hidden sm:block">
-        <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
-      </div>
+      {/* Bottom Right: Zoom Controls (Always Visible on Mobile & Desktop) */}
+      <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
 
       {/* Bottom Center: Navigation Pill & Interaction Hints */}
       <BottomBar />

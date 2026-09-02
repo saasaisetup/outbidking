@@ -19,16 +19,21 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
   // Rotation angles [lambda (yaw/long), phi (pitch/lat), gamma (roll)]
   const [rotation, setRotation] = useState<[number, number, number]>([-30, -25, 0]);
   const [isDragging, setIsDragging] = useState(false);
-  const [lastMousePos, setLastMousePos] = useState<{ x: number; y: number } | null>(null);
   const [worldData, setWorldData] = useState<any>(null);
   const [hoveredCountry, setHoveredCountry] = useState<{ name: string; info?: CountryInfo; x: number; y: number } | null>(null);
 
-  // Image Cache for pin pill icons
+  // Drag and Touch tracking refs
+  const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const touchStartDistRef = useRef<number | null>(null);
+  const isTouchDraggingRef = useRef(false);
+
+  // Image Cache for pin icons
   const imageCacheRef = useRef<Record<string, HTMLImageElement>>({});
   const targetRotationRef = useRef<[number, number, number] | null>(null);
   const isHoveredRef = useRef(false);
 
-  // Helper to safely load and cache any logo
+  // Preload logo image helper
   const loadLogoImage = useCallback((url: string) => {
     if (!url || imageCacheRef.current[url]) return;
     const img = new Image();
@@ -49,7 +54,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     imageCacheRef.current[url] = img;
   }, []);
 
-  // Preload logo images for all active countries
   useEffect(() => {
     Object.values(COUNTRIES_DATA).forEach((c) => {
       if (c.currentLeader?.logo) {
@@ -58,7 +62,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     });
   }, [loadLogoImage]);
 
-  // Load countries TopoJSON
   useEffect(() => {
     fetch('/geo/countries-110m.json')
       .then((res) => res.json())
@@ -70,7 +73,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       });
   }, []);
 
-  // Animate globe rotation on selected country
   useEffect(() => {
     if (selectedCountry) {
       const [lng, lat] = selectedCountry.coordinates;
@@ -82,7 +84,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
   useEffect(() => {
     let animationFrameId: number;
     const animate = () => {
-      if (targetRotationRef.current && !isDragging) {
+      if (targetRotationRef.current && !isDragging && !isTouchDraggingRef.current) {
         setRotation((prev) => {
           const [tLng, tLat] = targetRotationRef.current!;
           const [cLng, cLat] = prev;
@@ -95,8 +97,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
           }
           return [cLng + diffLng, cLat + diffLat, 0];
         });
-      } else if (!isDragging && !isHoveredRef.current && !selectedCountry) {
-        // Slow peaceful continuous spin in dark space
+      } else if (!isDragging && !isTouchDraggingRef.current && !isHoveredRef.current && !selectedCountry) {
         setRotation((prev) => [prev[0] + 0.06, prev[1], 0]);
       }
       animationFrameId = requestAnimationFrame(animate);
@@ -105,7 +106,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     return () => cancelAnimationFrame(animationFrameId);
   }, [isDragging, selectedCountry]);
 
-  // Main Render Canvas
   const renderGlobe = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -126,10 +126,10 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    // Large default scale in dark mode
-    const clampedZoom = Math.min(1.5, Math.max(0.85, zoomLevel));
-    const radius = Math.min(width, height) * 0.44 * clampedZoom;
-    const center: [number, number] = [width / 2, height / 2 + 10];
+    const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
+    // Responsive radius for mobile and desktop
+    const radius = Math.min(width, height) * (width < 640 ? 0.46 : 0.44) * clampedZoom;
+    const center: [number, number] = [width / 2, height / 2 + (width < 640 ? 0 : 10)];
 
     const projection = d3Geo
       .geoOrthographic()
@@ -140,7 +140,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
 
     const path = d3Geo.geoPath(projection, ctx);
 
-    // 1. Dark Ocean Sphere with glowing atmosphere
+    // 1. Dark Ocean Sphere
     ctx.beginPath();
     ctx.arc(center[0], center[1], radius, 0, 2 * Math.PI);
     ctx.fillStyle = '#090d16';
@@ -149,7 +149,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     ctx.strokeStyle = '#1e293b';
     ctx.stroke();
 
-    // 2. Graticules (Latitude & Longitude grid lines)
+    // 2. Graticules
     const graticule = d3Geo.geoGraticule10();
     ctx.beginPath();
     path(graticule);
@@ -201,7 +201,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
         const projectedPoint = projection(matchedCountry.coordinates);
         if (projectedPoint && isPointVisible(matchedCountry.coordinates, rotation)) {
           const [px, py] = projectedPoint;
-          ctx.font = '700 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.font = '700 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
           ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -213,7 +213,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       });
     }
 
-    // 5. Draw Sleek LOGO-ONLY Icon Badges on Active Pins (Matching Screenshot 2 & 5)
+    // 5. Sleek LOGO-ONLY Badges
     Object.values(COUNTRIES_DATA).forEach((c) => {
       if (c.currentLeader) {
         const point = projection(c.coordinates);
@@ -245,7 +245,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     return cosAngle > 0;
   }
 
-  // Draw sleek LOGO-ONLY Rounded App Icon Badge (Matching WARMAP / Pinit Screenshot 2)
   function drawLogoOnlyBadge(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -257,7 +256,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     const size = 26;
     const radius = 7;
 
-    // Glowing Badge Container
     ctx.beginPath();
     ctx.roundRect(x - size / 2, y - size / 2, size, size, radius);
     ctx.fillStyle = '#0b0f19';
@@ -296,23 +294,65 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       ctx.textBaseline = 'middle';
       ctx.fillText((authorName[0] || 'P').toUpperCase(), x, y);
     }
-
     ctx.restore();
   }
 
+  // Country Hit Finder at [px, py]
+  const findCountryAtPoint = (px: number, py: number): CountryInfo | null => {
+    const container = containerRef.current;
+    if (!container || !worldData) return null;
+
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
+    const radius = Math.min(width, height) * (width < 640 ? 0.46 : 0.44) * clampedZoom;
+    const center: [number, number] = [width / 2, height / 2 + (width < 640 ? 0 : 10)];
+
+    const projection = d3Geo
+      .geoOrthographic()
+      .scale(radius)
+      .translate(center)
+      .rotate(rotation)
+      .clipAngle(90);
+
+    const inverted = projection.invert?.([px, py]);
+    if (!inverted) return null;
+
+    const countries = topojson.feature(worldData, worldData.objects.countries) as any;
+    const hit = countries.features.find((f: any) => d3Geo.geoContains(f, inverted));
+
+    if (hit) {
+      const countryId = String(hit.id);
+      return (
+        Object.values(COUNTRIES_DATA).find(
+          (c) => c.id === countryId || (c.id && countryId.padStart(3, '0') === c.id.padStart(3, '0'))
+        ) || {
+          id: countryId,
+          slug: (hit.properties?.name || 'territory').toLowerCase().replace(/\s+/g, '-'),
+          name: hit.properties?.name || 'Territory',
+          code: 'GL',
+          flag: '🌍',
+          coordinates: inverted as [number, number],
+        }
+      );
+    }
+    return null;
+  };
+
+  // Mouse Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
-    setLastMousePos({ x: e.clientX, y: e.clientY });
+    lastMousePosRef.current = { x: e.clientX, y: e.clientY };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const container = containerRef.current;
     if (!container || !worldData) return;
 
-    if (isDragging && lastMousePos) {
-      const dx = e.clientX - lastMousePos.x;
-      const dy = e.clientY - lastMousePos.y;
-      const clampedZoom = Math.min(1.5, Math.max(0.85, zoomLevel));
+    if (isDragging && lastMousePosRef.current) {
+      const dx = e.clientX - lastMousePosRef.current.x;
+      const dy = e.clientY - lastMousePosRef.current.y;
+      const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
       const sensitivity = 0.35 / clampedZoom;
 
       setRotation((prev) => [
@@ -320,60 +360,111 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
         Math.max(-85, Math.min(85, prev[1] - dy * sensitivity)),
         0,
       ]);
-      setLastMousePos({ x: e.clientX, y: e.clientY });
+      lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else {
       const rect = container.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
+      const matched = findCountryAtPoint(mouseX, mouseY);
 
-      const width = container.clientWidth;
-      const height = container.clientHeight;
-      const clampedZoom = Math.min(1.5, Math.max(0.85, zoomLevel));
-      const radius = Math.min(width, height) * 0.44 * clampedZoom;
-      const center: [number, number] = [width / 2, height / 2 + 10];
-
-      const projection = d3Geo
-        .geoOrthographic()
-        .scale(radius)
-        .translate(center)
-        .rotate(rotation)
-        .clipAngle(90);
-
-      const inverted = projection.invert?.([mouseX, mouseY]);
-
-      if (inverted && worldData) {
-        const countries = topojson.feature(worldData, worldData.objects.countries) as any;
-        const hit = countries.features.find((f: any) => d3Geo.geoContains(f, inverted));
-
-        if (hit) {
-          const countryId = String(hit.id);
-          const matched = Object.values(COUNTRIES_DATA).find(
-            (c) => c.id === countryId || (c.id && countryId.padStart(3, '0') === c.id.padStart(3, '0'))
-          );
-          setHoveredCountry({
-            name: matched ? matched.name : hit.properties?.name || 'Territory',
-            info: matched,
-            x: mouseX,
-            y: mouseY,
-          });
-          isHoveredRef.current = true;
-          return;
-        }
+      if (matched) {
+        setHoveredCountry({
+          name: matched.name,
+          info: matched,
+          x: mouseX,
+          y: mouseY,
+        });
+        isHoveredRef.current = true;
+      } else {
+        setHoveredCountry(null);
+        isHoveredRef.current = false;
       }
-      setHoveredCountry(null);
-      isHoveredRef.current = false;
     }
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
-    setLastMousePos(null);
+    lastMousePosRef.current = null;
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (hoveredCountry && hoveredCountry.info) {
-      onSelectCountry(hoveredCountry.info);
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const matched = findCountryAtPoint(mouseX, mouseY);
+    if (matched) {
+      onSelectCountry(matched);
     }
+  };
+
+  // Mobile Touch Handlers: 1 finger drag, 2 finger pinch-to-zoom, tap detection
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+      lastMousePosRef.current = { x: touch.clientX, y: touch.clientY };
+      isTouchDraggingRef.current = false;
+      touchStartDistRef.current = null;
+    } else if (e.touches.length === 2) {
+      // 2 fingers pinch
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchStartDistRef.current = dist;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1 && lastMousePosRef.current) {
+      const touch = e.touches[0];
+      const dx = touch.clientX - lastMousePosRef.current.x;
+      const dy = touch.clientY - lastMousePosRef.current.y;
+
+      if (Math.hypot(dx, dy) > 4) {
+        isTouchDraggingRef.current = true;
+      }
+
+      const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
+      const sensitivity = 0.4 / clampedZoom;
+
+      setRotation((prev) => [
+        prev[0] + dx * sensitivity,
+        Math.max(-85, Math.min(85, prev[1] - dy * sensitivity)),
+        0,
+      ]);
+      lastMousePosRef.current = { x: touch.clientX, y: touch.clientY };
+    } else if (e.touches.length === 2 && touchStartDistRef.current && onWheelZoom) {
+      const newDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const delta = (newDist - touchStartDistRef.current) * 0.005;
+      onWheelZoom(delta);
+      touchStartDistRef.current = newDist;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const container = containerRef.current;
+    if (!isTouchDraggingRef.current && touchStartPosRef.current && container) {
+      // Tap on touch screen!
+      const rect = container.getBoundingClientRect();
+      const tapX = touchStartPosRef.current.x - rect.left;
+      const tapY = touchStartPosRef.current.y - rect.top;
+      const matched = findCountryAtPoint(tapX, tapY);
+
+      if (matched) {
+        onSelectCountry(matched);
+      }
+    }
+
+    isTouchDraggingRef.current = false;
+    touchStartPosRef.current = null;
+    lastMousePosRef.current = null;
+    touchStartDistRef.current = null;
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -396,12 +487,15 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full select-none cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center bg-[#06090e]"
+      className="relative h-full w-full select-none cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center bg-[#06090e] touch-none"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
     >
       <canvas ref={canvasRef} className="block h-full w-full" />
