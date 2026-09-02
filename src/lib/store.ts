@@ -383,6 +383,27 @@ class Store {
     this.warEventsCache.unshift(warEvent);
     this.save();
 
+    // Persist to Supabase territories table
+    if (supabase) {
+      try {
+        await supabase.from('territories').upsert({
+          country_code: code,
+          country_name: meta.name,
+          current_ruler_title: params.title.trim(),
+          current_ruler_url: params.url.trim(),
+          current_ruler_warcry: params.warCry?.trim(),
+          current_ruler_logo: domainFavicon,
+          current_ruler_color: color,
+          current_bid: params.bidAmount,
+          min_outbid_price: nextOutbidPrice,
+          total_plunder: (existing.totalPlunder || 0) + params.bidAmount,
+          conquered_at: new Date().toISOString(),
+        }, { onConflict: 'country_code' });
+      } catch (e) {
+        // non-blocking fallback to JSON store
+      }
+    }
+
     return { territory: updatedTerritory, warEvent, powers: this.getWorldPowers(), stats: this.getMapStats() };
   }
 
