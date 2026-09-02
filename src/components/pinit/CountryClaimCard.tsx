@@ -21,16 +21,16 @@ export function CountryClaimCard({
   return (
     <div className="pointer-events-auto absolute inset-x-3 bottom-14 z-40 sm:inset-x-auto sm:right-6 sm:bottom-14 sm:w-84 animate-in fade-in slide-in-from-bottom-4 duration-200">
       <div className="rounded-pin-lg border border-[#1e293b] bg-[#0b0f19]/95 p-4 shadow-2xl backdrop-blur-md">
-        {/* Header: Flag + Code + Name + Close Button */}
+        {/* Header: Flag + Name + Code Badge + Close Button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl">{country.flag}</span>
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#94a3b8]">
-              {country.code}
-            </span>
+            <span className="text-lg">{country.flag}</span>
             <h3 className="font-extrabold text-base text-white">
               {country.name}
             </h3>
+            <span className="text-[10px] font-mono font-bold uppercase text-[#94a3b8] bg-[#1e293b] px-1.5 py-0.5 rounded">
+              {country.code}
+            </span>
           </div>
           <button
             type="button"
