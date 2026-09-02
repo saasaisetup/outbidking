@@ -35,7 +35,6 @@ export function Globe({
 
   const imageCacheRef = useRef<Record<string, HTMLImageElement>>({});
   const targetRotationRef = useRef<[number, number, number] | null>(null);
-  const isHoveredRef = useRef(false);
 
   const loadLogoImage = useCallback((url: string) => {
     if (!url || imageCacheRef.current[url]) return;
@@ -83,6 +82,7 @@ export function Globe({
     }
   }, [selectedCountry]);
 
+  // Continuous Gentle Auto-Rotation (Smooth revolving)
   useEffect(() => {
     let animationFrameId: number;
     const animate = () => {
@@ -99,8 +99,8 @@ export function Globe({
           }
           return [cLng + diffLng, cLat + diffLat, 0];
         });
-      } else if (!isDragging && !isTouchDraggingRef.current && !isHoveredRef.current && !selectedCountry) {
-        setRotation((prev) => [prev[0] + 0.06, prev[1], 0]);
+      } else if (!isDragging && !isTouchDraggingRef.current && !selectedCountry) {
+        setRotation((prev) => [prev[0] + 0.07, prev[1], 0]);
       }
       animationFrameId = requestAnimationFrame(animate);
     };
@@ -325,7 +325,7 @@ export function Globe({
       .rotate(rotation)
       .clipAngle(90);
 
-    // Check direct click on visible leader logo badges (26x26 hitbox)
+    // Check direct click/hover on visible leader logo badges (26x26 hitbox)
     for (const c of Object.values(COUNTRIES_DATA)) {
       if (c.currentLeader && isPointVisible(c.coordinates, rotation)) {
         const point = projection(c.coordinates);
@@ -368,6 +368,7 @@ export function Globe({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const container = containerRef.current;
+    const canvas = canvasRef.current;
     if (!container || !worldData) return;
 
     if (isDragging && lastMousePosRef.current) {
@@ -389,16 +390,20 @@ export function Globe({
       const hit = findCountryAtPoint(mouseX, mouseY);
 
       if (hit) {
+        if (canvas) {
+          canvas.style.cursor = hit.clickedLogo ? 'pointer' : 'pointer';
+        }
         setHoveredCountry({
           name: hit.country.name,
           info: hit.country,
           x: mouseX,
           y: mouseY,
         });
-        isHoveredRef.current = true;
       } else {
+        if (canvas) {
+          canvas.style.cursor = isDragging ? 'grabbing' : 'grab';
+        }
         setHoveredCountry(null);
-        isHoveredRef.current = false;
       }
     }
   };
@@ -514,7 +519,7 @@ export function Globe({
   return (
     <div
       ref={containerRef}
-      className={`relative h-full w-full select-none cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center touch-none ${
+      className={`relative h-full w-full select-none overflow-hidden flex items-center justify-center touch-none ${
         isLightMode ? 'bg-[#faf7f0]' : 'bg-[#06090e]'
       }`}
       onMouseDown={handleMouseDown}
@@ -529,7 +534,7 @@ export function Globe({
     >
       <canvas ref={canvasRef} className="block h-full w-full" />
 
-      {/* Floating Tooltip with URL Preview & Clickable Visit Link */}
+      {/* Floating Tooltip with URL Preview & Direct Visit Link */}
       {hoveredCountry && !isDragging && (
         <div
           className={`pointer-events-auto absolute z-30 -translate-x-1/2 -translate-y-full rounded-pin-md border px-3.5 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 ${

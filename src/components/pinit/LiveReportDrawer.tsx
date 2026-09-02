@@ -1,159 +1,118 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { INITIAL_ACTIVITY, CountryInfo, COUNTRIES_DATA } from '@/lib/pinitData';
+import React, { useState } from 'react';
+import { INITIAL_ACTIVITY, COUNTRIES_DATA, CountryInfo } from '@/lib/pinitData';
 
 interface LiveReportDrawerProps {
   onSelectCountry?: (country: CountryInfo) => void;
+  isLightMode?: boolean;
 }
 
-export function LiveReportDrawer({ onSelectCountry }: LiveReportDrawerProps) {
+export function LiveReportDrawer({ onSelectCountry, isLightMode = false }: LiveReportDrawerProps) {
   const [isOpen, setIsOpen] = useState(true);
 
-  // Auto-collapse on mobile screens initially
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      setIsOpen(false);
-    }
-  }, []);
+  return (
+    <div className="fixed bottom-12 left-3 z-30 max-w-[280px] sm:max-w-xs transition-all pointer-events-auto">
+      {isOpen ? (
+        <div className={`rounded-pin-lg border shadow-2xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-150 ${
+          isLightMode
+            ? 'border-[#e6dfd1] bg-white/95 text-slate-900 shadow-pin-md'
+            : 'border-[#1e293b] bg-[#0b0f19]/95 text-white'
+        }`}>
+          {/* Header */}
+          <div className={`flex items-center justify-between px-3 py-2 border-b ${
+            isLightMode ? 'border-[#e6dfd1]' : 'border-[#1e293b]'
+          }`}>
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+              <span className="font-extrabold text-[11px] tracking-tight uppercase">
+                ⚡ LIVE REPORT
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="text-[#94a3b8] hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-xs"
+            >
+              ✕
+            </button>
+          </div>
 
-  if (!isOpen) {
-    return (
-      <div className="pointer-events-auto absolute left-2.5 bottom-12 z-20 sm:left-4">
+          {/* Activity Feed */}
+          <div className={`divide-y max-h-48 overflow-y-auto no-scrollbar ${
+            isLightMode ? 'divide-[#f0e9dc]' : 'divide-[#1e293b]/60'
+          }`}>
+            {INITIAL_ACTIVITY.map((act) => (
+              <div
+                key={act.id}
+                onClick={() => {
+                  const country = COUNTRIES_DATA[act.countrySlug];
+                  if (country && onSelectCountry) {
+                    onSelectCountry(country);
+                  }
+                }}
+                className={`flex items-center justify-between gap-2 px-3 py-2 transition-colors cursor-pointer ${
+                  isLightMode ? 'hover:bg-amber-50/70' : 'hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <img
+                    src={act.logo}
+                    alt=""
+                    className="h-5 w-5 rounded-full object-cover bg-white shrink-0 border border-slate-200 dark:border-slate-700"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/globe.svg';
+                    }}
+                  />
+                  <div className="min-w-0">
+                    <p className="font-bold text-[11px] truncate leading-tight">
+                      {act.productName}
+                    </p>
+                    <p className="text-[9px] text-[#94a3b8] truncate">
+                      claimed <strong className={isLightMode ? 'text-slate-800' : 'text-slate-200'}>{act.countryCode} {act.countryName}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <span className="font-mono text-[10px] font-bold text-amber-500 block">
+                    ${act.stake}
+                  </span>
+                  <span className="text-[8px] text-[#94a3b8] block">
+                    {act.timeAgo}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className={`p-1.5 text-center border-t ${
+            isLightMode ? 'border-[#e6dfd1] bg-[#faf7f0]' : 'border-[#1e293b] bg-[#06090e]'
+          }`}>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              ⊞ HIDE INTEL
+            </button>
+          </div>
+        </div>
+      ) : (
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-1.5 rounded-full border border-[#1e293b] bg-[#0b0f19]/90 px-3 py-1 text-[11px] font-extrabold text-white shadow-pin-lg hover:border-[#ff5722] transition-transform hover:scale-105 cursor-pointer backdrop-blur-md"
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider shadow-pin-sm backdrop-blur-md transition-all cursor-pointer ${
+            isLightMode
+              ? 'border-[#e6dfd1] bg-white/95 text-slate-800 hover:border-slate-400'
+              : 'border-[#1e293b] bg-[#0b0f19]/95 text-white hover:border-[#334155]'
+          }`}
         >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-          </span>
-          <span>⚡ REPORT</span>
-          <span className="text-[9px] text-[#94a3b8] font-mono">›</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          ⚡ REPORT ›
         </button>
-      </div>
-    );
-  }
-
-  return (
-    <aside
-      aria-label="Live intel feed report"
-      className="pointer-events-auto absolute left-2.5 bottom-12 z-30 w-76 sm:w-80 sm:left-4 max-w-[calc(100vw-1.5rem)] animate-in fade-in slide-in-from-bottom-2 duration-200"
-    >
-      <div className="rounded-pin-lg border border-[#1e293b] bg-[#0b0f19]/95 shadow-pin-lg backdrop-blur-md overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-3.5 py-2 border-b border-[#1e293b] bg-[#06090e]/50">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <h2 className="text-xs font-extrabold tracking-wide text-white uppercase">
-              ⚡ WAR REPORT
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="text-[10px] text-[#94a3b8] hover:text-white font-bold p-1 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Scrollable Feed */}
-        <div className="max-h-52 overflow-y-auto overscroll-contain divide-y divide-[#1e293b] px-1">
-          {INITIAL_ACTIVITY.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between p-2 text-xs hover:bg-[#151d30]/70 transition-colors"
-            >
-              {/* Logo + Name + Country */}
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <img
-                  src={item.logo}
-                  alt=""
-                  className="h-5 w-5 shrink-0 rounded-full object-cover border border-[#1e293b] bg-[#0b0f19]"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/globe.svg';
-                  }}
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <Link
-                      href={`/p/${item.productSlug}`}
-                      className="font-bold text-white truncate hover:underline hover:text-[#ff7043] text-[11px]"
-                    >
-                      {item.productName}
-                    </Link>
-                  </div>
-                  <div className="text-[10px] text-[#94a3b8] flex items-center gap-1">
-                    <span>claimed</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const c = COUNTRIES_DATA[item.countrySlug];
-                        if (c && onSelectCountry) onSelectCountry(c);
-                      }}
-                      className="font-semibold text-[#f1f5f9] hover:underline inline-flex items-center gap-0.5 cursor-pointer"
-                    >
-                      <span>{item.countryFlag}</span>
-                      <span>{item.countryName}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stake + Time + Direct Clickable Visit Link */}
-              <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
-                <span className="font-extrabold text-[11px] text-white font-mono">
-                  ${item.stake}
-                </span>
-                <span className="text-[9px] text-[#94a3b8]">
-                  {item.timeAgo}
-                </span>
-                <a
-                  href={item.productUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Visit ${item.productName}`}
-                  className="inline-flex items-center justify-center rounded p-1 text-[#94a3b8] hover:text-[#ff5722] hover:bg-[#ff5722]/15 transition-colors cursor-pointer"
-                >
-                  <svg viewBox="0 0 20 20" width="11" height="11" fill="none">
-                    <path
-                      d="M8.5 5.5H14.5V11.5"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M14.5 5.5L7.25 12.75"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Footer Hide Button */}
-        <div className="border-t border-[#1e293b] p-1 bg-[#06090e]/30 text-center">
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="w-full flex items-center justify-center gap-1 py-0.5 text-[9px] font-bold text-[#94a3b8] hover:text-white transition-colors cursor-pointer"
-          >
-            <span>◫</span>
-            <span>HIDE INTEL</span>
-          </button>
-        </div>
-      </div>
-    </aside>
+      )}
+    </div>
   );
 }

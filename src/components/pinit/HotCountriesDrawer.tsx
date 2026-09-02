@@ -1,144 +1,137 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { HOT_COUNTRIES, COUNTRIES_DATA, CountryInfo } from '@/lib/pinitData';
 
 interface HotCountriesDrawerProps {
-  onSelectCountry: (country: CountryInfo) => void;
-  onClaimCountry: (country: CountryInfo) => void;
+  onSelectCountry?: (country: CountryInfo) => void;
+  onClaimCountry?: (country: CountryInfo) => void;
+  isLightMode?: boolean;
 }
 
 export function HotCountriesDrawer({
   onSelectCountry,
   onClaimCountry,
+  isLightMode = false,
 }: HotCountriesDrawerProps) {
-  const [isOpen, setIsOpen] = useState(true);
-
-  // Auto-collapse on mobile screens initially
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      setIsOpen(false);
-    }
-  }, []);
-
-  if (!isOpen) {
-    return (
-      <div className="pointer-events-auto absolute right-2.5 bottom-12 z-20 sm:right-4">
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="flex items-center gap-1.5 rounded-full border border-[#1e293b] bg-[#0b0f19]/90 px-3 py-1 text-[11px] font-extrabold text-white shadow-pin-lg hover:border-amber-400 transition-transform hover:scale-105 cursor-pointer backdrop-blur-md"
-        >
-          <span>🔥</span>
-          <span>HOT LAND</span>
-          <span className="text-[9px] text-[#94a3b8] font-mono">‹</span>
-        </button>
-      </div>
-    );
-  }
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <aside
-      aria-label="Hot land best value"
-      className="pointer-events-auto absolute right-2.5 bottom-12 z-30 w-76 sm:w-84 sm:right-4 max-w-[calc(100vw-1.5rem)] animate-in fade-in slide-in-from-bottom-2 duration-200"
-    >
-      <div className="rounded-pin-lg border border-[#1e293b] bg-[#0b0f19]/95 shadow-pin-lg backdrop-blur-md overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-3.5 py-2 border-b border-[#1e293b] bg-[#06090e]/50">
-          <div className="flex items-center gap-1.5">
-            <span>🔥</span>
-            <h2 className="text-xs font-extrabold tracking-wide text-white uppercase">
-              HOT LAND — BEST VALUE
-            </h2>
+    <div className="fixed bottom-12 right-3 z-30 max-w-[280px] sm:max-w-xs transition-all pointer-events-auto">
+      {isOpen ? (
+        <div className={`rounded-pin-lg border shadow-2xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-150 ${
+          isLightMode
+            ? 'border-[#e6dfd1] bg-white/95 text-slate-900 shadow-pin-md'
+            : 'border-[#1e293b] bg-[#0b0f19]/95 text-white'
+        }`}>
+          {/* Header */}
+          <div className={`flex items-center justify-between px-3 py-2 border-b ${
+            isLightMode ? 'border-[#e6dfd1]' : 'border-[#1e293b]'
+          }`}>
+            <div className="flex items-center gap-1.5">
+              <span>🔥</span>
+              <span className="font-extrabold text-[11px] tracking-tight uppercase">
+                HOT LAND — BEST VALUE
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="text-[#94a3b8] hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-xs"
+            >
+              ✕
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="text-[10px] text-[#94a3b8] hover:text-white font-bold p-1 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
 
-        {/* List of Hot Countries */}
-        <div className="max-h-56 overflow-y-auto overscroll-contain divide-y divide-[#1e293b] px-1">
-          {HOT_COUNTRIES.map((item) => {
-            const countryObj = COUNTRIES_DATA[item.countrySlug];
-            return (
+          {/* Hot Deals List */}
+          <div className={`divide-y max-h-52 overflow-y-auto no-scrollbar ${
+            isLightMode ? 'divide-[#f0e9dc]' : 'divide-[#1e293b]/60'
+          }`}>
+            {HOT_COUNTRIES.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-2 text-xs hover:bg-[#151d30]/70 transition-colors"
+                onClick={() => {
+                  const country = COUNTRIES_DATA[item.countrySlug];
+                  if (country && onSelectCountry) {
+                    onSelectCountry(country);
+                  }
+                }}
+                className={`flex items-center justify-between gap-2 px-3 py-2 transition-colors cursor-pointer ${
+                  isLightMode ? 'hover:bg-amber-50/70' : 'hover:bg-slate-800/60'
+                }`}
               >
-                {/* Rank + Country & Ruler Info */}
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <span className="font-mono text-[10px] font-bold text-[#94a3b8] w-3 text-center">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="font-mono text-[10px] font-bold text-[#94a3b8] w-3">
                     #{item.rank}
                   </span>
-
                   <img
                     src={item.rulerLogo}
                     alt=""
-                    className="h-5 w-5 shrink-0 rounded-full object-cover border border-[#1e293b] bg-[#06090e]"
+                    className="h-5 w-5 rounded-full object-cover bg-white shrink-0 border border-slate-200 dark:border-slate-700"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = '/globe.svg';
                     }}
                   />
-
                   <div className="min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => countryObj && onSelectCountry(countryObj)}
-                      className="font-bold text-white truncate hover:underline hover:text-[#fbbf24] text-left block leading-tight cursor-pointer text-[11px]"
-                    >
-                      {item.countryFlag} {item.countryName}
-                    </button>
-                    <span className="text-[9px] text-[#94a3b8] truncate block leading-tight">
+                    <p className="font-bold text-[11px] truncate leading-tight">
+                      <span className="font-mono text-[9px] text-[#94a3b8] mr-1">{item.countryCode}</span>
+                      {item.countryName}
+                    </p>
+                    <p className="text-[9px] text-[#94a3b8] truncate">
                       {item.rulerName}
-                    </span>
+                    </p>
                   </div>
                 </div>
 
-                {/* Multiplier + Steal / Claim Button */}
-                <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
-                  <span className="text-[10px] font-bold text-amber-400 flex items-center gap-0.5">
-                    <span>🔥</span>
-                    <span>{item.multiplier}</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="font-mono text-[9px] font-bold text-amber-500">
+                    🔥 {item.multiplier}
                   </span>
-
                   <button
                     type="button"
-                    onClick={() => {
-                      if (countryObj) {
-                        onSelectCountry(countryObj);
-                        onClaimCountry(countryObj);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const country = COUNTRIES_DATA[item.countrySlug];
+                      if (country && onClaimCountry) {
+                        onClaimCountry(country);
                       }
                     }}
-                    className={`rounded-full px-2.5 py-0.5 text-[9px] font-extrabold transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-xs ${
-                      item.isClaimed
-                        ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black'
-                        : 'bg-amber-400 hover:bg-amber-300 text-amber-950 font-black'
-                    }`}
+                    className="rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-500 font-mono text-[9px] font-extrabold px-1.5 py-0.5 transition-colors cursor-pointer border border-emerald-500/30"
                   >
-                    {item.isClaimed ? `steal $${item.stealPrice}` : `claim $${item.stealPrice}`}
+                    steal ${item.stealPrice}
                   </button>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
 
-        {/* Footer Close Button */}
-        <div className="border-t border-[#1e293b] p-1 bg-[#06090e]/30 text-center">
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="w-full flex items-center justify-center gap-1 py-0.5 text-[9px] font-bold text-[#94a3b8] hover:text-white transition-colors cursor-pointer"
-          >
-            <span>✕</span>
-            <span>CLOSE</span>
-          </button>
+          {/* Footer */}
+          <div className={`p-1.5 text-center border-t ${
+            isLightMode ? 'border-[#e6dfd1] bg-[#faf7f0]' : 'border-[#1e293b] bg-[#06090e]'
+          }`}>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              ✕ CLOSE
+            </button>
+          </div>
         </div>
-      </div>
-    </aside>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider shadow-pin-sm backdrop-blur-md transition-all cursor-pointer ${
+            isLightMode
+              ? 'border-[#e6dfd1] bg-white/95 text-slate-800 hover:border-slate-400'
+              : 'border-[#1e293b] bg-[#0b0f19]/95 text-white hover:border-[#334155]'
+          }`}
+        >
+          <span>🔥</span>
+          HOT LAND ›
+        </button>
+      )}
+    </div>
   );
 }

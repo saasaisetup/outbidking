@@ -170,7 +170,7 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Top Navbar with Responsive HUD & Theme Toggle */}
+      {/* Top Navbar with Responsive HUD & Modern SVG Theme Toggle */}
       <TopNavbar
         isLightMode={isLightMode}
         onToggleTheme={handleToggleTheme}
@@ -188,15 +188,20 @@ export default function HomePage() {
         onSelectCategory={setSelectedCategory}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isLightMode={isLightMode}
       />
 
       {/* Bottom Left: Collapsible WAR REPORT Drawer */}
-      <LiveReportDrawer onSelectCountry={handleSelectCountry} />
+      <LiveReportDrawer
+        onSelectCountry={handleSelectCountry}
+        isLightMode={isLightMode}
+      />
 
       {/* Bottom Right: Collapsible HOT LAND Drawer */}
       <HotCountriesDrawer
         onSelectCountry={handleSelectCountry}
         onClaimCountry={(c) => handleOpenClaim(c)}
+        isLightMode={isLightMode}
       />
 
       {/* Bottom Floating Country Claim / Outbid Card */}
@@ -223,7 +228,7 @@ export default function HomePage() {
       <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
 
       {/* Bottom Center: Navigation Pill */}
-      <BottomBar />
+      <BottomBar isLightMode={isLightMode} />
     </main>
   );
 }
