@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { CountryInfo, COUNTRIES_DATA } from '@/lib/pinitData';
+import { CountryInfo } from '@/lib/pinitData';
 
 interface TopNavbarProps {
   isLightMode: boolean;
   onToggleTheme: () => void;
-  onSelectCountry: (country: CountryInfo) => void;
+  onSelectCountry?: (country: CountryInfo) => void;
   totalClaimed: number;
   totalRaised: number;
   liveOnlineCount: number;
@@ -16,27 +16,14 @@ interface TopNavbarProps {
 export function TopNavbar({
   isLightMode,
   onToggleTheme,
-  onSelectCountry,
   totalClaimed,
   totalRaised,
   liveOnlineCount,
 }: TopNavbarProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const filteredCountries = searchQuery.trim()
-    ? Object.values(COUNTRIES_DATA).filter(
-        (c) =>
-          c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.currentLeader?.name.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 6)
-    : [];
-
   return (
     <header className="fixed top-0 inset-x-0 z-40 px-3 py-2.5 sm:px-6 pointer-events-none">
       <div className="flex items-center justify-between gap-3 max-w-7xl mx-auto">
-        {/* Left: Clean Brand Logo & Name (No extra #1 badge) */}
+        {/* Left: Clean Brand Logo & Name */}
         <div className="flex items-center pointer-events-auto">
           <Link
             href="/"
@@ -57,7 +44,7 @@ export function TopNavbar({
           </Link>
         </div>
 
-        {/* Center: Sleek Live Stats HUD (Single Unified Bar, No bulky nested button borders) */}
+        {/* Center: Sleek Live Stats HUD (Single Unified Bar) */}
         <div className="hidden md:flex items-center pointer-events-auto">
           <div className={`flex items-center gap-3 rounded-full border px-4 py-1.5 text-[11px] font-mono backdrop-blur-md shadow-pin-sm ${
             isLightMode
@@ -87,7 +74,7 @@ export function TopNavbar({
           </div>
         </div>
 
-        {/* Right: Modern SVG Theme Toggle, Search Bar, and Rules */}
+        {/* Right: Modern SVG Theme Toggle and Rules Link */}
         <div className="flex items-center gap-2 pointer-events-auto">
           {/* Crisp Modern SVG Theme Toggle */}
           <button
@@ -119,77 +106,6 @@ export function TopNavbar({
               </svg>
             )}
           </button>
-
-          {/* Elegant Search Input */}
-          <div className="relative">
-            <div
-              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs backdrop-blur-md transition-all ${
-                isLightMode
-                  ? 'border-[#e6dfd1] bg-white text-slate-800 focus-within:border-[#ff5722]'
-                  : 'border-[#1e293b] bg-[#0b0f19] text-white focus-within:border-[#ff5722]'
-              }`}
-            >
-              <svg viewBox="0 0 20 20" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#94a3b8]">
-                <circle cx="9" cy="9" r="6" />
-                <path d="m13.5 13.5 4 4" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search country or startup..."
-                value={searchQuery}
-                onFocus={() => setIsSearchOpen(true)}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-28 sm:w-48 bg-transparent text-xs focus:outline-none placeholder:text-[#94a3b8]"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="text-[#94a3b8] hover:text-slate-900 dark:hover:text-white"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            {/* Search Dropdown */}
-            {isSearchOpen && filteredCountries.length > 0 && (
-              <div
-                className={`absolute right-0 top-full mt-2 w-64 rounded-pin-md border p-1.5 shadow-2xl backdrop-blur-md animate-in fade-in duration-100 ${
-                  isLightMode
-                    ? 'border-[#e6dfd1] bg-white/95 text-slate-900'
-                    : 'border-[#1e293b] bg-[#0b0f19]/95 text-white'
-                }`}
-              >
-                {filteredCountries.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => {
-                      onSelectCountry(c);
-                      setIsSearchOpen(false);
-                      setSearchQuery('');
-                    }}
-                    className={`flex w-full items-center justify-between gap-2 rounded-pin-sm px-2.5 py-1.5 text-left text-xs transition-colors cursor-pointer ${
-                      isLightMode ? 'hover:bg-slate-100' : 'hover:bg-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span>{c.flag}</span>
-                      <span className="font-bold truncate">{c.name}</span>
-                    </div>
-                    {c.currentLeader ? (
-                      <span className="font-bold text-[#fbbf24] text-[10px] shrink-0">
-                        ${c.currentLeader.stake}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-[#94a3b8] shrink-0">Free</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Rules / Info Link */}
           <Link

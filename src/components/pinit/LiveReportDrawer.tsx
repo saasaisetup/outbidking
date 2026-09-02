@@ -12,7 +12,7 @@ export function LiveReportDrawer({ onSelectCountry, isLightMode = false }: LiveR
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className="fixed bottom-12 left-3 z-30 w-80 sm:w-96 transition-all pointer-events-auto">
+    <div className="fixed bottom-12 left-3 z-30 w-72 sm:w-80 transition-all pointer-events-auto">
       {isOpen ? (
         <div className={`rounded-pin-lg border shadow-2xl backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-150 ${
           isLightMode
@@ -20,12 +20,12 @@ export function LiveReportDrawer({ onSelectCountry, isLightMode = false }: LiveR
             : 'border-[#1e293b] bg-[#0b0f19]/95 text-white'
         }`}>
           {/* Header */}
-          <div className={`flex items-center justify-between px-3.5 py-2.5 border-b ${
+          <div className={`flex items-center justify-between px-3 py-2 border-b ${
             isLightMode ? 'border-[#e6dfd1]' : 'border-[#1e293b]'
           }`}>
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-black text-xs tracking-tight uppercase">
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-extrabold text-[11px] tracking-tight uppercase">
                 ⚡ LIVE REPORT
               </span>
             </div>
@@ -39,7 +39,7 @@ export function LiveReportDrawer({ onSelectCountry, isLightMode = false }: LiveR
           </div>
 
           {/* Activity Feed */}
-          <div className={`divide-y max-h-52 overflow-y-auto no-scrollbar ${
+          <div className={`divide-y max-h-48 overflow-y-auto no-scrollbar ${
             isLightMode ? 'divide-[#f0e9dc]' : 'divide-[#1e293b]/60'
           }`}>
             {INITIAL_ACTIVITY.map((act) => (
@@ -51,34 +51,34 @@ export function LiveReportDrawer({ onSelectCountry, isLightMode = false }: LiveR
                     onSelectCountry(country);
                   }
                 }}
-                className={`flex items-center justify-between gap-3 px-3.5 py-2.5 transition-colors cursor-pointer ${
+                className={`flex items-center justify-between gap-2 px-3 py-2 transition-colors cursor-pointer ${
                   isLightMode ? 'hover:bg-amber-50/70' : 'hover:bg-slate-800/60'
                 }`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   <img
                     src={act.logo}
                     alt=""
-                    className="h-6 w-6 rounded-full object-cover bg-white shrink-0 border border-slate-200 dark:border-slate-700"
+                    className="h-5 w-5 rounded-full object-cover bg-white shrink-0 border border-slate-200 dark:border-slate-700"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = '/globe.svg';
                     }}
                   />
                   <div className="min-w-0">
-                    <p className="font-black text-xs truncate leading-tight">
+                    <p className="font-bold text-xs truncate leading-tight">
                       {act.productName}
                     </p>
-                    <p className="text-[10px] text-[#94a3b8] truncate mt-0.5">
-                      claimed <strong className={isLightMode ? 'text-slate-800 font-bold' : 'text-slate-200 font-bold'}>{act.countryCode} {act.countryName}</strong>
+                    <p className="text-[9px] text-[#94a3b8] truncate">
+                      claimed <strong className={isLightMode ? 'text-slate-800' : 'text-slate-200'}>{act.countryCode} {act.countryName}</strong>
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="font-mono text-xs font-extrabold text-amber-500 block">
+                  <span className="font-mono text-[11px] font-bold text-amber-500 block">
                     ${act.stake}
                   </span>
-                  <span className="text-[9px] text-[#94a3b8] block">
+                  <span className="text-[8px] text-[#94a3b8] block">
                     {act.timeAgo}
                   </span>
                 </div>
@@ -87,13 +87,13 @@ export function LiveReportDrawer({ onSelectCountry, isLightMode = false }: LiveR
           </div>
 
           {/* Footer */}
-          <div className={`p-2 text-center border-t ${
+          <div className={`p-1.5 text-center border-t ${
             isLightMode ? 'border-[#e6dfd1] bg-[#faf7f0]' : 'border-[#1e293b] bg-[#06090e]'
           }`}>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               ⊞ HIDE INTEL
             </button>
@@ -103,13 +103,13 @@ export function LiveReportDrawer({ onSelectCountry, isLightMode = false }: LiveR
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-black uppercase tracking-wider shadow-pin-sm backdrop-blur-md transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider shadow-pin-sm backdrop-blur-md transition-all cursor-pointer ${
             isLightMode
               ? 'border-[#e6dfd1] bg-white/95 text-slate-800 hover:border-slate-400'
               : 'border-[#1e293b] bg-[#0b0f19]/95 text-white hover:border-[#334155]'
           }`}
         >
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           ⚡ REPORT ›
         </button>
       )}

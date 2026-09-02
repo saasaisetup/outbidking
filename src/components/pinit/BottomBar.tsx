@@ -19,8 +19,8 @@ export function BottomBar({ isLightMode = false }: BottomBarProps) {
         <span className="text-yellow-400">TAP A COUNTRY</span>
       </div>
 
-      {/* Navigation Links Pill */}
-      <div className={`flex items-center gap-2.5 rounded-full border px-4 py-1 text-xs backdrop-blur-md shadow-pin-sm pointer-events-auto transition-all ${
+      {/* Clean Navigation Links Pill (No Categories) */}
+      <div className={`flex items-center gap-3 rounded-full border px-4 py-1 text-xs backdrop-blur-md shadow-pin-sm pointer-events-auto transition-all ${
         isLightMode
           ? 'border-[#e6dfd1] bg-white/95 text-slate-800'
           : 'border-[#1e293b] bg-[#0b0f19]/95 text-[#94a3b8]'
@@ -48,13 +48,6 @@ export function BottomBar({ isLightMode = false }: BottomBarProps) {
           className="font-extrabold text-[#ff7043] hover:underline"
         >
           Hall of Fame
-        </Link>
-        <span className="opacity-30">·</span>
-        <Link
-          href="/categories"
-          className="hover:text-[#ff5722] font-semibold transition-colors"
-        >
-          Categories
         </Link>
       </div>
     </div>

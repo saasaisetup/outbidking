@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { CATEGORIES_LIST, CountryInfo, COUNTRIES_DATA } from '@/lib/pinitData';
 
 interface HeroCardProps {
@@ -34,7 +35,7 @@ export function HeroCard({
     : [];
 
   return (
-    <div className="fixed top-14 left-3 z-30 max-w-[280px] sm:max-w-xs transition-all duration-200 pointer-events-auto">
+    <div className="fixed top-14 right-3 z-30 max-w-[280px] sm:max-w-xs transition-all duration-200 pointer-events-auto">
       {isCollapsed ? (
         <button
           type="button"
@@ -75,7 +76,7 @@ export function HeroCard({
             )}
           </div>
 
-          {/* Quick Search */}
+          {/* Search Input */}
           <div className="relative mt-3">
             <input
               type="text"
@@ -156,7 +157,7 @@ export function HeroCard({
             isLightMode ? 'border-[#e6dfd1]' : 'border-[#1e293b]'
           }`}>
             <label className="block text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
-              Category
+              Filter by Category
             </label>
             <select
               value={selectedCategory}
