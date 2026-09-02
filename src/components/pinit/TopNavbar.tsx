@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { COUNTRIES_DATA, CountryInfo } from '@/lib/pinitData';
 
 interface TopNavbarProps {
-  viewMode: 'globe' | 'flat';
-  onToggleViewMode: (mode: 'globe' | 'flat') => void;
   isLightMode: boolean;
   onToggleTheme: () => void;
   onSelectCountry: (country: CountryInfo) => void;
@@ -16,8 +14,6 @@ interface TopNavbarProps {
 }
 
 export function TopNavbar({
-  viewMode,
-  onToggleViewMode,
   isLightMode,
   onToggleTheme,
   onSelectCountry,
@@ -46,9 +42,9 @@ export function TopNavbar({
   }, []);
 
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between p-2.5 sm:p-3.5 gap-2">
-      {/* Brand Header: worldpinit.lol */}
-      <div className="pointer-events-auto flex items-center gap-2">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between p-3 sm:p-4 gap-2">
+      {/* Brand: worldpinit.lol */}
+      <div className="pointer-events-auto flex items-center gap-2 shrink-0">
         <Link
           href="/"
           className={`group flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-pin-sm hover:border-[#ff5722] transition-colors backdrop-blur-md ${
@@ -73,8 +69,8 @@ export function TopNavbar({
         </Link>
       </div>
 
-      {/* Center Live HUD Stats Pill */}
-      <div className={`pointer-events-auto hidden lg:flex items-center gap-2.5 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-pin-sm backdrop-blur-md ${
+      {/* Center Live HUD Stats (Desktop) */}
+      <div className={`pointer-events-auto hidden md:flex items-center gap-2.5 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-pin-sm backdrop-blur-md ${
         isLightMode
           ? 'border-[#e6dfd1] bg-white/95 text-slate-800'
           : 'border-[#1e293b] bg-[#0b0f19]/90 text-white'
@@ -112,39 +108,9 @@ export function TopNavbar({
         </span>
       </div>
 
-      {/* Right Controls: [GLOBE | FLAT] Toggle + Light/Dark Theme + Search + Rules Icon */}
-      <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
-        {/* Sleek Segmented Switch: Globe (Left) | Flat (Right) */}
-        <div className={`flex items-center rounded-full border p-0.5 shadow-pin-sm backdrop-blur-md transition-colors ${
-          isLightMode ? 'border-[#e6dfd1] bg-white/95' : 'border-[#1e293b] bg-[#0b0f19]/95'
-        }`}>
-          <button
-            type="button"
-            onClick={() => onToggleViewMode('globe')}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold transition-all cursor-pointer ${
-              viewMode === 'globe'
-                ? 'bg-[#3b82f6] text-white shadow-xs'
-                : 'text-[#94a3b8] hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>🌐</span>
-            <span>GLOBE</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onToggleViewMode('flat')}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold transition-all cursor-pointer ${
-              viewMode === 'flat'
-                ? 'bg-[#ff5722] text-white shadow-xs'
-                : 'text-[#94a3b8] hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <span>🗺️</span>
-            <span>FLAT</span>
-          </button>
-        </div>
-
-        {/* Light Mode / Dark Mode Toggle Button */}
+      {/* Right Controls: Light/Dark Theme + Search + Rules Icon */}
+      <div className="pointer-events-auto flex items-center gap-2 shrink-0">
+        {/* Light / Dark Mode Toggle Button */}
         <button
           type="button"
           onClick={onToggleTheme}
@@ -158,8 +124,8 @@ export function TopNavbar({
           {isLightMode ? '🌙' : '☀️'}
         </button>
 
-        {/* Search Input */}
-        <div ref={searchRef} className="relative hidden md:block">
+        {/* Search Input (Desktop) */}
+        <div ref={searchRef} className="relative hidden sm:block">
           <div className={`flex items-center rounded-full border px-3 py-1 shadow-pin-sm focus-within:border-[#ff5722] transition-colors ${
             isLightMode ? 'border-[#e6dfd1] bg-white' : 'border-[#1e293b] bg-[#0b0f19]/90'
           }`}>
@@ -168,14 +134,14 @@ export function TopNavbar({
             </svg>
             <input
               type="search"
-              placeholder="Search..."
+              placeholder="Search country..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setIsSearchOpen(true);
               }}
               onFocus={() => setIsSearchOpen(true)}
-              className="w-20 lg:w-28 bg-transparent px-2 py-0.5 text-xs placeholder:text-[#94a3b8] focus:outline-none"
+              className="w-24 lg:w-32 bg-transparent px-2 py-0.5 text-xs placeholder:text-[#94a3b8] focus:outline-none"
             />
             <kbd className={`hidden lg:inline rounded px-1.5 py-0.5 text-[9px] font-mono font-bold text-[#94a3b8] ${
               isLightMode ? 'bg-slate-100' : 'bg-[#1e293b]'

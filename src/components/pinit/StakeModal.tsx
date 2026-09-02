@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { CountryInfo, COUNTRIES_DATA, CATEGORIES_LIST, getProductFavicon } from '@/lib/pinitData';
 
@@ -8,9 +8,15 @@ interface StakeModalProps {
   country: CountryInfo | null;
   onClose: () => void;
   onSuccess: (countrySlug: string, placement: any) => void;
+  isLightMode?: boolean;
 }
 
-export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
+export function StakeModal({
+  country,
+  onClose,
+  onSuccess,
+  isLightMode = false,
+}: StakeModalProps) {
   const targetCountry = country || COUNTRIES_DATA['united-states-of-america'];
   const minStake = targetCountry.currentLeader ? (targetCountry.currentLeader.stake + 1) : 1;
 
@@ -24,10 +30,23 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
   const [stakeAmount, setStakeAmount] = useState<number>(minStake);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Sync stake amount with target country
+  useEffect(() => {
+    setStakeAmount(minStake);
+  }, [minStake]);
+
   // Auto-derived logo
   const logoPreview = getProductFavicon(url);
 
-  // Handle URL Continue
+  // 1.5x Wall formula calculation
+  const wallCost = Math.ceil(stakeAmount * 1.5);
+
+  const handleQuickMultiplier = (mult: number) => {
+    const base = targetCountry.currentLeader ? targetCountry.currentLeader.stake : minStake;
+    setStakeAmount(Math.max(minStake, base * mult));
+  };
+
+  // Handle URL Step Continue
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
@@ -48,11 +67,42 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
     setStep(2);
   };
 
-  // Handle Final Stake Submission
+  // Handle Final Stake Submission / Checkout
   const handleConfirmStake = async () => {
     setIsSubmitting(true);
 
     try {
+      // 1. Attempt Dodo Payments Live Checkout
+      try {
+        const res = await fetch('/api/dodo/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: url.startsWith('http') ? url : `https://${url}`,
+            title: name || 'My Startup',
+            description: tagline || 'Building in public',
+            category,
+            bidAmount: stakeAmount,
+            logoUrl: logoPreview,
+            isTerritory: true,
+            countryCode: targetCountry.code,
+            customerEmail: email || undefined,
+            origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.payment_link || data?.url) {
+            window.location.href = data.payment_link || data.url;
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Dodo checkout fallback to instant live placement:', e);
+      }
+
+      // 2. Instant Live Placement Feedback
       confetti({
         particleCount: 90,
         spread: 70,
@@ -80,14 +130,18 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md rounded-pin-lg border border-[#1e293b] bg-[#0b0f19] p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className={`relative w-full max-w-md rounded-pin-lg border p-6 shadow-2xl ${
+        isLightMode
+          ? 'border-[#e6dfd1] bg-white text-slate-900'
+          : 'border-[#1e293b] bg-[#0b0f19] text-white'
+      }`}>
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
           aria-label="Close modal"
-          className="absolute right-4 top-4 rounded-full p-1.5 text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors cursor-pointer"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-[#94a3b8] hover:bg-slate-700/20 hover:text-white transition-colors cursor-pointer"
         >
           <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
             <path
@@ -100,16 +154,18 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
 
         {/* Modal Header */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#94a3b8]">
-            {targetCountry.code}
-          </span>
           <span className="text-xl">{targetCountry.flag}</span>
-          <h2 className="text-lg font-extrabold text-white">
+          <h2 className="text-lg font-extrabold tracking-tight">
             Claim {targetCountry.name}
           </h2>
+          <span className={`font-mono text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
+            isLightMode ? 'bg-slate-100 text-slate-700' : 'bg-[#1e293b] text-[#94a3b8]'
+          }`}>
+            {targetCountry.code}
+          </span>
         </div>
         <p className="mt-1 text-xs text-[#94a3b8]">
-          Compete for the #1 throne for 24 hours
+          Compete for the #1 throne on {targetCountry.name} for 24 hours
         </p>
 
         {step === 1 ? (
@@ -126,6 +182,8 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                   className={`rounded-pin-md border py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
                     claimType === 'product'
                       ? 'border-[#ff5722] bg-[#ff5722]/15 text-[#ff7043]'
+                      : isLightMode
+                      ? 'border-[#e6dfd1] bg-[#faf7f0] text-slate-800'
                       : 'border-[#1e293b] bg-[#06090e] text-white hover:border-[#334155]'
                   }`}
                 >
@@ -137,10 +195,12 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                   className={`rounded-pin-md border py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
                     claimType === 'social'
                       ? 'border-[#ff5722] bg-[#ff5722]/15 text-[#ff7043]'
+                      : isLightMode
+                      ? 'border-[#e6dfd1] bg-[#faf7f0] text-slate-800'
                       : 'border-[#1e293b] bg-[#06090e] text-white hover:border-[#334155]'
                   }`}
                 >
-                  Social profile
+                  Social Profile
                 </button>
               </div>
             </div>
@@ -162,7 +222,11 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                   placeholder={claimType === 'product' ? 'https://yourstartup.com' : 'https://x.com/shipxankit'}
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="mt-1.5 w-full rounded-pin-md border border-[#1e293b] bg-[#06090e] px-3.5 py-2 text-xs text-white placeholder:text-[#64748b] focus:border-[#ff5722] focus:outline-none"
+                  className={`mt-1.5 w-full rounded-pin-md border px-3.5 py-2 text-xs focus:border-[#ff5722] focus:outline-none ${
+                    isLightMode
+                      ? 'border-[#e6dfd1] bg-[#faf7f0] text-slate-900 placeholder:text-slate-400'
+                      : 'border-[#1e293b] bg-[#06090e] text-white placeholder:text-[#64748b]'
+                  }`}
                 />
               </div>
 
@@ -175,7 +239,11 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                   placeholder="founder@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 w-full rounded-pin-md border border-[#1e293b] bg-[#06090e] px-3.5 py-2 text-xs text-white placeholder:text-[#64748b] focus:border-[#ff5722] focus:outline-none"
+                  className={`mt-1 w-full rounded-pin-md border px-3.5 py-2 text-xs focus:border-[#ff5722] focus:outline-none ${
+                    isLightMode
+                      ? 'border-[#e6dfd1] bg-[#faf7f0] text-slate-900 placeholder:text-slate-400'
+                      : 'border-[#1e293b] bg-[#06090e] text-white placeholder:text-[#64748b]'
+                  }`}
                 />
               </div>
 
@@ -190,7 +258,9 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
         ) : (
           <div className="mt-5 space-y-3.5 animate-in fade-in duration-150">
             {/* Logo Preview + Product Name */}
-            <div className="flex items-center gap-3 p-3 rounded-pin-md border border-[#1e293b] bg-[#06090e]">
+            <div className={`flex items-center gap-3 p-3 rounded-pin-md border ${
+              isLightMode ? 'border-[#e6dfd1] bg-[#faf7f0]' : 'border-[#1e293b] bg-[#06090e]'
+            }`}>
               <img
                 src={logoPreview}
                 alt="Logo preview"
@@ -206,7 +276,9 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Product Name or @handle"
-                  className="w-full font-bold text-xs text-white bg-transparent border-b border-dashed border-[#334155] focus:border-[#ff5722] focus:outline-none py-0.5"
+                  className={`w-full font-bold text-xs bg-transparent border-b border-dashed focus:border-[#ff5722] focus:outline-none py-0.5 ${
+                    isLightMode ? 'text-slate-900 border-slate-300' : 'text-white border-[#334155]'
+                  }`}
                 />
                 <span className="text-[10px] text-[#94a3b8]">Logo automatically detected</span>
               </div>
@@ -222,7 +294,11 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
                 placeholder="One sentence pitch"
-                className="w-full rounded-pin-md border border-[#1e293b] bg-[#06090e] px-3.5 py-1.5 text-xs text-white focus:border-[#ff5722] focus:outline-none"
+                className={`w-full rounded-pin-md border px-3.5 py-1.5 text-xs focus:border-[#ff5722] focus:outline-none ${
+                  isLightMode
+                    ? 'border-[#e6dfd1] bg-[#faf7f0] text-slate-900'
+                    : 'border-[#1e293b] bg-[#06090e] text-white'
+                }`}
               />
             </div>
 
@@ -233,7 +309,11 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-pin-md border border-[#1e293b] bg-[#06090e] px-3 py-1.5 text-xs text-white outline-none"
+                className={`w-full rounded-pin-md border px-3 py-1.5 text-xs outline-none ${
+                  isLightMode
+                    ? 'border-[#e6dfd1] bg-[#faf7f0] text-slate-900'
+                    : 'border-[#1e293b] bg-[#06090e] text-white'
+                }`}
               >
                 {CATEGORIES_LIST.filter((c) => c.value).map((c) => (
                   <option key={c.value} value={c.label}>
@@ -243,33 +323,75 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
               </select>
             </div>
 
-            {/* Stake Amount Selector */}
+            {/* Custom Stake Amount with [MIN] [2x] [5x] */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
-                  24h Stake Amount
+                  YOUR BID — MINIMUM ${minStake}
                 </label>
-                <span className="text-[11px] font-bold text-[#fbbf24]">
-                  Min: ${minStake}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {[minStake, minStake + 1, minStake + 4, minStake + 9].map((amt) => (
+                <div className="flex items-center gap-1">
                   <button
-                    key={amt}
                     type="button"
-                    onClick={() => setStakeAmount(amt)}
-                    className={`flex-1 rounded-pin-md border py-1.5 text-xs font-bold transition-colors cursor-pointer ${
-                      stakeAmount === amt
-                        ? 'border-[#ff5722] bg-[#ff5722] text-white shadow-pin-coral'
-                        : 'border-[#1e293b] bg-[#06090e] text-white hover:border-[#334155]'
+                    onClick={() => setStakeAmount(minStake)}
+                    className={`rounded border px-2 py-0.5 text-[10px] font-mono font-bold transition-colors cursor-pointer ${
+                      stakeAmount === minStake
+                        ? 'border-[#ff5722] bg-[#ff5722] text-white'
+                        : isLightMode
+                        ? 'border-slate-300 bg-slate-100 text-slate-700'
+                        : 'border-[#334155] bg-[#06090e] text-[#94a3b8] hover:text-white'
                     }`}
                   >
-                    ${amt}
+                    MIN
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => handleQuickMultiplier(2)}
+                    className={`rounded border px-2 py-0.5 text-[10px] font-mono font-bold transition-colors cursor-pointer ${
+                      stakeAmount === (targetCountry.currentLeader ? targetCountry.currentLeader.stake * 2 : minStake * 2)
+                        ? 'border-[#ff5722] bg-[#ff5722] text-white'
+                        : isLightMode
+                        ? 'border-slate-300 bg-slate-100 text-slate-700'
+                        : 'border-[#334155] bg-[#06090e] text-[#94a3b8] hover:text-white'
+                    }`}
+                  >
+                    2x
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickMultiplier(5)}
+                    className={`rounded border px-2 py-0.5 text-[10px] font-mono font-bold transition-colors cursor-pointer ${
+                      stakeAmount === (targetCountry.currentLeader ? targetCountry.currentLeader.stake * 5 : minStake * 5)
+                        ? 'border-[#ff5722] bg-[#ff5722] text-white'
+                        : isLightMode
+                        ? 'border-slate-300 bg-slate-100 text-slate-700'
+                        : 'border-[#334155] bg-[#06090e] text-[#94a3b8] hover:text-white'
+                    }`}
+                  >
+                    5x
+                  </button>
+                </div>
               </div>
+
+              {/* Editable Custom Amount Input */}
+              <div className={`flex items-center rounded-pin-md border px-3 py-1.5 focus-within:border-[#ff5722] ${
+                isLightMode ? 'border-[#e6dfd1] bg-[#faf7f0]' : 'border-[#1e293b] bg-[#06090e]'
+              }`}>
+                <span className="font-mono text-base font-extrabold text-[#ff7043] mr-2">
+                  $
+                </span>
+                <input
+                  type="number"
+                  min={minStake}
+                  value={stakeAmount}
+                  onChange={(e) => setStakeAmount(Math.max(minStake, parseInt(e.target.value) || minStake))}
+                  className="w-full bg-transparent font-mono text-base font-extrabold focus:outline-none"
+                />
+              </div>
+
+              {/* Wall Formula Text */}
+              <p className="mt-1 font-mono text-[10px] text-[#94a3b8]">
+                bid high to build a wall: taking {targetCountry.name} from you will cost <strong className="text-amber-500 font-bold">${wallCost}</strong>
+              </p>
             </div>
 
             {/* Confirm & Stake Button */}
@@ -277,7 +399,9 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="rounded-full border border-[#1e293b] px-4 py-2 text-xs font-semibold text-[#94a3b8] hover:text-white cursor-pointer"
+                className={`rounded-full border px-4 py-2 text-xs font-semibold hover:text-[#ff5722] transition-colors cursor-pointer ${
+                  isLightMode ? 'border-[#e6dfd1] text-slate-700' : 'border-[#1e293b] text-[#94a3b8]'
+                }`}
               >
                 ← Back
               </button>
@@ -287,7 +411,9 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                 disabled={isSubmitting}
                 className="flex-1 rounded-full bg-[#ff5722] hover:bg-[#ff7043] py-2.5 text-center text-xs font-extrabold text-white shadow-pin-coral transition-transform hover:scale-[1.02] cursor-pointer"
               >
-                {isSubmitting ? 'Claiming...' : `Claim for $${stakeAmount} on ${targetCountry.name}`}
+                {isSubmitting
+                  ? 'Connecting Checkout...'
+                  : `Claim for $${stakeAmount} on ${targetCountry.name}`}
               </button>
             </div>
           </div>

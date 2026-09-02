@@ -2,23 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { Globe } from '@/components/pinit/Globe';
-import { FlatMap } from '@/components/pinit/FlatMap';
 import { TopNavbar } from '@/components/pinit/TopNavbar';
 import { HeroCard } from '@/components/pinit/HeroCard';
 import { LiveReportDrawer } from '@/components/pinit/LiveReportDrawer';
 import { HotCountriesDrawer } from '@/components/pinit/HotCountriesDrawer';
 import { CountryClaimCard } from '@/components/pinit/CountryClaimCard';
+import { StakeModal } from '@/components/pinit/StakeModal';
 import { BottomBar } from '@/components/pinit/BottomBar';
 import { ZoomControls } from '@/components/pinit/ZoomControls';
 import { CountryInfo, COUNTRIES_DATA } from '@/lib/pinitData';
 
 export default function HomePage() {
-  const [viewMode, setViewMode] = useState<'globe' | 'flat'>('globe');
   const [isLightMode, setIsLightMode] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<CountryInfo | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
+  const [modalCountry, setModalCountry] = useState<CountryInfo | null>(null);
 
   // Dynamic live states for real-time updates
   const [liveClaimedCount, setLiveClaimedCount] = useState<number>(5);
@@ -50,20 +51,18 @@ export default function HomePage() {
     setSelectedCountry(country);
   };
 
-  // Open Claim for a specific or default country
+  // Open Claim Modal for a specific country
   const handleOpenClaim = (country?: CountryInfo) => {
-    setSelectedCountry(country || COUNTRIES_DATA['iran'] || COUNTRIES_DATA['united-states-of-america']);
+    setModalCountry(country || selectedCountry || COUNTRIES_DATA['united-states-of-america']);
+    setIsStakeModalOpen(true);
   };
 
-  // Handle Successful Claim / Invade & Color Change in Real Time
-  const handleClaimSuccess = (countrySlug: string, placement: any, newColor?: string) => {
+  // Handle Successful Claim in Real Time
+  const handleClaimSuccess = (countrySlug: string, placement: any) => {
     const target = COUNTRIES_DATA[countrySlug];
     if (target) {
       const wasClaimed = !!target.currentLeader;
       target.currentLeader = placement;
-      if (newColor) {
-        target.color = newColor;
-      }
       setSelectedCountry({ ...target });
 
       if (!wasClaimed) {
@@ -75,51 +74,34 @@ export default function HomePage() {
 
   // Zoom Controls
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(viewMode === 'flat' ? 3.5 : 1.6, prev + 0.15));
+    setZoomLevel((prev) => Math.min(1.6, prev + 0.15));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(viewMode === 'flat' ? 0.65 : 0.75, prev - 0.15));
+    setZoomLevel((prev) => Math.max(0.75, prev - 0.15));
   };
 
   const handleWheelZoom = (delta: number) => {
-    setZoomLevel((prev) =>
-      Math.min(
-        viewMode === 'flat' ? 3.5 : 1.6,
-        Math.max(viewMode === 'flat' ? 0.65 : 0.75, prev + delta)
-      )
-    );
+    setZoomLevel((prev) => Math.min(1.6, Math.max(0.75, prev + delta)));
   };
 
   return (
     <main className={`relative h-screen w-screen overflow-hidden select-none touch-none ${
-      isLightMode ? 'bg-[#f8fafc] text-slate-900' : 'bg-[#06090e] text-white'
+      isLightMode ? 'bg-[#faf7f0] text-slate-900' : 'bg-[#06090e] text-white'
     }`}>
-      {/* Background Interactive Map: 3D Globe vs 2D Flat Map */}
+      {/* Background 3D Globe View */}
       <div className="absolute inset-0 z-0">
-        {viewMode === 'globe' ? (
-          <Globe
-            selectedCountry={selectedCountry}
-            onSelectCountry={handleSelectCountry}
-            zoomLevel={zoomLevel}
-            onWheelZoom={handleWheelZoom}
-            isLightMode={isLightMode}
-          />
-        ) : (
-          <FlatMap
-            selectedCountry={selectedCountry}
-            onSelectCountry={handleSelectCountry}
-            zoomLevel={zoomLevel}
-            onWheelZoom={handleWheelZoom}
-            isLightMode={isLightMode}
-          />
-        )}
+        <Globe
+          selectedCountry={selectedCountry}
+          onSelectCountry={handleSelectCountry}
+          zoomLevel={zoomLevel}
+          onWheelZoom={handleWheelZoom}
+          isLightMode={isLightMode}
+        />
       </div>
 
-      {/* Top Navbar with [GLOBE | FLAT], Light/Dark mode, Real-Time Stats, Search, and Rules Icon */}
+      {/* Top Navbar with Responsive HUD & Theme Toggle */}
       <TopNavbar
-        viewMode={viewMode}
-        onToggleViewMode={setViewMode}
         isLightMode={isLightMode}
         onToggleTheme={handleToggleTheme}
         onSelectCountry={handleSelectCountry}
@@ -147,12 +129,22 @@ export default function HomePage() {
         onClaimCountry={(c) => handleOpenClaim(c)}
       />
 
-      {/* Bottom Right: Command Side Drawer with Custom Bid, Multipliers, & 11 Color Swatches */}
+      {/* Bottom Floating Country Claim / Outbid Card */}
       {selectedCountry && (
         <CountryClaimCard
           country={selectedCountry}
           onClose={() => setSelectedCountry(null)}
-          onClaimSuccess={handleClaimSuccess}
+          onClaim={(c) => handleOpenClaim(c)}
+          isLightMode={isLightMode}
+        />
+      )}
+
+      {/* 2-Step Interactive Stake Modal */}
+      {isStakeModalOpen && (
+        <StakeModal
+          country={modalCountry}
+          onClose={() => setIsStakeModalOpen(false)}
+          onSuccess={handleClaimSuccess}
           isLightMode={isLightMode}
         />
       )}
