@@ -9,7 +9,6 @@ interface TopNavbarProps {
   onToggleViewMode: (mode: 'globe' | 'flat') => void;
   isLightMode: boolean;
   onToggleTheme: () => void;
-  onPinClick: () => void;
   onSelectCountry: (country: CountryInfo) => void;
   totalClaimed: number;
   totalRaised: number;
@@ -21,7 +20,6 @@ export function TopNavbar({
   onToggleViewMode,
   isLightMode,
   onToggleTheme,
-  onPinClick,
   onSelectCountry,
   totalClaimed,
   totalRaised,
@@ -55,7 +53,7 @@ export function TopNavbar({
           href="/"
           className={`group flex items-center gap-2 rounded-xl border px-3 py-1.5 shadow-pin-sm hover:border-[#ff5722] transition-colors backdrop-blur-md ${
             isLightMode
-              ? 'border-slate-300 bg-white/95 text-slate-900'
+              ? 'border-[#e6dfd1] bg-white/95 text-slate-900'
               : 'border-[#1e293b] bg-[#0b0f19]/90 text-white'
           }`}
         >
@@ -69,7 +67,7 @@ export function TopNavbar({
           <span className="text-sm font-extrabold tracking-tight">
             worldpinit<span className="text-[#ff5722]">.lol</span>
           </span>
-          <span className="hidden xs:inline-block rounded bg-[#f59e0b]/15 border border-[#f59e0b]/30 px-1.5 py-0.5 text-[9px] font-mono font-bold text-[#fbbf24]">
+          <span className="hidden sm:inline-block rounded bg-[#f59e0b]/15 border border-[#f59e0b]/30 px-1.5 py-0.5 text-[9px] font-mono font-bold text-[#fbbf24]">
             #1 PER COUNTRY
           </span>
         </Link>
@@ -78,7 +76,7 @@ export function TopNavbar({
       {/* Center Live HUD Stats Pill */}
       <div className={`pointer-events-auto hidden lg:flex items-center gap-2.5 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-pin-sm backdrop-blur-md ${
         isLightMode
-          ? 'border-slate-300 bg-white/95 text-slate-800'
+          ? 'border-[#e6dfd1] bg-white/95 text-slate-800'
           : 'border-[#1e293b] bg-[#0b0f19]/90 text-white'
       }`}>
         <span className="flex items-center gap-1.5">
@@ -89,60 +87,60 @@ export function TopNavbar({
           <span className="font-bold text-emerald-500">{liveOnlineCount} ONLINE</span>
         </span>
 
-        <span className="text-slate-500">·</span>
+        <span className="text-slate-400">·</span>
 
         <span className="text-[#94a3b8]">
           <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>31,810</strong> VISITORS
         </span>
 
-        <span className="text-slate-500">·</span>
+        <span className="text-slate-400">·</span>
 
         <span className="text-[#ef4444] font-extrabold font-mono">
           ${totalRaised} RAISED
         </span>
 
-        <span className="text-slate-500">·</span>
+        <span className="text-slate-400">·</span>
 
         <span className="text-[#94a3b8]">
           <strong className={isLightMode ? 'text-slate-900' : 'text-white'}>34,087</strong> CLICKS
         </span>
 
-        <span className="text-slate-500">·</span>
+        <span className="text-slate-400">·</span>
 
         <span className={`font-bold font-mono ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
           {totalClaimed}/195 CLAIMED
         </span>
       </div>
 
-      {/* Right Controls: [GLOBE | FLAT] Toggle + Light/Dark Theme + Search + Claim CTA */}
+      {/* Right Controls: [GLOBE | FLAT] Toggle + Light/Dark Theme + Search + Rules Icon */}
       <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
-        {/* Globe Left vs Flat Right Toggle Switch */}
-        <div className={`flex items-center rounded-full border p-0.5 shadow-pin-sm backdrop-blur-md ${
-          isLightMode ? 'border-slate-300 bg-white/95' : 'border-[#1e293b] bg-[#0b0f19]/95'
+        {/* Sleek Segmented Switch: Globe (Left) | Flat (Right) */}
+        <div className={`flex items-center rounded-full border p-0.5 shadow-pin-sm backdrop-blur-md transition-colors ${
+          isLightMode ? 'border-[#e6dfd1] bg-white/95' : 'border-[#1e293b] bg-[#0b0f19]/95'
         }`}>
           <button
             type="button"
             onClick={() => onToggleViewMode('globe')}
-            className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold transition-all cursor-pointer ${
               viewMode === 'globe'
                 ? 'bg-[#3b82f6] text-white shadow-xs'
-                : 'text-[#94a3b8] hover:text-white'
+                : 'text-[#94a3b8] hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span>🌐</span>
-            <span className="hidden xs:inline">GLOBE</span>
+            <span>GLOBE</span>
           </button>
           <button
             type="button"
             onClick={() => onToggleViewMode('flat')}
-            className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold transition-all cursor-pointer ${
               viewMode === 'flat'
                 ? 'bg-[#ff5722] text-white shadow-xs'
-                : 'text-[#94a3b8] hover:text-white'
+                : 'text-[#94a3b8] hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <span>🗺️</span>
-            <span className="hidden xs:inline">FLAT</span>
+            <span>FLAT</span>
           </button>
         </div>
 
@@ -150,10 +148,10 @@ export function TopNavbar({
         <button
           type="button"
           onClick={onToggleTheme}
-          title={isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          title={isLightMode ? 'Switch to Dark Space Theme' : 'Switch to Warm Cream Light Theme'}
           className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold shadow-pin-sm transition-colors cursor-pointer ${
             isLightMode
-              ? 'border-slate-300 bg-white text-slate-800 hover:border-[#ff5722]'
+              ? 'border-[#e6dfd1] bg-white text-slate-800 hover:border-[#ff5722]'
               : 'border-[#1e293b] bg-[#0b0f19] text-amber-400 hover:border-amber-400'
           }`}
         >
@@ -163,7 +161,7 @@ export function TopNavbar({
         {/* Search Input */}
         <div ref={searchRef} className="relative hidden md:block">
           <div className={`flex items-center rounded-full border px-3 py-1 shadow-pin-sm focus-within:border-[#ff5722] transition-colors ${
-            isLightMode ? 'border-slate-300 bg-white' : 'border-[#1e293b] bg-[#0b0f19]/90'
+            isLightMode ? 'border-[#e6dfd1] bg-white' : 'border-[#1e293b] bg-[#0b0f19]/90'
           }`}>
             <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor" className="text-[#94a3b8]">
               <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
@@ -190,7 +188,7 @@ export function TopNavbar({
           {isSearchOpen && searchQuery.trim().length > 0 && (
             <div className={`absolute right-0 top-full mt-1.5 w-60 max-h-56 overflow-y-auto rounded-pin-md border py-1 shadow-2xl z-50 divide-y ${
               isLightMode
-                ? 'border-slate-300 bg-white divide-slate-200 text-slate-900'
+                ? 'border-[#e6dfd1] bg-white divide-slate-200 text-slate-900'
                 : 'border-[#1e293b] bg-[#0b0f19] divide-[#1e293b] text-white'
             }`}>
               {filteredCountries.length > 0 ? (
@@ -221,22 +219,12 @@ export function TopNavbar({
           )}
         </div>
 
-        {/* Claim CTA Button */}
-        <button
-          type="button"
-          onClick={onPinClick}
-          className="flex items-center gap-1.5 rounded-full bg-amber-400 hover:bg-amber-500 text-amber-950 px-3.5 py-1.5 text-xs font-extrabold shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-        >
-          <span>📍</span>
-          <span>Claim $1</span>
-        </button>
-
-        {/* Rules Link */}
+        {/* Rules Icon */}
         <Link
           href="/rules"
           title="Game Rules & Mechanics"
-          className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold text-[#94a3b8] shadow-pin-sm hover:border-[#ff5722] transition-colors ${
-            isLightMode ? 'border-slate-300 bg-white' : 'border-[#1e293b] bg-[#0b0f19]'
+          className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold text-[#94a3b8] shadow-pin-sm hover:border-[#ff5722] hover:text-white transition-colors ${
+            isLightMode ? 'border-[#e6dfd1] bg-white text-slate-700' : 'border-[#1e293b] bg-[#0b0f19]'
           }`}
         >
           ⓘ

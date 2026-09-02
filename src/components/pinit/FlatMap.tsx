@@ -29,7 +29,6 @@ export function FlatMap({
   const [worldData, setWorldData] = useState<any>(null);
   const [hoveredCountry, setHoveredCountry] = useState<{ name: string; info?: CountryInfo; x: number; y: number } | null>(null);
 
-  // Drag and Touch tracking refs
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const touchStartDistRef = useRef<number | null>(null);
@@ -76,6 +75,31 @@ export function FlatMap({
       });
   }, []);
 
+  // Compute Projection with bounded pan
+  const getProjection = useCallback((width: number, height: number, customPan: [number, number]) => {
+    const isMobile = width < 640;
+    const clampedZoom = Math.min(3.0, Math.max(0.7, zoomLevel));
+    const baseScale = isMobile ? width / 5.2 : width / 5.8;
+    const scale = baseScale * clampedZoom;
+
+    // Strict boundary clamping so map cannot be dragged offscreen
+    const maxPanX = Math.max(20, (width * (clampedZoom - 0.7)) / 1.6);
+    const maxPanY = Math.max(20, (height * (clampedZoom - 0.7)) / 1.8);
+
+    const clampedPanX = Math.max(-maxPanX, Math.min(maxPanX, customPan[0]));
+    const clampedPanY = Math.max(-maxPanY, Math.min(maxPanY, customPan[1]));
+
+    const center: [number, number] = [
+      width / 2 + clampedPanX,
+      height / 2 + clampedPanY + (isMobile ? 0 : 25),
+    ];
+
+    return d3Geo
+      .geoNaturalEarth1()
+      .scale(scale)
+      .translate(center);
+  }, [zoomLevel]);
+
   const renderMap = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -96,29 +120,18 @@ export function FlatMap({
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    // Deep background
-    ctx.fillStyle = isLightMode ? '#f8fafc' : '#06090e';
+    // Warm cream background for light theme, dark space for dark theme
+    ctx.fillStyle = isLightMode ? '#faf7f0' : '#06090e';
     ctx.fillRect(0, 0, width, height);
 
-    const isMobile = width < 640;
-    const clampedZoom = Math.min(3.5, Math.max(0.65, zoomLevel));
-    // Full screen scale (Matching Screenshot 3)
-    const baseScale = isMobile ? width / 5.2 : width / 5.8;
-    const scale = baseScale * clampedZoom;
-    const center: [number, number] = [width / 2 + pan[0], height / 2 + pan[1] + (isMobile ? 0 : 25)];
-
-    const projection = d3Geo
-      .geoNaturalEarth1()
-      .scale(scale)
-      .translate(center);
-
+    const projection = getProjection(width, height, pan);
     const path = d3Geo.geoPath(projection, ctx);
 
     // 1. Graticules
     const graticule = d3Geo.geoGraticule10();
     ctx.beginPath();
     path(graticule);
-    ctx.strokeStyle = isLightMode ? 'rgba(203, 213, 225, 0.6)' : 'rgba(30, 41, 59, 0.45)';
+    ctx.strokeStyle = isLightMode ? 'rgba(214, 204, 187, 0.45)' : 'rgba(30, 41, 59, 0.45)';
     ctx.lineWidth = 0.5;
     ctx.stroke();
 
@@ -156,7 +169,7 @@ export function FlatMap({
           : isHovered
           ? '#ffd54f'
           : isLightMode
-          ? 'rgba(255, 255, 255, 0.8)'
+          ? 'rgba(255, 255, 255, 0.85)'
           : 'rgba(15, 23, 42, 0.85)';
         ctx.lineWidth = isSelected ? 2 : isHovered ? 1.5 : 0.7;
         ctx.stroke();
@@ -176,7 +189,7 @@ export function FlatMap({
           const [px, py] = projectedPoint;
           if (px >= 0 && px <= width && py >= 0 && py <= height) {
             ctx.font = '700 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            ctx.fillStyle = isLightMode ? '#0f172a' : 'rgba(255, 255, 255, 0.85)';
+            ctx.fillStyle = isLightMode ? '#1e293b' : 'rgba(255, 255, 255, 0.85)';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(matchedCountry.name, px, py);
@@ -205,7 +218,7 @@ export function FlatMap({
       }
     });
 
-  }, [pan, zoomLevel, worldData, hoveredCountry, selectedCountry, isLightMode]);
+  }, [pan, zoomLevel, worldData, hoveredCountry, selectedCountry, isLightMode, getProjection]);
 
   function drawOceanSpot(
     ctx: CanvasRenderingContext2D,
@@ -218,7 +231,7 @@ export function FlatMap({
     ctx.save();
     ctx.beginPath();
     ctx.arc(x, y, 15, 0, 2 * Math.PI);
-    ctx.fillStyle = isLightMode ? 'rgba(241, 245, 249, 0.9)' : 'rgba(15, 23, 42, 0.85)';
+    ctx.fillStyle = isLightMode ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.85)';
     ctx.fill();
     ctx.strokeStyle = '#10b981';
     ctx.lineWidth = 1.5;
@@ -250,8 +263,8 @@ export function FlatMap({
     ctx.beginPath();
     ctx.roundRect(x - size / 2, y - size / 2, size, size, radius);
     ctx.fillStyle = isLightMode ? '#ffffff' : '#0b0f19';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 8;
     ctx.shadowOffsetY = 2;
     ctx.fill();
     ctx.strokeStyle = '#f59e0b';
@@ -288,24 +301,29 @@ export function FlatMap({
     ctx.restore();
   }
 
-  const findCountryAtPoint = (px: number, py: number): CountryInfo | null => {
+  // Find country or logo badge at point
+  const findCountryAtPoint = (px: number, py: number): { country: CountryInfo; clickedLogo?: boolean } | null => {
     const container = containerRef.current;
     if (!container || !worldData) return null;
 
     const width = container.clientWidth;
     const height = container.clientHeight;
-    const isMobile = width < 640;
-    const clampedZoom = Math.min(3.5, Math.max(0.65, zoomLevel));
-    const baseScale = isMobile ? width / 5.2 : width / 5.8;
-    const scale = baseScale * clampedZoom;
-    const center: [number, number] = [width / 2 + pan[0], height / 2 + pan[1] + (isMobile ? 0 : 25)];
+    const projection = getProjection(width, height, pan);
 
-    const projection = d3Geo
-      .geoNaturalEarth1()
-      .scale(scale)
-      .translate(center);
+    // 1. Check if direct click on any active Leader's Logo Badge (26x26 hitbox)
+    for (const c of Object.values(COUNTRIES_DATA)) {
+      if (c.currentLeader) {
+        const point = projection(c.coordinates);
+        if (point) {
+          const [badgeX, badgeY] = [point[0], point[1] - 18];
+          if (Math.hypot(badgeX - px, badgeY - py) <= 16) {
+            return { country: c, clickedLogo: true };
+          }
+        }
+      }
+    }
 
-    // Check Ocean Zones first
+    // 2. Check Ocean Zones
     const oceanHit = Object.values(COUNTRIES_DATA).find((zone) => {
       if (!zone.isOceanZone) return false;
       const point = projection(zone.coordinates);
@@ -313,8 +331,9 @@ export function FlatMap({
       return Math.hypot(point[0] - px, point[1] - py) <= 24;
     });
 
-    if (oceanHit) return oceanHit;
+    if (oceanHit) return { country: oceanHit };
 
+    // 3. Check Geo Polygon
     const inverted = projection.invert?.([px, py]);
     if (!inverted) return null;
 
@@ -323,18 +342,17 @@ export function FlatMap({
 
     if (hit) {
       const countryId = String(hit.id);
-      return (
-        Object.values(COUNTRIES_DATA).find(
-          (c) => c.id === countryId || (c.id && countryId.padStart(3, '0') === c.id.padStart(3, '0'))
-        ) || {
-          id: countryId,
-          slug: (hit.properties?.name || 'territory').toLowerCase().replace(/\s+/g, '-'),
-          name: hit.properties?.name || 'Territory',
-          code: 'GL',
-          flag: '🌍',
-          coordinates: inverted as [number, number],
-        }
-      );
+      const matched = Object.values(COUNTRIES_DATA).find(
+        (c) => c.id === countryId || (c.id && countryId.padStart(3, '0') === c.id.padStart(3, '0'))
+      ) || {
+        id: countryId,
+        slug: (hit.properties?.name || 'territory').toLowerCase().replace(/\s+/g, '-'),
+        name: hit.properties?.name || 'Territory',
+        code: 'GL',
+        flag: '🌍',
+        coordinates: inverted as [number, number],
+      };
+      return { country: matched };
     }
     return null;
   };
@@ -351,18 +369,28 @@ export function FlatMap({
     if (isDragging && lastMousePosRef.current) {
       const dx = e.clientX - lastMousePosRef.current.x;
       const dy = e.clientY - lastMousePosRef.current.y;
-      setPan((prev) => [prev[0] + dx, prev[1] + dy]);
+      
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      const clampedZoom = Math.min(3.0, Math.max(0.7, zoomLevel));
+      const maxPanX = Math.max(20, (width * (clampedZoom - 0.7)) / 1.6);
+      const maxPanY = Math.max(20, (height * (clampedZoom - 0.7)) / 1.8);
+
+      setPan((prev) => [
+        Math.max(-maxPanX, Math.min(maxPanX, prev[0] + dx)),
+        Math.max(-maxPanY, Math.min(maxPanY, prev[1] + dy)),
+      ]);
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     } else {
       const rect = container.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-      const matched = findCountryAtPoint(mouseX, mouseY);
+      const hit = findCountryAtPoint(mouseX, mouseY);
 
-      if (matched) {
+      if (hit) {
         setHoveredCountry({
-          name: matched.name,
-          info: matched,
+          name: hit.country.name,
+          info: hit.country,
           x: mouseX,
           y: mouseY,
         });
@@ -383,9 +411,14 @@ export function FlatMap({
     const rect = container.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    const matched = findCountryAtPoint(mouseX, mouseY);
-    if (matched) {
-      onSelectCountry(matched);
+    const hit = findCountryAtPoint(mouseX, mouseY);
+
+    if (hit) {
+      if (hit.clickedLogo && hit.country.currentLeader?.url) {
+        window.open(hit.country.currentLeader.url, '_blank');
+      } else {
+        onSelectCountry(hit.country);
+      }
     }
   };
 
@@ -406,6 +439,9 @@ export function FlatMap({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    const container = containerRef.current;
+    if (!container) return;
+
     if (e.touches.length === 1 && lastMousePosRef.current) {
       const touch = e.touches[0];
       const dx = touch.clientX - lastMousePosRef.current.x;
@@ -415,7 +451,16 @@ export function FlatMap({
         isTouchDraggingRef.current = true;
       }
 
-      setPan((prev) => [prev[0] + dx, prev[1] + dy]);
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      const clampedZoom = Math.min(3.0, Math.max(0.7, zoomLevel));
+      const maxPanX = Math.max(20, (width * (clampedZoom - 0.7)) / 1.6);
+      const maxPanY = Math.max(20, (height * (clampedZoom - 0.7)) / 1.8);
+
+      setPan((prev) => [
+        Math.max(-maxPanX, Math.min(maxPanX, prev[0] + dx)),
+        Math.max(-maxPanY, Math.min(maxPanY, prev[1] + dy)),
+      ]);
       lastMousePosRef.current = { x: touch.clientX, y: touch.clientY };
     } else if (e.touches.length === 2 && touchStartDistRef.current && onWheelZoom) {
       const newDist = Math.hypot(
@@ -434,10 +479,14 @@ export function FlatMap({
       const rect = container.getBoundingClientRect();
       const tapX = touchStartPosRef.current.x - rect.left;
       const tapY = touchStartPosRef.current.y - rect.top;
-      const matched = findCountryAtPoint(tapX, tapY);
+      const hit = findCountryAtPoint(tapX, tapY);
 
-      if (matched) {
-        onSelectCountry(matched);
+      if (hit) {
+        if (hit.clickedLogo && hit.country.currentLeader?.url) {
+          window.open(hit.country.currentLeader.url, '_blank');
+        } else {
+          onSelectCountry(hit.country);
+        }
       }
     }
 
@@ -468,7 +517,7 @@ export function FlatMap({
     <div
       ref={containerRef}
       className={`relative h-full w-full select-none cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center touch-none ${
-        isLightMode ? 'bg-[#f8fafc]' : 'bg-[#06090e]'
+        isLightMode ? 'bg-[#faf7f0]' : 'bg-[#06090e]'
       }`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -487,7 +536,7 @@ export function FlatMap({
         <div
           className={`pointer-events-auto absolute z-30 -translate-x-1/2 -translate-y-full rounded-pin-md border px-3.5 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 ${
             isLightMode
-              ? 'border-slate-300 bg-white/95 text-slate-900'
+              ? 'border-[#e6dfd1] bg-white/95 text-slate-900'
               : 'border-[#1e293b] bg-[#0b0f19]/95 text-white'
           }`}
           style={{

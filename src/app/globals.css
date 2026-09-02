@@ -19,14 +19,14 @@
 }
 
 .light-theme {
-  --pin-bg: #f8fafc;
+  --pin-bg: #faf7f0;
   --pin-paper: #ffffff;
   --pin-card: #ffffff;
-  --pin-card-hover: #f1f5f9;
-  --pin-ink: #0f172a;
+  --pin-card-hover: #f4efe4;
+  --pin-ink: #1e293b;
   --pin-muted: #64748b;
-  --pin-border: #e2e8f0;
-  --pin-border-strong: #cbd5e1;
+  --pin-border: #e6dfd1;
+  --pin-border-strong: #d5cbb9;
   --pin-coral: #ff5722;
   --pin-coral-ink: #e64a19;
   --pin-coral-soft: rgba(255, 87, 34, 0.1);
@@ -51,7 +51,7 @@ body {
 }
 
 .shadow-pin-sm {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .shadow-pin-coral {

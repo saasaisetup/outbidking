@@ -116,13 +116,12 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Top Navbar with [GLOBE | FLAT] on right, Light/Dark mode, Real-Time Stats, Search, and Claim CTA */}
+      {/* Top Navbar with [GLOBE | FLAT], Light/Dark mode, Real-Time Stats, Search, and Rules Icon */}
       <TopNavbar
         viewMode={viewMode}
         onToggleViewMode={setViewMode}
         isLightMode={isLightMode}
         onToggleTheme={handleToggleTheme}
-        onPinClick={() => handleOpenClaim(selectedCountry || undefined)}
         onSelectCountry={handleSelectCountry}
         totalClaimed={liveClaimedCount}
         totalRaised={liveRaisedAmount}

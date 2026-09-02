@@ -128,7 +128,8 @@ export function Globe({
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    ctx.fillStyle = isLightMode ? '#f8fafc' : '#06090e';
+    // Warm cream background for light theme, dark space for dark theme
+    ctx.fillStyle = isLightMode ? '#faf7f0' : '#06090e';
     ctx.fillRect(0, 0, width, height);
 
     const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
@@ -147,17 +148,17 @@ export function Globe({
     // 1. Ocean Sphere
     ctx.beginPath();
     ctx.arc(center[0], center[1], radius, 0, 2 * Math.PI);
-    ctx.fillStyle = isLightMode ? '#e2e8f0' : '#090d16';
+    ctx.fillStyle = isLightMode ? '#eef2f7' : '#090d16';
     ctx.fill();
     ctx.lineWidth = 1.5;
-    ctx.strokeStyle = isLightMode ? '#cbd5e1' : '#1e293b';
+    ctx.strokeStyle = isLightMode ? '#d5cbb9' : '#1e293b';
     ctx.stroke();
 
     // 2. Graticules
     const graticule = d3Geo.geoGraticule10();
     ctx.beginPath();
     path(graticule);
-    ctx.strokeStyle = isLightMode ? 'rgba(148, 163, 184, 0.4)' : 'rgba(30, 41, 59, 0.45)';
+    ctx.strokeStyle = isLightMode ? 'rgba(214, 204, 187, 0.45)' : 'rgba(30, 41, 59, 0.45)';
     ctx.lineWidth = 0.5;
     ctx.stroke();
 
@@ -195,7 +196,7 @@ export function Globe({
           : isHovered
           ? '#ffd54f'
           : isLightMode
-          ? 'rgba(255, 255, 255, 0.7)'
+          ? 'rgba(255, 255, 255, 0.85)'
           : 'rgba(15, 23, 42, 0.8)';
         ctx.lineWidth = isSelected ? 2 : isHovered ? 1.5 : 0.7;
         ctx.stroke();
@@ -214,7 +215,7 @@ export function Globe({
         if (projectedPoint && isPointVisible(matchedCountry.coordinates, rotation)) {
           const [px, py] = projectedPoint;
           ctx.font = '700 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          ctx.fillStyle = isLightMode ? '#0f172a' : 'rgba(255, 255, 255, 0.85)';
+          ctx.fillStyle = isLightMode ? '#1e293b' : 'rgba(255, 255, 255, 0.85)';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(matchedCountry.name, px, py);
@@ -268,8 +269,8 @@ export function Globe({
     ctx.beginPath();
     ctx.roundRect(x - size / 2, y - size / 2, size, size, radius);
     ctx.fillStyle = isLightMode ? '#ffffff' : '#0b0f19';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 8;
     ctx.shadowOffsetY = 2;
     ctx.fill();
     ctx.strokeStyle = '#f59e0b';
@@ -307,7 +308,7 @@ export function Globe({
     ctx.restore();
   }
 
-  const findCountryAtPoint = (px: number, py: number): CountryInfo | null => {
+  const findCountryAtPoint = (px: number, py: number): { country: CountryInfo; clickedLogo?: boolean } | null => {
     const container = containerRef.current;
     if (!container || !worldData) return null;
 
@@ -324,6 +325,19 @@ export function Globe({
       .rotate(rotation)
       .clipAngle(90);
 
+    // Check direct click on visible leader logo badges (26x26 hitbox)
+    for (const c of Object.values(COUNTRIES_DATA)) {
+      if (c.currentLeader && isPointVisible(c.coordinates, rotation)) {
+        const point = projection(c.coordinates);
+        if (point) {
+          const [badgeX, badgeY] = [point[0], point[1] - 18];
+          if (Math.hypot(badgeX - px, badgeY - py) <= 16) {
+            return { country: c, clickedLogo: true };
+          }
+        }
+      }
+    }
+
     const inverted = projection.invert?.([px, py]);
     if (!inverted) return null;
 
@@ -332,18 +346,17 @@ export function Globe({
 
     if (hit) {
       const countryId = String(hit.id);
-      return (
-        Object.values(COUNTRIES_DATA).find(
-          (c) => c.id === countryId || (c.id && countryId.padStart(3, '0') === c.id.padStart(3, '0'))
-        ) || {
-          id: countryId,
-          slug: (hit.properties?.name || 'territory').toLowerCase().replace(/\s+/g, '-'),
-          name: hit.properties?.name || 'Territory',
-          code: 'GL',
-          flag: '🌍',
-          coordinates: inverted as [number, number],
-        }
-      );
+      const matched = Object.values(COUNTRIES_DATA).find(
+        (c) => c.id === countryId || (c.id && countryId.padStart(3, '0') === c.id.padStart(3, '0'))
+      ) || {
+        id: countryId,
+        slug: (hit.properties?.name || 'territory').toLowerCase().replace(/\s+/g, '-'),
+        name: hit.properties?.name || 'Territory',
+        code: 'GL',
+        flag: '🌍',
+        coordinates: inverted as [number, number],
+      };
+      return { country: matched };
     }
     return null;
   };
@@ -373,12 +386,12 @@ export function Globe({
       const rect = container.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-      const matched = findCountryAtPoint(mouseX, mouseY);
+      const hit = findCountryAtPoint(mouseX, mouseY);
 
-      if (matched) {
+      if (hit) {
         setHoveredCountry({
-          name: matched.name,
-          info: matched,
+          name: hit.country.name,
+          info: hit.country,
           x: mouseX,
           y: mouseY,
         });
@@ -401,9 +414,14 @@ export function Globe({
     const rect = container.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    const matched = findCountryAtPoint(mouseX, mouseY);
-    if (matched) {
-      onSelectCountry(matched);
+    const hit = findCountryAtPoint(mouseX, mouseY);
+
+    if (hit) {
+      if (hit.clickedLogo && hit.country.currentLeader?.url) {
+        window.open(hit.country.currentLeader.url, '_blank');
+      } else {
+        onSelectCountry(hit.country);
+      }
     }
   };
 
@@ -459,10 +477,14 @@ export function Globe({
       const rect = container.getBoundingClientRect();
       const tapX = touchStartPosRef.current.x - rect.left;
       const tapY = touchStartPosRef.current.y - rect.top;
-      const matched = findCountryAtPoint(tapX, tapY);
+      const hit = findCountryAtPoint(tapX, tapY);
 
-      if (matched) {
-        onSelectCountry(matched);
+      if (hit) {
+        if (hit.clickedLogo && hit.country.currentLeader?.url) {
+          window.open(hit.country.currentLeader.url, '_blank');
+        } else {
+          onSelectCountry(hit.country);
+        }
       }
     }
 
@@ -493,7 +515,7 @@ export function Globe({
     <div
       ref={containerRef}
       className={`relative h-full w-full select-none cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center touch-none ${
-        isLightMode ? 'bg-[#f8fafc]' : 'bg-[#06090e]'
+        isLightMode ? 'bg-[#faf7f0]' : 'bg-[#06090e]'
       }`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -512,7 +534,7 @@ export function Globe({
         <div
           className={`pointer-events-auto absolute z-30 -translate-x-1/2 -translate-y-full rounded-pin-md border px-3.5 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 ${
             isLightMode
-              ? 'border-slate-300 bg-white/95 text-slate-900'
+              ? 'border-[#e6dfd1] bg-white/95 text-slate-900'
               : 'border-[#1e293b] bg-[#0b0f19]/95 text-white'
           }`}
           style={{
