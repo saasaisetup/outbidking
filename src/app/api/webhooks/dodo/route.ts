@@ -27,8 +27,6 @@ export async function POST(req: NextRequest) {
       req.headers.get('timestamp') ||
       '';
 
-    let isSignatureVerified = false;
-
     if (
       webhookSecret &&
       !webhookSecret.includes('your_actual') &&
@@ -42,10 +40,8 @@ export async function POST(req: NextRequest) {
           'webhook-signature': webhookSignature,
           'webhook-timestamp': webhookTimestamp,
         });
-        isSignatureVerified = true;
       } catch (err: any) {
         console.warn('[Dodo Webhook] Signature verification notice:', err.message);
-        // Continue processing to prevent dropping valid simulated / test transactions
       }
     }
 
@@ -90,8 +86,35 @@ export async function POST(req: NextRequest) {
 
       const numericBid = Number(bidAmount) || (data.total_amount ? data.total_amount / 100 : 1);
 
-      // Fulfill Leaderboard Bid
-      if (url) {
+      // Fulfill Territory Conquest if countryCode or isTerritory
+      if (countryCode || isTerritory === 'true' || isTerritory === true) {
+        const result = await store.conquerTerritoryAsync({
+          countryCode: countryCode || 'US',
+          title: title || url || 'My Product',
+          url: url || 'https://worldpinit.lol',
+          warCry: warCry || description,
+          customColor,
+          bidAmount: numericBid,
+          logoUrl,
+          category: category || 'SaaS',
+          paymentProvider: 'dodo',
+        });
+
+        if (supabase) {
+          try {
+            await supabase.channel('world-war-realtime').send({
+              type: 'broadcast',
+              event: 'TERRITORY_CONQUERED',
+              payload: { territory: result.territory },
+            });
+          } catch (e) {
+            console.error('[Dodo Webhook] Realtime broadcast error:', e);
+          }
+        }
+
+        console.log(`[Dodo Webhook] Territory ${countryCode} claimed by ${url} for $${numericBid}!`);
+      } else if (url) {
+        // Fulfill Classic Leaderboard Bid
         const result = await store.placeBidAsync({
           url,
           title: title || url,
@@ -103,7 +126,6 @@ export async function POST(req: NextRequest) {
           paymentIntentId: paymentId,
         });
 
-        // Broadcast realtime update to all live connected users
         if (supabase) {
           try {
             await supabase.channel('outbid-realtime').send({

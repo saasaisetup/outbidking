@@ -71,38 +71,60 @@ export function StakeModal({
   const handleConfirmStake = async () => {
     setIsSubmitting(true);
 
+    const fullUrl = url.startsWith('http') ? url.trim() : `https://${url.trim()}`;
+    const cleanTitle = name.trim() || (claimType === 'social' ? '@founder' : 'My Startup');
+    const cleanTagline = tagline.trim() || 'Building in public';
+
     try {
-      // 1. Attempt Dodo Payments Live Checkout
+      // 1. Persist directly to backend API (/api/territories)
+      fetch('/api/territories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          countryCode: targetCountry.code,
+          title: cleanTitle,
+          url: fullUrl,
+          warCry: cleanTagline,
+          bidAmount: stakeAmount,
+          logoUrl: logoPreview,
+          category,
+          paymentProvider: 'dodo',
+        }),
+      }).catch((e) => console.warn('Territory API background save:', e));
+
+      // 2. Request Dodo Payments Hosted Checkout Link
       try {
         const res = await fetch('/api/dodo/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            url: url.startsWith('http') ? url : `https://${url}`,
-            title: name || 'My Startup',
-            description: tagline || 'Building in public',
+            url: fullUrl,
+            title: cleanTitle,
+            description: cleanTagline,
             category,
             bidAmount: stakeAmount,
             logoUrl: logoPreview,
             isTerritory: true,
             countryCode: targetCountry.code,
-            customerEmail: email || undefined,
+            email: email.trim() || undefined,
+            name: cleanTitle,
             origin: typeof window !== 'undefined' ? window.location.origin : undefined,
           }),
         });
 
         if (res.ok) {
           const data = await res.json();
-          if (data?.payment_link || data?.url) {
-            window.location.href = data.payment_link || data.url;
+          const checkoutLink = data?.paymentLink || data?.payment_link || data?.url;
+          if (checkoutLink) {
+            window.location.href = checkoutLink;
             return;
           }
         }
       } catch (e) {
-        console.warn('Dodo checkout fallback to instant live placement:', e);
+        console.warn('Dodo checkout redirect notice:', e);
       }
 
-      // 2. Instant Live Placement Feedback
+      // 3. Instant UI feedback
       confetti({
         particleCount: 90,
         spread: 70,
@@ -111,9 +133,9 @@ export function StakeModal({
 
       const newPlacement = {
         id: `stake-${Date.now()}`,
-        name: name || (claimType === 'social' ? '@founder' : 'My Startup'),
-        tagline: tagline || 'Building in public',
-        url: url.startsWith('http') ? url : `https://${url}`,
+        name: cleanTitle,
+        tagline: cleanTagline,
+        url: fullUrl,
         logo: logoPreview,
         stake: stakeAmount,
         category,

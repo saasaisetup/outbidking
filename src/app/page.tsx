@@ -21,9 +21,78 @@ export default function HomePage() {
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [modalCountry, setModalCountry] = useState<CountryInfo | null>(null);
 
-  // Dynamic live states for real-time updates
+  // Dynamic live stats
   const [liveClaimedCount, setLiveClaimedCount] = useState<number>(5);
   const [liveRaisedAmount, setLiveRaisedAmount] = useState<number>(22);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Synchronize dynamic territories from backend /api/territories on load & poll
+  useEffect(() => {
+    let active = true;
+
+    async function fetchLiveTerritories() {
+      try {
+        const res = await fetch('/api/territories', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active || !data.territories) return;
+
+        let claimed = 0;
+        let raised = 0;
+
+        data.territories.forEach((t: any) => {
+          if (t.currentRuler) {
+            claimed++;
+            raised += (t.currentRuler.bidAmount || t.currentBid || 1);
+
+            // Match into COUNTRIES_DATA by code or name
+            const matched = Object.values(COUNTRIES_DATA).find(
+              (c) => c.code.toUpperCase() === t.countryCode?.toUpperCase() ||
+                     c.name.toLowerCase() === t.countryName?.toLowerCase()
+            );
+
+            if (matched) {
+              matched.currentLeader = {
+                id: `ruler-${t.countryCode}`,
+                name: t.currentRuler.title || t.currentRuler.rulerName || 'Sovereign Ruler',
+                tagline: t.currentRuler.warCry || 'Conquered territory',
+                url: t.currentRuler.url,
+                logo: t.currentRuler.logoUrl || '/globe.svg',
+                stake: t.currentRuler.bidAmount || t.currentBid || 1,
+                category: t.currentRuler.category || 'SaaS',
+                claimedAt: 'Active',
+                expiresIn: '24h 00m',
+                clicks: t.clicks || 0,
+                customColor: t.currentRuler.customColor,
+              };
+
+              if (t.currentRuler.customColor) {
+                matched.color = t.currentRuler.customColor;
+              }
+            }
+          }
+        });
+
+        if (claimed > 0) {
+          setLiveClaimedCount(claimed);
+        }
+        if (raised > 0) {
+          setLiveRaisedAmount(raised);
+        }
+        setRefreshTrigger((prev) => prev + 1);
+      } catch (err) {
+        console.warn('Could not sync territories with API:', err);
+      }
+    }
+
+    fetchLiveTerritories();
+    const interval = setInterval(fetchLiveTerritories, 10000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Handle Theme Toggle
   const handleToggleTheme = () => {
@@ -69,6 +138,7 @@ export default function HomePage() {
         setLiveClaimedCount((prev) => prev + 1);
       }
       setLiveRaisedAmount((prev) => prev + (placement.stake || 1));
+      setRefreshTrigger((prev) => prev + 1);
     }
   };
 
@@ -89,8 +159,8 @@ export default function HomePage() {
     <main className={`relative h-screen w-screen overflow-hidden select-none touch-none ${
       isLightMode ? 'bg-[#faf7f0] text-slate-900' : 'bg-[#06090e] text-white'
     }`}>
-      {/* Background 3D Globe View */}
-      <div className="absolute inset-0 z-0">
+      {/* Background 3D Globe View with Dynamic Refresh */}
+      <div className="absolute inset-0 z-0" key={refreshTrigger}>
         <Globe
           selectedCountry={selectedCountry}
           onSelectCountry={handleSelectCountry}
