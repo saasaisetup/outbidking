@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
 import { CountryInfo, COUNTRY_COLOR_PALETTE, getProductFavicon } from '@/lib/pinitData';
@@ -19,7 +19,9 @@ export function CountryClaimCard({
   isLightMode = false,
 }: CountryClaimCardProps) {
   const isClaimed = !!country.currentLeader;
-  const minPrice = country.minPrice || (isClaimed ? country.currentLeader!.stake + 1 : 1);
+  const minPrice = isClaimed
+    ? country.currentLeader!.stake + 1
+    : (country.minPrice || 1);
 
   // Form states
   const [bidAmount, setBidAmount] = useState<number>(minPrice);
@@ -31,11 +33,18 @@ export function CountryClaimCard({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Reset bid when country changes
+  useEffect(() => {
+    setBidAmount(minPrice);
+    setSelectedColor(country.currentLeader?.customColor || country.color || '#ff5722');
+  }, [country, minPrice]);
+
   // Wall cost calculation (1.5x formula)
   const wallCost = Math.ceil(bidAmount * 1.5);
 
   const handleQuickMultiplier = (mult: number) => {
-    setBidAmount(Math.max(minPrice, minPrice * mult));
+    const base = isClaimed ? country.currentLeader!.stake : minPrice;
+    setBidAmount(Math.max(minPrice, base * mult));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,16 +83,16 @@ export function CountryClaimCard({
           ? 'border-slate-300 bg-white/95 text-slate-900'
           : 'border-[#1e293b] bg-[#0b0f19]/95 text-white'
       }`}>
-        {/* Header: Flag + Code + Name + Tier Badge + Close Button */}
+        {/* Header: Flag + Name + Code Badge + Tier Badge + Close Button */}
         <div className="flex items-center justify-between border-b pb-2.5 border-inherit">
           <div className="flex items-center gap-2">
             <span className="text-xl">{country.flag}</span>
-            <span className="font-mono text-xs font-bold text-[#94a3b8] uppercase">
-              {country.code}
-            </span>
             <h3 className="font-extrabold text-base tracking-tight">
               {country.name}
             </h3>
+            <span className="rounded bg-[#1e293b] px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#94a3b8] uppercase border border-[#334155]">
+              {country.code}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -185,7 +194,7 @@ export function CountryClaimCard({
                   type="button"
                   onClick={() => handleQuickMultiplier(2)}
                   className={`rounded border px-2 py-0.5 text-[10px] font-mono font-bold transition-colors cursor-pointer ${
-                    bidAmount === minPrice * 2
+                    bidAmount === (isClaimed ? country.currentLeader!.stake * 2 : minPrice * 2)
                       ? 'border-[#ff5722] bg-[#ff5722] text-white'
                       : 'border-[#334155] bg-[#06090e] text-[#94a3b8] hover:text-white'
                   }`}
@@ -196,7 +205,7 @@ export function CountryClaimCard({
                   type="button"
                   onClick={() => handleQuickMultiplier(5)}
                   className={`rounded border px-2 py-0.5 text-[10px] font-mono font-bold transition-colors cursor-pointer ${
-                    bidAmount === minPrice * 5
+                    bidAmount === (isClaimed ? country.currentLeader!.stake * 5 : minPrice * 5)
                       ? 'border-[#ff5722] bg-[#ff5722] text-white'
                       : 'border-[#334155] bg-[#06090e] text-[#94a3b8] hover:text-white'
                   }`}
