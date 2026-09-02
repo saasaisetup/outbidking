@@ -20,9 +20,29 @@ export default function HomePage() {
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [modalCountry, setModalCountry] = useState<CountryInfo | null>(null);
 
-  // Dynamic live stats
+  // Dynamic real-time stats
   const [liveClaimedCount, setLiveClaimedCount] = useState<number>(5);
   const [liveRaisedAmount, setLiveRaisedAmount] = useState<number>(22);
+  const [liveVisitorCount, setLiveVisitorCount] = useState<number>(2140);
+  const [liveClickCount, setLiveClickCount] = useState<number>(1580);
+
+  // Track page visit on mount & fetch real-time visitors
+  useEffect(() => {
+    async function trackVisit() {
+      try {
+        const res = await fetch('/api/track-visit', { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.totalVisitors) setLiveVisitorCount(data.totalVisitors);
+          if (data.totalClicks) setLiveClickCount(data.totalClicks);
+          if (data.totalRaised) setLiveRaisedAmount((prev) => Math.max(prev, data.totalRaised));
+        }
+      } catch (e) {
+        console.warn('Track visit failed:', e);
+      }
+    }
+    trackVisit();
+  }, []);
 
   // Synchronize dynamic territories from backend /api/territories on load & poll
   useEffect(() => {
@@ -169,13 +189,15 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Top Navbar with Responsive HUD & Modern SVG Theme Toggle */}
+      {/* Top Navbar with Real-time Dynamic Stats HUD */}
       <TopNavbar
         isLightMode={isLightMode}
         onToggleTheme={handleToggleTheme}
         onSelectCountry={handleSelectCountry}
         totalClaimed={liveClaimedCount}
         totalRaised={liveRaisedAmount}
+        totalVisitors={liveVisitorCount}
+        totalClicks={liveClickCount}
         liveOnlineCount={18}
       />
 

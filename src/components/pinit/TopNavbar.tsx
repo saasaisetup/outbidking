@@ -10,6 +10,8 @@ interface TopNavbarProps {
   onSelectCountry?: (country: CountryInfo) => void;
   totalClaimed: number;
   totalRaised: number;
+  totalVisitors: number;
+  totalClicks: number;
   liveOnlineCount: number;
 }
 
@@ -18,6 +20,8 @@ export function TopNavbar({
   onToggleTheme,
   totalClaimed,
   totalRaised,
+  totalVisitors,
+  totalClicks,
   liveOnlineCount,
 }: TopNavbarProps) {
   return (
@@ -44,7 +48,7 @@ export function TopNavbar({
           </Link>
         </div>
 
-        {/* Center: Sleek Live Stats HUD (Single Unified Bar) */}
+        {/* Center: Dynamic Real-Time Stats HUD */}
         <div className="hidden md:flex items-center pointer-events-auto">
           <div className={`flex items-center gap-3 rounded-full border px-4 py-1.5 text-[11px] font-mono backdrop-blur-md shadow-pin-sm ${
             isLightMode
@@ -57,15 +61,19 @@ export function TopNavbar({
             </span>
             <span className="opacity-30">·</span>
             <span className="font-medium">
-              <strong className={isLightMode ? 'text-slate-900 font-bold' : 'text-white font-bold'}>2,140</strong> VISITORS
+              <strong className={isLightMode ? 'text-slate-900 font-bold' : 'text-white font-bold'}>
+                {totalVisitors.toLocaleString()}
+              </strong> VISITORS
             </span>
             <span className="opacity-30">·</span>
             <span className="font-bold text-[#ff7043]">
-              ${totalRaised} RAISED
+              ${totalRaised.toLocaleString()} RAISED
             </span>
             <span className="opacity-30">·</span>
             <span className="font-medium">
-              <strong className={isLightMode ? 'text-slate-900 font-bold' : 'text-white font-bold'}>1,580</strong> CLICKS
+              <strong className={isLightMode ? 'text-slate-900 font-bold' : 'text-white font-bold'}>
+                {totalClicks.toLocaleString()}
+              </strong> CLICKS
             </span>
             <span className="opacity-30">·</span>
             <span className="font-bold text-amber-500">
