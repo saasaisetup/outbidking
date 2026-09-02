@@ -10,30 +10,33 @@ interface GlobeProps {
   onSelectCountry: (country: CountryInfo) => void;
   zoomLevel: number;
   onWheelZoom?: (delta: number) => void;
+  isLightMode?: boolean;
 }
 
-export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom }: GlobeProps) {
+export function Globe({
+  selectedCountry,
+  onSelectCountry,
+  zoomLevel,
+  onWheelZoom,
+  isLightMode = false,
+}: GlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Rotation angles [lambda (yaw/long), phi (pitch/lat), gamma (roll)]
   const [rotation, setRotation] = useState<[number, number, number]>([-30, -25, 0]);
   const [isDragging, setIsDragging] = useState(false);
   const [worldData, setWorldData] = useState<any>(null);
   const [hoveredCountry, setHoveredCountry] = useState<{ name: string; info?: CountryInfo; x: number; y: number } | null>(null);
 
-  // Drag and Touch tracking refs
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const touchStartDistRef = useRef<number | null>(null);
   const isTouchDraggingRef = useRef(false);
 
-  // Image Cache for pin icons
   const imageCacheRef = useRef<Record<string, HTMLImageElement>>({});
   const targetRotationRef = useRef<[number, number, number] | null>(null);
   const isHoveredRef = useRef(false);
 
-  // Preload logo image helper
   const loadLogoImage = useCallback((url: string) => {
     if (!url || imageCacheRef.current[url]) return;
     const img = new Image();
@@ -80,7 +83,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     }
   }, [selectedCountry]);
 
-  // Smooth Gentle Auto-Rotation & Animation loop
   useEffect(() => {
     let animationFrameId: number;
     const animate = () => {
@@ -126,8 +128,10 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
+    ctx.fillStyle = isLightMode ? '#f8fafc' : '#06090e';
+    ctx.fillRect(0, 0, width, height);
+
     const clampedZoom = Math.min(1.6, Math.max(0.75, zoomLevel));
-    // Responsive radius for mobile and desktop
     const radius = Math.min(width, height) * (width < 640 ? 0.46 : 0.44) * clampedZoom;
     const center: [number, number] = [width / 2, height / 2 + (width < 640 ? 0 : 10)];
 
@@ -140,20 +144,20 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
 
     const path = d3Geo.geoPath(projection, ctx);
 
-    // 1. Dark Ocean Sphere
+    // 1. Ocean Sphere
     ctx.beginPath();
     ctx.arc(center[0], center[1], radius, 0, 2 * Math.PI);
-    ctx.fillStyle = '#090d16';
+    ctx.fillStyle = isLightMode ? '#e2e8f0' : '#090d16';
     ctx.fill();
     ctx.lineWidth = 1.5;
-    ctx.strokeStyle = '#1e293b';
+    ctx.strokeStyle = isLightMode ? '#cbd5e1' : '#1e293b';
     ctx.stroke();
 
     // 2. Graticules
     const graticule = d3Geo.geoGraticule10();
     ctx.beginPath();
     path(graticule);
-    ctx.strokeStyle = 'rgba(30, 41, 59, 0.45)';
+    ctx.strokeStyle = isLightMode ? 'rgba(148, 163, 184, 0.4)' : 'rgba(30, 41, 59, 0.45)';
     ctx.lineWidth = 0.5;
     ctx.stroke();
 
@@ -177,6 +181,8 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
           ctx.fillStyle = '#ff5722';
         } else if (isHovered) {
           ctx.fillStyle = '#fbbf24';
+        } else if (matchedCountry?.currentLeader?.customColor) {
+          ctx.fillStyle = matchedCountry.currentLeader.customColor;
         } else if (matchedCountry?.color) {
           ctx.fillStyle = matchedCountry.color;
         } else {
@@ -184,7 +190,13 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
         }
 
         ctx.fill();
-        ctx.strokeStyle = isSelected ? '#ffffff' : isHovered ? '#ffd54f' : 'rgba(15, 23, 42, 0.8)';
+        ctx.strokeStyle = isSelected
+          ? '#ffffff'
+          : isHovered
+          ? '#ffd54f'
+          : isLightMode
+          ? 'rgba(255, 255, 255, 0.7)'
+          : 'rgba(15, 23, 42, 0.8)';
         ctx.lineWidth = isSelected ? 2 : isHovered ? 1.5 : 0.7;
         ctx.stroke();
       });
@@ -202,13 +214,10 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
         if (projectedPoint && isPointVisible(matchedCountry.coordinates, rotation)) {
           const [px, py] = projectedPoint;
           ctx.font = '700 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.fillStyle = isLightMode ? '#0f172a' : 'rgba(255, 255, 255, 0.85)';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-          ctx.shadowBlur = 4;
           ctx.fillText(matchedCountry.name, px, py);
-          ctx.shadowBlur = 0;
         }
       });
     }
@@ -230,7 +239,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       }
     });
 
-  }, [rotation, zoomLevel, worldData, hoveredCountry, selectedCountry]);
+  }, [rotation, zoomLevel, worldData, hoveredCountry, selectedCountry, isLightMode]);
 
   function isPointVisible(coords: [number, number], rot: [number, number, number]): boolean {
     const centerLon = -rot[0];
@@ -258,8 +267,8 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
 
     ctx.beginPath();
     ctx.roundRect(x - size / 2, y - size / 2, size, size, radius);
-    ctx.fillStyle = '#0b0f19';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillStyle = isLightMode ? '#ffffff' : '#0b0f19';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
     ctx.shadowBlur = 10;
     ctx.shadowOffsetY = 2;
     ctx.fill();
@@ -294,10 +303,10 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       ctx.textBaseline = 'middle';
       ctx.fillText((authorName[0] || 'P').toUpperCase(), x, y);
     }
+
     ctx.restore();
   }
 
-  // Country Hit Finder at [px, py]
   const findCountryAtPoint = (px: number, py: number): CountryInfo | null => {
     const container = containerRef.current;
     if (!container || !worldData) return null;
@@ -339,7 +348,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     return null;
   };
 
-  // Mouse Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     lastMousePosRef.current = { x: e.clientX, y: e.clientY };
@@ -399,7 +407,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     }
   };
 
-  // Mobile Touch Handlers: 1 finger drag, 2 finger pinch-to-zoom, tap detection
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       const touch = e.touches[0];
@@ -408,7 +415,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       isTouchDraggingRef.current = false;
       touchStartDistRef.current = null;
     } else if (e.touches.length === 2) {
-      // 2 fingers pinch
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
@@ -450,7 +456,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
   const handleTouchEnd = (e: React.TouchEvent) => {
     const container = containerRef.current;
     if (!isTouchDraggingRef.current && touchStartPosRef.current && container) {
-      // Tap on touch screen!
       const rect = container.getBoundingClientRect();
       const tapX = touchStartPosRef.current.x - rect.left;
       const tapY = touchStartPosRef.current.y - rect.top;
@@ -487,7 +492,9 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full select-none cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center bg-[#06090e] touch-none"
+      className={`relative h-full w-full select-none cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center touch-none ${
+        isLightMode ? 'bg-[#f8fafc]' : 'bg-[#06090e]'
+      }`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -500,10 +507,14 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     >
       <canvas ref={canvasRef} className="block h-full w-full" />
 
-      {/* Floating Dark Glassmorphism Tooltip with Clickable Visit Link */}
+      {/* Floating Tooltip with URL Preview & Clickable Visit Link */}
       {hoveredCountry && !isDragging && (
         <div
-          className="pointer-events-auto absolute z-30 -translate-x-1/2 -translate-y-full rounded-pin-md border border-[#1e293b] bg-[#0b0f19]/95 px-3.5 py-2.5 text-white shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100"
+          className={`pointer-events-auto absolute z-30 -translate-x-1/2 -translate-y-full rounded-pin-md border px-3.5 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 ${
+            isLightMode
+              ? 'border-slate-300 bg-white/95 text-slate-900'
+              : 'border-[#1e293b] bg-[#0b0f19]/95 text-white'
+          }`}
           style={{
             left: `${hoveredCountry.x}px`,
             top: `${hoveredCountry.y - 14}px`,
@@ -516,10 +527,10 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
                 {hoveredCountry.info.code}
               </span>
             )}
-            <span className="font-extrabold text-xs text-white">{hoveredCountry.name}</span>
+            <span className="font-extrabold text-xs">{hoveredCountry.name}</span>
           </div>
 
-          <div className="mt-1.5 flex items-center justify-between gap-3 pt-1 border-t border-[#1e293b]">
+          <div className="mt-1.5 flex items-center justify-between gap-3 pt-1 border-t border-inherit">
             {hoveredCountry.info?.currentLeader ? (
               <>
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -531,9 +542,14 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
                       (e.target as HTMLImageElement).src = '/globe.svg';
                     }}
                   />
-                  <span className="text-[11px] text-[#fbbf24] font-bold truncate">
-                    {hoveredCountry.info.currentLeader.name} (${hoveredCountry.info.currentLeader.stake})
-                  </span>
+                  <div>
+                    <span className="text-[11px] text-[#fbbf24] font-bold truncate block">
+                      {hoveredCountry.info.currentLeader.name} (${hoveredCountry.info.currentLeader.stake})
+                    </span>
+                    <span className="text-[9px] text-[#94a3b8] truncate block font-mono">
+                      {hoveredCountry.info.currentLeader.url}
+                    </span>
+                  </div>
                 </div>
 
                 <a
@@ -541,13 +557,15 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="rounded-full bg-[#ff5722] hover:bg-[#ff7043] px-2 py-0.5 text-[10px] font-extrabold text-white transition-colors shrink-0 cursor-pointer shadow-xs"
+                  className="rounded-full bg-[#ff5722] hover:bg-[#ff7043] px-2.5 py-1 text-[10px] font-extrabold text-white transition-colors shrink-0 cursor-pointer shadow-xs"
                 >
                   VISIT ↗
                 </a>
               </>
             ) : (
-              <span className="text-[11px] text-[#94a3b8]">Unclaimed. Tap to stake</span>
+              <span className="text-[11px] text-[#94a3b8]">
+                Unclaimed (${hoveredCountry.info?.minPrice || 1}). Tap to claim
+              </span>
             )}
           </div>
         </div>

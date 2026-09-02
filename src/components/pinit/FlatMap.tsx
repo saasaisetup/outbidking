@@ -10,6 +10,7 @@ interface FlatMapProps {
   onSelectCountry: (country: CountryInfo) => void;
   zoomLevel: number;
   onWheelZoom?: (delta: number) => void;
+  isLightMode?: boolean;
 }
 
 export function FlatMap({
@@ -17,6 +18,7 @@ export function FlatMap({
   onSelectCountry,
   zoomLevel,
   onWheelZoom,
+  isLightMode = false,
 }: FlatMapProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -94,13 +96,17 @@ export function FlatMap({
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    const isMobile = width < 640;
-    const clampedZoom = Math.min(3.0, Math.max(0.65, zoomLevel));
-    const baseScale = isMobile ? width / 5.4 : width / 6.28;
-    const scale = baseScale * clampedZoom;
-    const center: [number, number] = [width / 2 + pan[0], height / 2 + pan[1] + (isMobile ? 0 : 15)];
+    // Deep background
+    ctx.fillStyle = isLightMode ? '#f8fafc' : '#06090e';
+    ctx.fillRect(0, 0, width, height);
 
-    // Natural Earth projection for flat world view
+    const isMobile = width < 640;
+    const clampedZoom = Math.min(3.5, Math.max(0.65, zoomLevel));
+    // Full screen scale (Matching Screenshot 3)
+    const baseScale = isMobile ? width / 5.2 : width / 5.8;
+    const scale = baseScale * clampedZoom;
+    const center: [number, number] = [width / 2 + pan[0], height / 2 + pan[1] + (isMobile ? 0 : 25)];
+
     const projection = d3Geo
       .geoNaturalEarth1()
       .scale(scale)
@@ -112,7 +118,7 @@ export function FlatMap({
     const graticule = d3Geo.geoGraticule10();
     ctx.beginPath();
     path(graticule);
-    ctx.strokeStyle = 'rgba(30, 41, 59, 0.4)';
+    ctx.strokeStyle = isLightMode ? 'rgba(203, 213, 225, 0.6)' : 'rgba(30, 41, 59, 0.45)';
     ctx.lineWidth = 0.5;
     ctx.stroke();
 
@@ -136,6 +142,8 @@ export function FlatMap({
           ctx.fillStyle = '#ff5722';
         } else if (isHovered) {
           ctx.fillStyle = '#fbbf24';
+        } else if (matchedCountry?.currentLeader?.customColor) {
+          ctx.fillStyle = matchedCountry.currentLeader.customColor;
         } else if (matchedCountry?.color) {
           ctx.fillStyle = matchedCountry.color;
         } else {
@@ -143,7 +151,13 @@ export function FlatMap({
         }
 
         ctx.fill();
-        ctx.strokeStyle = isSelected ? '#ffffff' : isHovered ? '#ffd54f' : 'rgba(15, 23, 42, 0.85)';
+        ctx.strokeStyle = isSelected
+          ? '#ffffff'
+          : isHovered
+          ? '#ffd54f'
+          : isLightMode
+          ? 'rgba(255, 255, 255, 0.8)'
+          : 'rgba(15, 23, 42, 0.85)';
         ctx.lineWidth = isSelected ? 2 : isHovered ? 1.5 : 0.7;
         ctx.stroke();
       });
@@ -162,7 +176,7 @@ export function FlatMap({
           const [px, py] = projectedPoint;
           if (px >= 0 && px <= width && py >= 0 && py <= height) {
             ctx.font = '700 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillStyle = isLightMode ? '#0f172a' : 'rgba(255, 255, 255, 0.85)';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(matchedCountry.name, px, py);
@@ -171,12 +185,12 @@ export function FlatMap({
       });
     }
 
-    // 4. Draw Maritime Ocean Trade Route Spots
+    // 4. Draw Maritime Ocean Trade Portals ($10 Each)
     Object.values(COUNTRIES_DATA).filter((c) => c.isOceanZone).forEach((zone) => {
       const point = projection(zone.coordinates);
       if (point) {
         const [px, py] = point;
-        drawOceanSpot(ctx, px, py, zone.name, zone.flag);
+        drawOceanSpot(ctx, px, py, zone.name, zone.flag, zone.minPrice || 10);
       }
     });
 
@@ -186,24 +200,25 @@ export function FlatMap({
         const point = projection(c.coordinates);
         if (point) {
           const [px, py] = point;
-          drawLogoOnlyBadge(ctx, px, py - 16, c.currentLeader.logo, c.currentLeader.name);
+          drawLogoOnlyBadge(ctx, px, py - 18, c.currentLeader.logo, c.currentLeader.name);
         }
       }
     });
 
-  }, [pan, zoomLevel, worldData, hoveredCountry, selectedCountry]);
+  }, [pan, zoomLevel, worldData, hoveredCountry, selectedCountry, isLightMode]);
 
   function drawOceanSpot(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
     name: string,
-    icon: string
+    icon: string,
+    price: number
   ) {
     ctx.save();
     ctx.beginPath();
-    ctx.arc(x, y, 14, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.arc(x, y, 15, 0, 2 * Math.PI);
+    ctx.fillStyle = isLightMode ? 'rgba(241, 245, 249, 0.9)' : 'rgba(15, 23, 42, 0.85)';
     ctx.fill();
     ctx.strokeStyle = '#10b981';
     ctx.lineWidth = 1.5;
@@ -216,8 +231,8 @@ export function FlatMap({
     ctx.fillText(icon, x, y);
 
     ctx.font = 'bold 8px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillStyle = '#6ee7b7';
-    ctx.fillText(name, x, y + 18);
+    ctx.fillStyle = '#10b981';
+    ctx.fillText(`${name} ($${price})`, x, y + 18);
     ctx.restore();
   }
 
@@ -229,21 +244,21 @@ export function FlatMap({
     authorName: string
   ) {
     ctx.save();
-    const size = 24;
-    const radius = 6;
+    const size = 26;
+    const radius = 7;
 
     ctx.beginPath();
     ctx.roundRect(x - size / 2, y - size / 2, size, size, radius);
-    ctx.fillStyle = '#0b0f19';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-    ctx.shadowBlur = 8;
+    ctx.fillStyle = isLightMode ? '#ffffff' : '#0b0f19';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    ctx.shadowBlur = 10;
     ctx.shadowOffsetY = 2;
     ctx.fill();
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    const imgSize = 18;
+    const imgSize = 20;
     const imgX = x - imgSize / 2;
     const imgY = y - imgSize / 2;
 
@@ -251,7 +266,7 @@ export function FlatMap({
     if (cachedImg && cachedImg.complete && cachedImg.naturalWidth > 0) {
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(imgX, imgY, imgSize, imgSize, 4);
+      ctx.roundRect(imgX, imgY, imgSize, imgSize, 5);
       ctx.clip();
       ctx.drawImage(cachedImg, imgX, imgY, imgSize, imgSize);
       ctx.restore();
@@ -260,12 +275,12 @@ export function FlatMap({
         loadLogoImage(logoUrl);
       }
       ctx.beginPath();
-      ctx.roundRect(imgX, imgY, imgSize, imgSize, 4);
+      ctx.roundRect(imgX, imgY, imgSize, imgSize, 5);
       ctx.fillStyle = '#ff5722';
       ctx.fill();
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 8px sans-serif';
+      ctx.font = 'bold 9px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText((authorName[0] || 'P').toUpperCase(), x, y);
@@ -273,7 +288,6 @@ export function FlatMap({
     ctx.restore();
   }
 
-  // Country Hit Finder at [px, py]
   const findCountryAtPoint = (px: number, py: number): CountryInfo | null => {
     const container = containerRef.current;
     if (!container || !worldData) return null;
@@ -281,10 +295,10 @@ export function FlatMap({
     const width = container.clientWidth;
     const height = container.clientHeight;
     const isMobile = width < 640;
-    const clampedZoom = Math.min(3.0, Math.max(0.65, zoomLevel));
-    const baseScale = isMobile ? width / 5.4 : width / 6.28;
+    const clampedZoom = Math.min(3.5, Math.max(0.65, zoomLevel));
+    const baseScale = isMobile ? width / 5.2 : width / 5.8;
     const scale = baseScale * clampedZoom;
-    const center: [number, number] = [width / 2 + pan[0], height / 2 + pan[1] + (isMobile ? 0 : 15)];
+    const center: [number, number] = [width / 2 + pan[0], height / 2 + pan[1] + (isMobile ? 0 : 25)];
 
     const projection = d3Geo
       .geoNaturalEarth1()
@@ -296,7 +310,7 @@ export function FlatMap({
       if (!zone.isOceanZone) return false;
       const point = projection(zone.coordinates);
       if (!point) return false;
-      return Math.hypot(point[0] - px, point[1] - py) <= 22;
+      return Math.hypot(point[0] - px, point[1] - py) <= 24;
     });
 
     if (oceanHit) return oceanHit;
@@ -325,7 +339,6 @@ export function FlatMap({
     return null;
   };
 
-  // Mouse Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     lastMousePosRef.current = { x: e.clientX, y: e.clientY };
@@ -376,7 +389,6 @@ export function FlatMap({
     }
   };
 
-  // Mobile Touch Handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       const touch = e.touches[0];
@@ -455,7 +467,9 @@ export function FlatMap({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full select-none cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center bg-[#06090e] touch-none"
+      className={`relative h-full w-full select-none cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center touch-none ${
+        isLightMode ? 'bg-[#f8fafc]' : 'bg-[#06090e]'
+      }`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -468,10 +482,14 @@ export function FlatMap({
     >
       <canvas ref={canvasRef} className="block h-full w-full" />
 
-      {/* Floating Tooltip */}
+      {/* Floating Tooltip with Direct URL Link Preview & Visit CTA */}
       {hoveredCountry && !isDragging && (
         <div
-          className="pointer-events-auto absolute z-30 -translate-x-1/2 -translate-y-full rounded-pin-md border border-[#1e293b] bg-[#0b0f19]/95 px-3.5 py-2.5 text-white shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100"
+          className={`pointer-events-auto absolute z-30 -translate-x-1/2 -translate-y-full rounded-pin-md border px-3.5 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100 ${
+            isLightMode
+              ? 'border-slate-300 bg-white/95 text-slate-900'
+              : 'border-[#1e293b] bg-[#0b0f19]/95 text-white'
+          }`}
           style={{
             left: `${hoveredCountry.x}px`,
             top: `${hoveredCountry.y - 14}px`,
@@ -484,10 +502,10 @@ export function FlatMap({
                 {hoveredCountry.info.code}
               </span>
             )}
-            <span className="font-extrabold text-xs text-white">{hoveredCountry.name}</span>
+            <span className="font-extrabold text-xs">{hoveredCountry.name}</span>
           </div>
 
-          <div className="mt-1.5 flex items-center justify-between gap-3 pt-1 border-t border-[#1e293b]">
+          <div className="mt-1.5 flex items-center justify-between gap-3 pt-1 border-t border-inherit">
             {hoveredCountry.info?.currentLeader ? (
               <>
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -499,9 +517,14 @@ export function FlatMap({
                       (e.target as HTMLImageElement).src = '/globe.svg';
                     }}
                   />
-                  <span className="text-[11px] text-[#fbbf24] font-bold truncate">
-                    {hoveredCountry.info.currentLeader.name} (${hoveredCountry.info.currentLeader.stake})
-                  </span>
+                  <div>
+                    <span className="text-[11px] text-[#fbbf24] font-bold truncate block">
+                      {hoveredCountry.info.currentLeader.name} (${hoveredCountry.info.currentLeader.stake})
+                    </span>
+                    <span className="text-[9px] text-[#94a3b8] truncate block font-mono">
+                      {hoveredCountry.info.currentLeader.url}
+                    </span>
+                  </div>
                 </div>
 
                 <a
@@ -509,13 +532,15 @@ export function FlatMap({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="rounded-full bg-[#ff5722] hover:bg-[#ff7043] px-2 py-0.5 text-[10px] font-extrabold text-white transition-colors shrink-0 cursor-pointer shadow-xs"
+                  className="rounded-full bg-[#ff5722] hover:bg-[#ff7043] px-2.5 py-1 text-[10px] font-extrabold text-white transition-colors shrink-0 cursor-pointer shadow-xs"
                 >
                   VISIT ↗
                 </a>
               </>
             ) : (
-              <span className="text-[11px] text-[#94a3b8]">Unclaimed. Tap to stake</span>
+              <span className="text-[11px] text-[#94a3b8]">
+                Unclaimed portal (${hoveredCountry.info?.minPrice || 1}). Tap to claim
+              </span>
             )}
           </div>
         </div>

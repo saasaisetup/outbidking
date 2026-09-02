@@ -1,12 +1,14 @@
 export interface CountryInfo {
-  id: string; // ISO numeric code string or custom id
+  id: string;
   slug: string;
   name: string;
-  code: string; // 2-letter ISO
+  code: string;
   flag: string;
-  coordinates: [number, number]; // [longitude, latitude]
+  coordinates: [number, number];
   color?: string;
+  tier?: 'TIER S' | 'TIER A' | 'TIER B' | 'TIER C';
   isOceanZone?: boolean;
+  minPrice?: number;
   currentLeader?: {
     id: string;
     name: string;
@@ -19,6 +21,7 @@ export interface CountryInfo {
     expiresIn: string;
     isLaunchSponsored?: boolean;
     clicks: number;
+    customColor?: string;
   };
 }
 
@@ -78,7 +81,35 @@ export interface ProductDetail {
   }[];
 }
 
-// Logo resolver helper for any domain or social handle
+// 11 Custom Palette Swatches (Matching Screenshot 2)
+export const COUNTRY_COLOR_PALETTE = [
+  '#ff5722', // Bright Coral / Red-Orange
+  '#f59e0b', // Amber / Gold
+  '#eab308', // Warm Yellow
+  '#10b981', // Emerald Green
+  '#06b6d4', // Cyan / Aqua
+  '#3b82f6', // Cobalt Blue
+  '#8b5cf6', // Violet / Purple
+  '#ec4899', // Hot Pink
+  '#84cc16', // Lime Green
+  '#ea580c', // Deep Orange
+  '#38bdf8', // Sky Blue
+  '#f43f5e', // Crimson Rose
+];
+
+export const DARK_MAP_COLORS = [
+  '#f59e0b',
+  '#e11d48',
+  '#06b6d4',
+  '#3b82f6',
+  '#10b981',
+  '#8b5cf6',
+  '#ec4899',
+  '#d97706',
+  '#14b8a6',
+  '#6366f1',
+];
+
 export function getProductFavicon(urlOrHandle: string): string {
   if (!urlOrHandle) return '/globe.svg';
   
@@ -105,21 +136,6 @@ export function getProductFavicon(urlOrHandle: string): string {
   return '/globe.svg';
 }
 
-// Neon Dark Mode Palette for Countries
-export const DARK_MAP_COLORS = [
-  '#f59e0b', // vibrant amber/orange
-  '#e11d48', // vivid crimson/magenta
-  '#06b6d4', // cyan/aqua
-  '#3b82f6', // bright blue
-  '#10b981', // emerald green
-  '#8b5cf6', // purple
-  '#ec4899', // hot pink
-  '#d97706', // dark gold
-  '#14b8a6', // teal
-  '#6366f1', // indigo
-];
-
-// Complete World Countries & Maritime Trade Zones Registry
 export const COUNTRIES_DATA: Record<string, CountryInfo> = {
   "united-states-of-america": {
     id: "840",
@@ -129,6 +145,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇺🇸",
     coordinates: [-98.5795, 39.8283],
     color: "#3b82f6",
+    tier: "TIER S",
+    minPrice: 5,
     currentLeader: {
       id: "claude-ai",
       name: "Claude",
@@ -140,6 +158,7 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
       claimedAt: "3d ago",
       expiresIn: "18h 40m",
       clicks: 98,
+      customColor: "#3b82f6",
     }
   },
   russia: {
@@ -150,6 +169,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇷🇺",
     coordinates: [95.3188, 61.524],
     color: "#f59e0b",
+    tier: "TIER A",
+    minPrice: 3,
     currentLeader: {
       id: "shipxankit",
       name: "@shipxankit",
@@ -161,6 +182,7 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
       claimedAt: "1h ago",
       expiresIn: "23h 05m",
       clicks: 34,
+      customColor: "#f59e0b",
     },
   },
   china: {
@@ -171,6 +193,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇨🇳",
     coordinates: [104.1954, 35.8617],
     color: "#10b981",
+    tier: "TIER S",
+    minPrice: 5,
     currentLeader: {
       id: "deepseek-com",
       name: "DeepSeek",
@@ -182,6 +206,7 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
       claimedAt: "2d ago",
       expiresIn: "14h 15m",
       clicks: 81,
+      customColor: "#10b981",
     }
   },
   canada: {
@@ -192,6 +217,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇨🇦",
     coordinates: [-106.3468, 56.1304],
     color: "#e11d48",
+    tier: "TIER A",
+    minPrice: 2,
     currentLeader: {
       id: "outoutbid-lol",
       name: "outoutbid.lol",
@@ -204,6 +231,7 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
       expiresIn: "3h 12m",
       isLaunchSponsored: true,
       clicks: 42,
+      customColor: "#e11d48",
     },
   },
   brazil: {
@@ -214,6 +242,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇧🇷",
     coordinates: [-51.9253, -14.235],
     color: "#e11d48",
+    tier: "TIER B",
+    minPrice: 2,
     currentLeader: {
       id: "snapsong-app",
       name: "SnapSong",
@@ -225,6 +255,31 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
       claimedAt: "1d ago",
       expiresIn: "16h 20m",
       clicks: 53,
+      customColor: "#e11d48",
+    }
+  },
+  iran: {
+    id: "364",
+    slug: "iran",
+    name: "Iran",
+    code: "IR",
+    flag: "🇮🇷",
+    coordinates: [53.683, 32.4279],
+    color: "#8b5cf6",
+    tier: "TIER C",
+    minPrice: 1,
+    currentLeader: {
+      id: "terrified-of-ai",
+      name: "Terrified of AI",
+      tagline: "Claim your spot.",
+      url: "https://terrifiedof.ai",
+      logo: "https://www.google.com/s2/favicons?domain=terrifiedof.ai&sz=128",
+      stake: 10,
+      category: "AI",
+      claimedAt: "1d ago",
+      expiresIn: "12h 00m",
+      clicks: 290,
+      customColor: "#8b5cf6",
     }
   },
   india: {
@@ -235,6 +290,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇮🇳",
     coordinates: [78.9629, 20.5937],
     color: "#f59e0b",
+    tier: "TIER S",
+    minPrice: 5,
   },
   australia: {
     id: "036",
@@ -244,6 +301,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇦🇺",
     coordinates: [133.7751, -25.2744],
     color: "#fbbf24",
+    tier: "TIER A",
+    minPrice: 3,
   },
   "united-kingdom": {
     id: "826",
@@ -253,6 +312,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇬🇧",
     coordinates: [-3.436, 55.3781],
     color: "#3b82f6",
+    tier: "TIER S",
+    minPrice: 4,
   },
   germany: {
     id: "276",
@@ -262,6 +323,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇩🇪",
     coordinates: [10.4515, 51.1657],
     color: "#8b5cf6",
+    tier: "TIER A",
+    minPrice: 3,
   },
   france: {
     id: "250",
@@ -271,6 +334,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇫🇷",
     coordinates: [2.2137, 46.2276],
     color: "#06b6d4",
+    tier: "TIER A",
+    minPrice: 3,
   },
   japan: {
     id: "392",
@@ -280,6 +345,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇯🇵",
     coordinates: [138.2529, 36.2048],
     color: "#ec4899",
+    tier: "TIER S",
+    minPrice: 4,
   },
   turkey: {
     id: "792",
@@ -289,6 +356,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇹🇷",
     coordinates: [35.2433, 38.9637],
     color: "#e11d48",
+    tier: "TIER B",
+    minPrice: 2,
   },
   "saudi-arabia": {
     id: "682",
@@ -298,6 +367,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇸🇦",
     coordinates: [45.0792, 23.8859],
     color: "#10b981",
+    tier: "TIER B",
+    minPrice: 2,
   },
   egypt: {
     id: "818",
@@ -307,6 +378,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇪🇬",
     coordinates: [30.8025, 26.8206],
     color: "#f59e0b",
+    tier: "TIER B",
+    minPrice: 2,
   },
   "south-africa": {
     id: "710",
@@ -316,6 +389,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇿🇦",
     coordinates: [22.9375, -30.5595],
     color: "#14b8a6",
+    tier: "TIER B",
+    minPrice: 2,
   },
   mexico: {
     id: "484",
@@ -325,6 +400,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇲🇽",
     coordinates: [-102.5528, 23.6345],
     color: "#10b981",
+    tier: "TIER B",
+    minPrice: 2,
   },
   argentina: {
     id: "032",
@@ -334,8 +411,10 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "🇦🇷",
     coordinates: [-63.6167, -38.4161],
     color: "#06b6d4",
+    tier: "TIER B",
+    minPrice: 2,
   },
-  // Maritime Ocean Spots
+  // Maritime Ocean Portals / Trade Zones ($10 Starting Price)
   "south-atlantic-patrol": {
     id: "ocean-1",
     slug: "south-atlantic-patrol",
@@ -344,6 +423,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "⚓",
     coordinates: [-25.0, -32.0],
     isOceanZone: true,
+    tier: "TIER B",
+    minPrice: 10,
   },
   "north-pacific-fleet": {
     id: "ocean-2",
@@ -353,6 +434,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "⚓",
     coordinates: [-160.0, 32.0],
     isOceanZone: true,
+    tier: "TIER A",
+    minPrice: 10,
   },
   "south-pacific-patrol": {
     id: "ocean-3",
@@ -362,6 +445,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "⚓",
     coordinates: [-135.0, -28.0],
     isOceanZone: true,
+    tier: "TIER B",
+    minPrice: 10,
   },
   "indian-ocean-trade-route": {
     id: "ocean-4",
@@ -371,6 +456,8 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     flag: "⚓",
     coordinates: [75.0, -18.0],
     isOceanZone: true,
+    tier: "TIER A",
+    minPrice: 10,
   }
 };
 
@@ -392,6 +479,20 @@ export const HOT_COUNTRIES: HotCountryItem[] = [
   {
     id: "hot-2",
     rank: 2,
+    countryName: "Iran",
+    countrySlug: "iran",
+    countryFlag: "🇮🇷",
+    countryCode: "IR",
+    rulerName: "Terrified of AI",
+    rulerLogo: "https://www.google.com/s2/favicons?domain=terrifiedof.ai&sz=128",
+    currentStake: 10,
+    stealPrice: 27,
+    multiplier: "9.8x",
+    isClaimed: true,
+  },
+  {
+    id: "hot-3",
+    rank: 3,
     countryName: "Russia",
     countrySlug: "russia",
     countryFlag: "🇷🇺",
@@ -404,8 +505,8 @@ export const HOT_COUNTRIES: HotCountryItem[] = [
     isClaimed: true,
   },
   {
-    id: "hot-3",
-    rank: 3,
+    id: "hot-4",
+    rank: 4,
     countryName: "China",
     countrySlug: "china",
     countryFlag: "🇨🇳",
@@ -418,8 +519,8 @@ export const HOT_COUNTRIES: HotCountryItem[] = [
     isClaimed: true,
   },
   {
-    id: "hot-4",
-    rank: 4,
+    id: "hot-5",
+    rank: 5,
     countryName: "Brazil",
     countrySlug: "brazil",
     countryFlag: "🇧🇷",
@@ -432,31 +533,17 @@ export const HOT_COUNTRIES: HotCountryItem[] = [
     isClaimed: true,
   },
   {
-    id: "hot-5",
-    rank: 5,
-    countryName: "Canada",
-    countrySlug: "canada",
-    countryFlag: "🇨🇦",
-    countryCode: "CA",
-    rulerName: "outoutbid.lol",
-    rulerLogo: "https://outoutbid.lol/favicon.svg",
-    currentStake: 1,
-    stealPrice: 2,
-    multiplier: "4.9x",
-    isClaimed: true,
-  },
-  {
     id: "hot-6",
     rank: 6,
-    countryName: "India",
-    countrySlug: "india",
-    countryFlag: "🇮🇳",
-    countryCode: "IN",
-    rulerName: "Unclaimed",
+    countryName: "South Atlantic Patrol",
+    countrySlug: "south-atlantic-patrol",
+    countryFlag: "⚓",
+    countryCode: "SA",
+    rulerName: "Unclaimed Portal",
     rulerLogo: "/globe.svg",
     currentStake: 0,
-    stealPrice: 1,
-    multiplier: "9.2x",
+    stealPrice: 10,
+    multiplier: "12.5x",
     isClaimed: false,
   }
 ];
@@ -464,6 +551,22 @@ export const HOT_COUNTRIES: HotCountryItem[] = [
 export const INITIAL_ACTIVITY: ActivityItem[] = [
   {
     id: "act-0",
+    productName: "Terrified of AI",
+    productSlug: "terrified-of-ai",
+    productUrl: "https://terrifiedof.ai",
+    logo: "https://www.google.com/s2/favicons?domain=terrifiedof.ai&sz=128",
+    stake: 10,
+    countryName: "Iran",
+    countryFlag: "🇮🇷",
+    countryCode: "IR",
+    countrySlug: "iran",
+    category: "AI",
+    action: "claimed",
+    timeAgo: "10m ago",
+    placementSlug: "terrified-of-ai-iran",
+  },
+  {
+    id: "act-1",
     productName: "Claude",
     productSlug: "claude-ai",
     productUrl: "https://claude.ai",
@@ -479,7 +582,7 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     placementSlug: "claude-ai-us",
   },
   {
-    id: "act-1",
+    id: "act-2",
     productName: "@shipxankit",
     productSlug: "shipxankit",
     productUrl: "https://x.com/shipxankit",
@@ -495,7 +598,7 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     placementSlug: "shipxankit-russia-20260901",
   },
   {
-    id: "act-2",
+    id: "act-3",
     productName: "DeepSeek",
     productSlug: "deepseek-com",
     productUrl: "https://deepseek.com",
@@ -511,7 +614,7 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     placementSlug: "deepseek-china",
   },
   {
-    id: "act-3",
+    id: "act-4",
     productName: "SnapSong",
     productSlug: "snapsong-app",
     productUrl: "https://snapsong.io",
@@ -525,55 +628,6 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     action: "claimed",
     timeAgo: "1d ago",
     placementSlug: "snapsong-brazil",
-  },
-  {
-    id: "act-4",
-    productName: "outoutbid.lol",
-    productSlug: "outoutbid-lol",
-    productUrl: "https://outoutbid.lol",
-    logo: "https://outoutbid.lol/favicon.svg",
-    stake: 1,
-    isLaunchSponsored: true,
-    countryName: "Canada",
-    countryFlag: "🇨🇦",
-    countryCode: "CA",
-    countrySlug: "canada",
-    category: "Marketing",
-    action: "claimed",
-    timeAgo: "21h ago",
-    placementSlug: "outoutbid-lol-canada-20260831",
-  },
-  {
-    id: "act-5",
-    productName: "IndieTools",
-    productSlug: "indietools-app",
-    productUrl: "https://www.indietools.app",
-    logo: "https://www.indietools.app/favicon.ico",
-    stake: 1,
-    countryName: "Turkey",
-    countryFlag: "🇹🇷",
-    countryCode: "TR",
-    countrySlug: "turkey",
-    category: "Marketing",
-    action: "expired",
-    timeAgo: "8h ago",
-    placementSlug: "indietools-app-turkey-20260831",
-  },
-  {
-    id: "act-6",
-    productName: "QueueForm",
-    productSlug: "queueform-com",
-    productUrl: "https://www.queueform.com",
-    logo: "https://framerusercontent.com/images/tfR1y96Rt21pquBZznoCbQMC5Qw.png",
-    stake: 1,
-    countryName: "United States of America",
-    countryFlag: "🇺🇸",
-    countryCode: "US",
-    countrySlug: "united-states-of-america",
-    category: "Marketing",
-    action: "expired",
-    timeAgo: "12h ago",
-    placementSlug: "queueform-com-us-20260831",
   }
 ];
 
@@ -592,6 +646,30 @@ export const CATEGORIES_LIST = [
 ];
 
 export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
+  "terrified-of-ai": {
+    id: "terrified-of-ai",
+    slug: "terrified-of-ai",
+    name: "Terrified of AI",
+    tagline: "Claim your spot.",
+    url: "https://terrifiedof.ai",
+    logo: "https://www.google.com/s2/favicons?domain=terrifiedof.ai&sz=128",
+    category: "AI",
+    description: "Real-time AI monitoring and attention intelligence.",
+    launchDate: "September 2026",
+    totalStaked: 10,
+    allTimeClicks: 290,
+    countriesClaimed: [
+      {
+        countryName: "Iran",
+        countryFlag: "🇮🇷",
+        countrySlug: "iran",
+        rank: 1,
+        staked: 10,
+        date: "Today",
+        status: "active",
+      }
+    ]
+  },
   "claude-ai": {
     id: "claude-ai",
     slug: "claude-ai",
@@ -709,54 +787,6 @@ export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
         staked: 1,
         date: "21h ago",
         status: "active",
-      }
-    ]
-  },
-  "indietools-app": {
-    id: "indietools-app",
-    slug: "indietools-app",
-    name: "IndieTools",
-    tagline: "Discover What's Building Next",
-    url: "https://www.indietools.app",
-    logo: "https://www.indietools.app/favicon.ico",
-    category: "Marketing",
-    description: "Curated directory and launchpad for indie makers and micro-SaaS founders.",
-    launchDate: "August 2026",
-    totalStaked: 1,
-    allTimeClicks: 124,
-    countriesClaimed: [
-      {
-        countryName: "Turkey",
-        countryFlag: "🇹🇷",
-        countrySlug: "turkey",
-        rank: 1,
-        staked: 1,
-        date: "8h ago",
-        status: "hall-of-fame",
-      }
-    ]
-  },
-  "queueform-com": {
-    id: "queueform-com",
-    slug: "queueform-com",
-    name: "QueueForm",
-    tagline: "Word of Mouth Marketing SaaS",
-    url: "https://www.queueform.com",
-    logo: "https://framerusercontent.com/images/tfR1y96Rt21pquBZznoCbQMC5Qw.png",
-    category: "Marketing",
-    description: "Turn your waiting list into an interactive referral engine.",
-    launchDate: "August 2026",
-    totalStaked: 1,
-    allTimeClicks: 210,
-    countriesClaimed: [
-      {
-        countryName: "United States",
-        countryFlag: "🇺🇸",
-        countrySlug: "united-states-of-america",
-        rank: 1,
-        staked: 1,
-        date: "12h ago",
-        status: "hall-of-fame",
       }
     ]
   }
