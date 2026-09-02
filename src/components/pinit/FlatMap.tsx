@@ -5,30 +5,31 @@ import * as d3Geo from 'd3-geo';
 import * as topojson from 'topojson-client';
 import { COUNTRIES_DATA, CountryInfo, DARK_MAP_COLORS } from '@/lib/pinitData';
 
-interface GlobeProps {
+interface FlatMapProps {
   selectedCountry: CountryInfo | null;
   onSelectCountry: (country: CountryInfo) => void;
   zoomLevel: number;
   onWheelZoom?: (delta: number) => void;
 }
 
-export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom }: GlobeProps) {
+export function FlatMap({
+  selectedCountry,
+  onSelectCountry,
+  zoomLevel,
+  onWheelZoom,
+}: FlatMapProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Rotation angles [lambda (yaw/long), phi (pitch/lat), gamma (roll)]
-  const [rotation, setRotation] = useState<[number, number, number]>([-30, -25, 0]);
+  // Pan offsets [tx, ty]
+  const [pan, setPan] = useState<[number, number]>([0, 0]);
   const [isDragging, setIsDragging] = useState(false);
   const [lastMousePos, setLastMousePos] = useState<{ x: number; y: number } | null>(null);
   const [worldData, setWorldData] = useState<any>(null);
   const [hoveredCountry, setHoveredCountry] = useState<{ name: string; info?: CountryInfo; x: number; y: number } | null>(null);
 
-  // Image Cache for pin pill icons
   const imageCacheRef = useRef<Record<string, HTMLImageElement>>({});
-  const targetRotationRef = useRef<[number, number, number] | null>(null);
-  const isHoveredRef = useRef(false);
 
-  // Helper to safely load and cache any logo
   const loadLogoImage = useCallback((url: string) => {
     if (!url || imageCacheRef.current[url]) return;
     const img = new Image();
@@ -36,20 +37,19 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     img.src = url;
     img.onload = () => {
       imageCacheRef.current[url] = img;
-      renderGlobe();
+      renderMap();
     };
     img.onerror = () => {
       const fallbackImg = new Image();
       fallbackImg.src = url;
       fallbackImg.onload = () => {
         imageCacheRef.current[url] = fallbackImg;
-        renderGlobe();
+        renderMap();
       };
     };
     imageCacheRef.current[url] = img;
   }, []);
 
-  // Preload logo images for all active countries
   useEffect(() => {
     Object.values(COUNTRIES_DATA).forEach((c) => {
       if (c.currentLeader?.logo) {
@@ -58,7 +58,6 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     });
   }, [loadLogoImage]);
 
-  // Load countries TopoJSON
   useEffect(() => {
     fetch('/geo/countries-110m.json')
       .then((res) => res.json())
@@ -70,43 +69,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
       });
   }, []);
 
-  // Animate globe rotation on selected country
-  useEffect(() => {
-    if (selectedCountry) {
-      const [lng, lat] = selectedCountry.coordinates;
-      targetRotationRef.current = [-lng, -lat, 0];
-    }
-  }, [selectedCountry]);
-
-  // Smooth Gentle Auto-Rotation & Animation loop
-  useEffect(() => {
-    let animationFrameId: number;
-    const animate = () => {
-      if (targetRotationRef.current && !isDragging) {
-        setRotation((prev) => {
-          const [tLng, tLat] = targetRotationRef.current!;
-          const [cLng, cLat] = prev;
-          const diffLng = (tLng - cLng) * 0.1;
-          const diffLat = (tLat - cLat) * 0.1;
-
-          if (Math.abs(diffLng) < 0.05 && Math.abs(diffLat) < 0.05) {
-            targetRotationRef.current = null;
-            return [tLng, tLat, 0];
-          }
-          return [cLng + diffLng, cLat + diffLat, 0];
-        });
-      } else if (!isDragging && !isHoveredRef.current && !selectedCountry) {
-        // Slow peaceful continuous spin in dark space
-        setRotation((prev) => [prev[0] + 0.06, prev[1], 0]);
-      }
-      animationFrameId = requestAnimationFrame(animate);
-    };
-    animationFrameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isDragging, selectedCountry]);
-
-  // Main Render Canvas
-  const renderGlobe = useCallback(() => {
+  const renderMap = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container || !worldData) return;
@@ -126,38 +89,27 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, width, height);
 
-    // Large default scale in dark mode
-    const clampedZoom = Math.min(1.5, Math.max(0.85, zoomLevel));
-    const radius = Math.min(width, height) * 0.44 * clampedZoom;
-    const center: [number, number] = [width / 2, height / 2 + 10];
+    const clampedZoom = Math.min(2.5, Math.max(0.75, zoomLevel));
+    const scale = (width / 6.28) * clampedZoom;
+    const center: [number, number] = [width / 2 + pan[0], height / 2 + pan[1] + 15];
 
+    // Natural Earth projection for flat world view
     const projection = d3Geo
-      .geoOrthographic()
-      .scale(radius)
-      .translate(center)
-      .rotate(rotation)
-      .clipAngle(90);
+      .geoNaturalEarth1()
+      .scale(scale)
+      .translate(center);
 
     const path = d3Geo.geoPath(projection, ctx);
 
-    // 1. Dark Ocean Sphere with glowing atmosphere
-    ctx.beginPath();
-    ctx.arc(center[0], center[1], radius, 0, 2 * Math.PI);
-    ctx.fillStyle = '#090d16';
-    ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = '#1e293b';
-    ctx.stroke();
-
-    // 2. Graticules (Latitude & Longitude grid lines)
+    // 1. Graticules
     const graticule = d3Geo.geoGraticule10();
     ctx.beginPath();
     path(graticule);
-    ctx.strokeStyle = 'rgba(30, 41, 59, 0.45)';
+    ctx.strokeStyle = 'rgba(30, 41, 59, 0.4)';
     ctx.lineWidth = 0.5;
     ctx.stroke();
 
-    // 3. Land Countries
+    // 2. Land Countries
     const countries = topojson.feature(worldData, worldData.objects.countries) as any;
 
     if (countries && countries.features) {
@@ -184,68 +136,85 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
         }
 
         ctx.fill();
-        ctx.strokeStyle = isSelected ? '#ffffff' : isHovered ? '#ffd54f' : 'rgba(15, 23, 42, 0.8)';
+        ctx.strokeStyle = isSelected ? '#ffffff' : isHovered ? '#ffd54f' : 'rgba(15, 23, 42, 0.85)';
         ctx.lineWidth = isSelected ? 2 : isHovered ? 1.5 : 0.7;
         ctx.stroke();
       });
 
-      // 4. Country Labels on Visible Land
+      // 3. Country Names
       countries.features.forEach((feature: any) => {
         const countryId = String(feature.id);
         const matchedCountry = Object.values(COUNTRIES_DATA).find(
           (c) => c.id === countryId || (c.id && countryId.padStart(3, '0') === c.id.padStart(3, '0'))
         );
 
-        if (!matchedCountry) return;
+        if (!matchedCountry || matchedCountry.isOceanZone) return;
 
         const projectedPoint = projection(matchedCountry.coordinates);
-        if (projectedPoint && isPointVisible(matchedCountry.coordinates, rotation)) {
+        if (projectedPoint) {
           const [px, py] = projectedPoint;
-          ctx.font = '700 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-          ctx.shadowBlur = 4;
-          ctx.fillText(matchedCountry.name, px, py);
-          ctx.shadowBlur = 0;
+          if (px >= 0 && px <= width && py >= 0 && py <= height) {
+            ctx.font = '700 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(matchedCountry.name, px, py);
+          }
         }
       });
     }
 
-    // 5. Draw Sleek LOGO-ONLY Icon Badges on Active Pins (Matching Screenshot 2 & 5)
+    // 4. Draw Maritime Ocean Trade Route Spots (South Atlantic, Pacific Fleet, etc.)
+    Object.values(COUNTRIES_DATA).filter((c) => c.isOceanZone).forEach((zone) => {
+      const point = projection(zone.coordinates);
+      if (point) {
+        const [px, py] = point;
+        drawOceanSpot(ctx, px, py, zone.name, zone.flag);
+      }
+    });
+
+    // 5. Draw Sleek LOGO-ONLY Badges on Active Countries
     Object.values(COUNTRIES_DATA).forEach((c) => {
       if (c.currentLeader) {
         const point = projection(c.coordinates);
-        if (point && isPointVisible(c.coordinates, rotation)) {
+        if (point) {
           const [px, py] = point;
-          drawLogoOnlyBadge(
-            ctx,
-            px,
-            py - 18,
-            c.currentLeader.logo,
-            c.currentLeader.name
-          );
+          drawLogoOnlyBadge(ctx, px, py - 16, c.currentLeader.logo, c.currentLeader.name);
         }
       }
     });
 
-  }, [rotation, zoomLevel, worldData, hoveredCountry, selectedCountry]);
+  }, [pan, zoomLevel, worldData, hoveredCountry, selectedCountry]);
 
-  function isPointVisible(coords: [number, number], rot: [number, number, number]): boolean {
-    const centerLon = -rot[0];
-    const centerLat = -rot[1];
-    const [lon, lat] = coords;
+  // Draw Maritime Ocean Spot (dashed green ring with anchor)
+  function drawOceanSpot(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    name: string,
+    icon: string
+  ) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, 14, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fill();
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
+    ctx.stroke();
 
-    const rad = Math.PI / 180;
-    const cosAngle =
-      Math.sin(lat * rad) * Math.sin(centerLat * rad) +
-      Math.cos(lat * rad) * Math.cos(centerLat * rad) * Math.cos((lon - centerLon) * rad);
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(icon, x, y);
 
-    return cosAngle > 0;
+    ctx.font = 'bold 8px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#6ee7b7';
+    ctx.fillText(name, x, y + 18);
+    ctx.restore();
   }
 
-  // Draw sleek LOGO-ONLY Rounded App Icon Badge (Matching WARMAP / Pinit Screenshot 2)
   function drawLogoOnlyBadge(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -254,22 +223,21 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     authorName: string
   ) {
     ctx.save();
-    const size = 26;
-    const radius = 7;
+    const size = 24;
+    const radius = 6;
 
-    // Glowing Badge Container
     ctx.beginPath();
     ctx.roundRect(x - size / 2, y - size / 2, size, size, radius);
     ctx.fillStyle = '#0b0f19';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = 8;
     ctx.shadowOffsetY = 2;
     ctx.fill();
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    const imgSize = 20;
+    const imgSize = 18;
     const imgX = x - imgSize / 2;
     const imgY = y - imgSize / 2;
 
@@ -277,7 +245,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     if (cachedImg && cachedImg.complete && cachedImg.naturalWidth > 0) {
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(imgX, imgY, imgSize, imgSize, 5);
+      ctx.roundRect(imgX, imgY, imgSize, imgSize, 4);
       ctx.clip();
       ctx.drawImage(cachedImg, imgX, imgY, imgSize, imgSize);
       ctx.restore();
@@ -286,17 +254,16 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
         loadLogoImage(logoUrl);
       }
       ctx.beginPath();
-      ctx.roundRect(imgX, imgY, imgSize, imgSize, 5);
+      ctx.roundRect(imgX, imgY, imgSize, imgSize, 4);
       ctx.fillStyle = '#ff5722';
       ctx.fill();
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 9px sans-serif';
+      ctx.font = 'bold 8px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText((authorName[0] || 'P').toUpperCase(), x, y);
     }
-
     ctx.restore();
   }
 
@@ -312,14 +279,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     if (isDragging && lastMousePos) {
       const dx = e.clientX - lastMousePos.x;
       const dy = e.clientY - lastMousePos.y;
-      const clampedZoom = Math.min(1.5, Math.max(0.85, zoomLevel));
-      const sensitivity = 0.35 / clampedZoom;
-
-      setRotation((prev) => [
-        prev[0] + dx * sensitivity,
-        Math.max(-85, Math.min(85, prev[1] - dy * sensitivity)),
-        0,
-      ]);
+      setPan((prev) => [prev[0] + dx, prev[1] + dy]);
       setLastMousePos({ x: e.clientX, y: e.clientY });
     } else {
       const rect = container.getBoundingClientRect();
@@ -328,16 +288,14 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
 
       const width = container.clientWidth;
       const height = container.clientHeight;
-      const clampedZoom = Math.min(1.5, Math.max(0.85, zoomLevel));
-      const radius = Math.min(width, height) * 0.44 * clampedZoom;
-      const center: [number, number] = [width / 2, height / 2 + 10];
+      const clampedZoom = Math.min(2.5, Math.max(0.75, zoomLevel));
+      const scale = (width / 6.28) * clampedZoom;
+      const center: [number, number] = [width / 2 + pan[0], height / 2 + pan[1] + 15];
 
       const projection = d3Geo
-        .geoOrthographic()
-        .scale(radius)
-        .translate(center)
-        .rotate(rotation)
-        .clipAngle(90);
+        .geoNaturalEarth1()
+        .scale(scale)
+        .translate(center);
 
       const inverted = projection.invert?.([mouseX, mouseY]);
 
@@ -356,12 +314,10 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
             x: mouseX,
             y: mouseY,
           });
-          isHoveredRef.current = true;
           return;
         }
       }
       setHoveredCountry(null);
-      isHoveredRef.current = false;
     }
   };
 
@@ -379,19 +335,19 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     if (onWheelZoom) {
-      onWheelZoom(e.deltaY > 0 ? -0.08 : 0.08);
+      onWheelZoom(e.deltaY > 0 ? -0.1 : 0.1);
     }
   };
 
   useEffect(() => {
-    renderGlobe();
-  }, [renderGlobe]);
+    renderMap();
+  }, [renderMap]);
 
   useEffect(() => {
-    const handleResize = () => renderGlobe();
+    const handleResize = () => renderMap();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [renderGlobe]);
+  }, [renderMap]);
 
   return (
     <div
@@ -406,7 +362,7 @@ export function Globe({ selectedCountry, onSelectCountry, zoomLevel, onWheelZoom
     >
       <canvas ref={canvasRef} className="block h-full w-full" />
 
-      {/* Floating Dark Glassmorphism Tooltip with Clickable Visit Link */}
+      {/* Floating Dark Tooltip with Clickable Visit Link */}
       {hoveredCountry && !isDragging && (
         <div
           className="pointer-events-auto absolute z-30 -translate-x-1/2 -translate-y-full rounded-pin-md border border-[#1e293b] bg-[#0b0f19]/95 px-3.5 py-2.5 text-white shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-100"

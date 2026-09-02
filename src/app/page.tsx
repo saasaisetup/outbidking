@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Globe } from '@/components/pinit/Globe';
+import { FlatMap } from '@/components/pinit/FlatMap';
 import { TopNavbar } from '@/components/pinit/TopNavbar';
 import { HeroCard } from '@/components/pinit/HeroCard';
 import { LiveReportDrawer } from '@/components/pinit/LiveReportDrawer';
@@ -13,6 +14,7 @@ import { ZoomControls } from '@/components/pinit/ZoomControls';
 import { CountryInfo, COUNTRIES_DATA } from '@/lib/pinitData';
 
 export default function HomePage() {
+  const [viewMode, setViewMode] = useState<'globe' | 'flat'>('globe');
   const [selectedCountry, setSelectedCountry] = useState<CountryInfo | null>(null);
   const [isStakeModalOpen, setIsStakeModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -23,7 +25,7 @@ export default function HomePage() {
   const [liveClaimedCount, setLiveClaimedCount] = useState<number>(4);
   const [liveRaisedAmount, setLiveRaisedAmount] = useState<number>(12);
 
-  // Handle Country Selection on Globe, Search, or Hot List
+  // Handle Country Selection on Globe, Flat Map, Search, or Hot List
   const handleSelectCountry = (country: CountryInfo) => {
     setSelectedCountry(country);
   };
@@ -44,7 +46,6 @@ export default function HomePage() {
       target.currentLeader = placement;
       setSelectedCountry({ ...target });
 
-      // Increment live stats in real-time
       if (!wasClaimed) {
         setLiveClaimedCount((prev) => prev + 1);
       }
@@ -52,38 +53,54 @@ export default function HomePage() {
     }
   };
 
-  // Strict Zoom Bounds: 0.85 (min) to 1.45 (max)
+  // Zoom Controls
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(1.45, prev + 0.15));
+    setZoomLevel((prev) => Math.min(viewMode === 'flat' ? 2.5 : 1.5, prev + 0.15));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(0.85, prev - 0.15));
+    setZoomLevel((prev) => Math.max(viewMode === 'flat' ? 0.75 : 0.85, prev - 0.15));
   };
 
   const handleWheelZoom = (delta: number) => {
-    setZoomLevel((prev) => Math.min(1.45, Math.max(0.85, prev + delta)));
+    setZoomLevel((prev) =>
+      Math.min(
+        viewMode === 'flat' ? 2.5 : 1.5,
+        Math.max(viewMode === 'flat' ? 0.75 : 0.85, prev + delta)
+      )
+    );
   };
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-[var(--pin-paper)] select-none">
-      {/* 3D Interactive Orthographic Globe in Background */}
+    <main className="relative h-screen w-screen overflow-hidden bg-[#06090e] select-none text-white">
+      {/* Background Interactive Map: 3D Globe vs 2D Flat Map */}
       <div className="absolute inset-0 z-0">
-        <Globe
-          selectedCountry={selectedCountry}
-          onSelectCountry={handleSelectCountry}
-          zoomLevel={zoomLevel}
-          onWheelZoom={handleWheelZoom}
-        />
+        {viewMode === 'globe' ? (
+          <Globe
+            selectedCountry={selectedCountry}
+            onSelectCountry={handleSelectCountry}
+            zoomLevel={zoomLevel}
+            onWheelZoom={handleWheelZoom}
+          />
+        ) : (
+          <FlatMap
+            selectedCountry={selectedCountry}
+            onSelectCountry={handleSelectCountry}
+            zoomLevel={zoomLevel}
+            onWheelZoom={handleWheelZoom}
+          />
+        )}
       </div>
 
-      {/* Top Navbar with Real-Time Stats ($12 raised), Search, and Claim CTA */}
+      {/* Top Navbar with Flat vs Globe Switch, Real-Time Stats ($12 raised), Search, and Claim CTA */}
       <TopNavbar
+        viewMode={viewMode}
+        onToggleViewMode={setViewMode}
         onPinClick={() => handleOpenStake(selectedCountry || undefined)}
         onSelectCountry={handleSelectCountry}
         totalClaimed={liveClaimedCount}
         totalRaised={liveRaisedAmount}
-        liveOnlineCount={1}
+        liveOnlineCount={18}
       />
 
       {/* Top Left: Collapsible Hero Card */}
@@ -96,10 +113,10 @@ export default function HomePage() {
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
-      {/* Bottom Left: Collapsible LIVE REPORT Drawer */}
+      {/* Bottom Left: Collapsible WAR REPORT Drawer */}
       <LiveReportDrawer onSelectCountry={handleSelectCountry} />
 
-      {/* Bottom Right: Collapsible HOT COUNTRIES Drawer */}
+      {/* Bottom Right: Collapsible HOT LAND Drawer */}
       <HotCountriesDrawer
         onSelectCountry={handleSelectCountry}
         onClaimCountry={(c) => handleOpenStake(c)}
@@ -119,10 +136,10 @@ export default function HomePage() {
         <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
       </div>
 
-      {/* Bottom Center: Navigation Pill */}
+      {/* Bottom Center: Navigation Pill & Interaction Hints */}
       <BottomBar />
 
-      {/* Modal: Pin on Country */}
+      {/* Modal: Claim / Pin on Country */}
       {isStakeModalOpen && (
         <StakeModal
           country={selectedCountry}

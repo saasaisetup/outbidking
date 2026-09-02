@@ -20,15 +20,15 @@ export function CountryClaimCard({
 
   return (
     <div className="pointer-events-auto absolute right-3 bottom-14 z-40 w-84 max-w-[calc(100vw-1.5rem)] sm:right-6 sm:bottom-14 animate-in fade-in slide-in-from-bottom-4 duration-200">
-      <div className="rounded-pin-lg border border-[var(--pin-border)] bg-[var(--pin-card)] p-4 shadow-pin-lg">
-        {/* Header: Flag + Name + Close Button */}
+      <div className="rounded-pin-lg border border-[#1e293b] bg-[#0b0f19]/95 p-4 shadow-2xl backdrop-blur-md">
+        {/* Header: Flag + Code + Name + Close Button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">{country.flag}</span>
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--pin-muted)]">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#94a3b8]">
               {country.code}
             </span>
-            <h3 className="font-extrabold text-base text-[var(--pin-ink)]">
+            <h3 className="font-extrabold text-base text-white">
               {country.name}
             </h3>
           </div>
@@ -36,7 +36,7 @@ export function CountryClaimCard({
             type="button"
             onClick={onClose}
             aria-label="Close country details"
-            className="rounded-full p-1 text-[var(--pin-muted)] hover:bg-[var(--pin-paper)] hover:text-[var(--pin-ink)] transition-colors cursor-pointer"
+            className="rounded-full p-1 text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors cursor-pointer"
           >
             <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
               <path
@@ -51,14 +51,14 @@ export function CountryClaimCard({
         {/* Content Body */}
         <div className="mt-3">
           {isClaimed ? (
-            <div className="rounded-pin-md border border-[var(--pin-border)] bg-[var(--pin-paper)] p-3">
-              {/* Leader Avatar, Name, Stake, and VISIT Button */}
+            <div className="rounded-pin-md border border-[#1e293b] bg-[#06090e] p-3">
+              {/* Leader Avatar, Name, Stake, and Prominent VISIT Button */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <img
                     src={country.currentLeader!.logo}
                     alt=""
-                    className="h-8 w-8 rounded-full object-cover bg-white border border-[var(--pin-border)] shrink-0 shadow-xs"
+                    className="h-8 w-8 rounded-full object-cover bg-white border border-[#1e293b] shrink-0 shadow-xs"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = '/globe.svg';
                     }}
@@ -66,12 +66,12 @@ export function CountryClaimCard({
                   <div className="min-w-0">
                     <Link
                       href={`/p/${country.currentLeader!.id}`}
-                      className="font-extrabold text-sm text-[var(--pin-ink)] hover:underline truncate block leading-tight"
+                      className="font-extrabold text-sm text-white hover:underline hover:text-[#ff7043] truncate block leading-tight"
                     >
                       {country.currentLeader!.name}
                     </Link>
-                    <span className="text-[11px] font-bold text-[var(--pin-coral-ink)]">
-                      ${country.currentLeader!.stake}
+                    <span className="text-[11px] font-bold text-[#fbbf24]">
+                      ${country.currentLeader!.stake} staked
                     </span>
                   </div>
                 </div>
@@ -81,7 +81,7 @@ export function CountryClaimCard({
                   href={country.currentLeader!.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 rounded-full bg-[var(--pin-coral)] hover:bg-[var(--pin-coral-ink)] text-white px-3 py-1.5 text-xs font-extrabold shadow-pin-coral transition-transform hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
+                  className="inline-flex items-center gap-1 rounded-full bg-[#ff5722] hover:bg-[#ff7043] text-white px-3 py-1.5 text-xs font-extrabold shadow-pin-coral transition-transform hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
                 >
                   <span>VISIT</span>
                   <span>↗</span>
@@ -89,21 +89,21 @@ export function CountryClaimCard({
               </div>
 
               {/* Tagline */}
-              <p className="mt-2 text-xs text-[var(--pin-muted)] leading-tight">
+              <p className="mt-2 text-xs text-[#94a3b8] leading-tight">
                 {country.currentLeader!.tagline}
               </p>
 
               {/* Expiration & Clicks */}
-              <div className="mt-2 pt-2 border-t border-[var(--pin-border)] flex items-center justify-between text-[11px] text-[var(--pin-muted)]">
-                <span>Expires in <strong className="text-[var(--pin-ink)]">{country.currentLeader!.expiresIn}</strong></span>
-                <span className="font-bold text-emerald-600">{country.currentLeader!.clicks} clicks</span>
+              <div className="mt-2 pt-2 border-t border-[#1e293b] flex items-center justify-between text-[11px] text-[#94a3b8]">
+                <span>Expires in <strong className="text-white">{country.currentLeader!.expiresIn}</strong></span>
+                <span className="font-bold text-emerald-400">{country.currentLeader!.clicks} clicks</span>
               </div>
             </div>
           ) : (
             <div className="p-2">
-              <p className="text-xs text-[var(--pin-muted)]">Nobody owns the board yet.</p>
-              <p className="mt-1 text-xs font-semibold text-[var(--pin-ink)]">
-                Starting stake: <span className="font-bold text-[var(--pin-coral-ink)]">$1</span>
+              <p className="text-xs text-[#94a3b8]">Unclaimed sovereign territory.</p>
+              <p className="mt-1 text-xs font-semibold text-white">
+                Starting stake: <span className="font-bold text-[#fbbf24]">$1</span>
               </p>
             </div>
           )}
@@ -113,18 +113,18 @@ export function CountryClaimCard({
         <button
           type="button"
           onClick={() => onClaim(country)}
-          className="mt-3.5 w-full rounded-full bg-[var(--pin-coral)] py-2.5 text-center text-sm font-bold text-white shadow-pin-coral outline-none transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          className="mt-3.5 w-full rounded-full bg-[#ff5722] hover:bg-[#ff7043] py-2.5 text-center text-sm font-extrabold text-white shadow-pin-coral outline-none transition-transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           {isClaimed
             ? `Outbid ${country.currentLeader!.name} from $${minStake}`
-            : `Pin ${country.name} from $1`}
+            : `Claim ${country.name} from $1`}
         </button>
 
         {/* Deep Links */}
-        <div className="mt-2 flex items-center justify-center gap-3 text-[11px] font-semibold text-[var(--pin-muted)]">
+        <div className="mt-2 flex items-center justify-center gap-3 text-[11px] font-semibold text-[#94a3b8]">
           <Link
             href={`/country/${country.slug}`}
-            className="hover:text-[var(--pin-coral-ink)] hover:underline"
+            className="hover:text-[#ff7043] hover:underline"
           >
             View {country.name} history →
           </Link>
@@ -133,7 +133,7 @@ export function CountryClaimCard({
               <span>·</span>
               <Link
                 href={`/p/${country.currentLeader!.id}`}
-                className="hover:text-[var(--pin-coral-ink)] hover:underline"
+                className="hover:text-[#ff7043] hover:underline"
               >
                 Product details →
               </Link>

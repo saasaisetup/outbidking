@@ -80,14 +80,14 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md rounded-pin-lg border border-[var(--pin-border)] bg-[var(--pin-card)] p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md rounded-pin-lg border border-[#1e293b] bg-[#0b0f19] p-6 shadow-2xl">
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
           aria-label="Close modal"
-          className="absolute right-4 top-4 rounded-full p-1.5 text-[var(--pin-muted)] hover:bg-[var(--pin-paper)] hover:text-[var(--pin-ink)] transition-colors cursor-pointer"
+          className="absolute right-4 top-4 rounded-full p-1.5 text-[#94a3b8] hover:bg-[#1e293b] hover:text-white transition-colors cursor-pointer"
         >
           <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor">
             <path
@@ -100,23 +100,23 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
 
         {/* Modal Header */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--pin-muted)]">
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#94a3b8]">
             {targetCountry.code}
           </span>
           <span className="text-xl">{targetCountry.flag}</span>
-          <h2 className="text-lg font-extrabold text-[var(--pin-ink)]">
-            Pin on {targetCountry.name}
+          <h2 className="text-lg font-extrabold text-white">
+            Claim {targetCountry.name}
           </h2>
         </div>
-        <p className="mt-1 text-xs text-[var(--pin-muted)]">
-          Compete for a top rank for 24 hours
+        <p className="mt-1 text-xs text-[#94a3b8]">
+          Compete for the #1 throne for 24 hours
         </p>
 
         {step === 1 ? (
           <div className="mt-5 space-y-4">
-            {/* Section 1: Claiming Type Tabs */}
+            {/* Claiming Type Tabs */}
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)] mb-2">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
                 What are you claiming with?
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -125,8 +125,8 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                   onClick={() => setClaimType('product')}
                   className={`rounded-pin-md border py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
                     claimType === 'product'
-                      ? 'border-[var(--pin-coral)] bg-[var(--pin-coral-soft)] text-[var(--pin-coral-ink)]'
-                      : 'border-[var(--pin-border)] bg-white text-[var(--pin-ink)] hover:border-[var(--pin-border-strong)]'
+                      ? 'border-[#ff5722] bg-[#ff5722]/15 text-[#ff7043]'
+                      : 'border-[#1e293b] bg-[#06090e] text-white hover:border-[#334155]'
                   }`}
                 >
                   Product URL
@@ -136,8 +136,8 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                   onClick={() => setClaimType('social')}
                   className={`rounded-pin-md border py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
                     claimType === 'social'
-                      ? 'border-[var(--pin-coral)] bg-[var(--pin-coral-soft)] text-[var(--pin-coral-ink)]'
-                      : 'border-[var(--pin-border)] bg-white text-[var(--pin-ink)] hover:border-[var(--pin-border-strong)]'
+                      ? 'border-[#ff5722] bg-[#ff5722]/15 text-[#ff7043]'
+                      : 'border-[#1e293b] bg-[#06090e] text-white hover:border-[#334155]'
                   }`}
                 >
                   Social profile
@@ -145,16 +145,16 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
               </div>
             </div>
 
-            {/* Section 2: URL & Email Form */}
+            {/* URL & Email Form */}
             <form onSubmit={handleContinue} className="space-y-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)]">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
                   {claimType === 'product' ? 'Product URL' : 'Social Profile URL / Handle'}
                 </label>
-                <p className="text-[11px] text-[var(--pin-muted)] leading-tight mt-0.5">
+                <p className="text-[11px] text-[#94a3b8] leading-tight mt-0.5">
                   {claimType === 'product'
-                    ? 'The site people land on: your homepage, app, or landing page.'
-                    : 'Your X/Twitter, LinkedIn, GitHub, or Instagram handle.'}
+                    ? 'The destination people land on: your app or landing page.'
+                    : 'Your X/Twitter, LinkedIn, GitHub, or YouTube handle.'}
                 </p>
                 <input
                   type="text"
@@ -162,26 +162,26 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                   placeholder={claimType === 'product' ? 'https://yourstartup.com' : 'https://x.com/shipxankit'}
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  className="mt-1.5 w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3.5 py-2 text-xs text-[var(--pin-ink)] placeholder:text-[var(--pin-muted)] focus:border-[var(--pin-coral)] focus:outline-none"
+                  className="mt-1.5 w-full rounded-pin-md border border-[#1e293b] bg-[#06090e] px-3.5 py-2 text-xs text-white placeholder:text-[#64748b] focus:border-[#ff5722] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)]">
-                  Login / Notification Email (Optional)
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
+                  Notification Email (Optional)
                 </label>
                 <input
                   type="email"
-                  placeholder="you@domain.com"
+                  placeholder="founder@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3.5 py-2 text-xs text-[var(--pin-ink)] placeholder:text-[var(--pin-muted)] focus:border-[var(--pin-coral)] focus:outline-none"
+                  className="mt-1 w-full rounded-pin-md border border-[#1e293b] bg-[#06090e] px-3.5 py-2 text-xs text-white placeholder:text-[#64748b] focus:border-[#ff5722] focus:outline-none"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full rounded-pin-md bg-[var(--pin-coral)] py-2.5 text-xs font-bold text-white shadow-pin-coral hover:bg-[var(--pin-coral-ink)] transition-colors cursor-pointer"
+                className="w-full rounded-pin-md bg-[#ff5722] hover:bg-[#ff7043] py-2.5 text-xs font-extrabold text-white shadow-pin-coral transition-colors cursor-pointer"
               >
                 Continue →
               </button>
@@ -190,11 +190,11 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
         ) : (
           <div className="mt-5 space-y-3.5 animate-in fade-in duration-150">
             {/* Logo Preview + Product Name */}
-            <div className="flex items-center gap-3 p-3 rounded-pin-md border border-[var(--pin-border)] bg-[var(--pin-paper)]">
+            <div className="flex items-center gap-3 p-3 rounded-pin-md border border-[#1e293b] bg-[#06090e]">
               <img
                 src={logoPreview}
                 alt="Logo preview"
-                className="h-10 w-10 rounded-full object-cover bg-white border border-[var(--pin-border)] shadow-xs"
+                className="h-10 w-10 rounded-full object-cover bg-white border border-[#1e293b] shadow-xs shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/globe.svg';
                 }}
@@ -206,14 +206,14 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Product Name or @handle"
-                  className="w-full font-bold text-xs text-[var(--pin-ink)] bg-transparent border-b border-dashed border-[var(--pin-border-strong)] focus:border-[var(--pin-coral)] focus:outline-none py-0.5"
+                  className="w-full font-bold text-xs text-white bg-transparent border-b border-dashed border-[#334155] focus:border-[#ff5722] focus:outline-none py-0.5"
                 />
-                <span className="text-[10px] text-[var(--pin-muted)]">Logo automatically detected</span>
+                <span className="text-[10px] text-[#94a3b8]">Logo automatically detected</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)] mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                 Tagline / Pitch
               </label>
               <input
@@ -222,18 +222,18 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
                 placeholder="One sentence pitch"
-                className="w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3.5 py-1.5 text-xs text-[var(--pin-ink)] focus:border-[var(--pin-coral)] focus:outline-none"
+                className="w-full rounded-pin-md border border-[#1e293b] bg-[#06090e] px-3.5 py-1.5 text-xs text-white focus:border-[#ff5722] focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)] mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">
                 Category
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-pin-md border border-[var(--pin-border-strong)] bg-white px-3 py-1.5 text-xs text-[var(--pin-ink)] outline-none"
+                className="w-full rounded-pin-md border border-[#1e293b] bg-[#06090e] px-3 py-1.5 text-xs text-white outline-none"
               >
                 {CATEGORIES_LIST.filter((c) => c.value).map((c) => (
                   <option key={c.value} value={c.label}>
@@ -246,10 +246,10 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
             {/* Stake Amount Selector */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--pin-muted)]">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
                   24h Stake Amount
                 </label>
-                <span className="text-[11px] font-bold text-[var(--pin-coral-ink)]">
+                <span className="text-[11px] font-bold text-[#fbbf24]">
                   Min: ${minStake}
                 </span>
               </div>
@@ -262,8 +262,8 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                     onClick={() => setStakeAmount(amt)}
                     className={`flex-1 rounded-pin-md border py-1.5 text-xs font-bold transition-colors cursor-pointer ${
                       stakeAmount === amt
-                        ? 'border-[var(--pin-coral)] bg-[var(--pin-coral)] text-white shadow-pin-coral'
-                        : 'border-[var(--pin-border)] bg-white text-[var(--pin-ink)] hover:border-[var(--pin-border-strong)]'
+                        ? 'border-[#ff5722] bg-[#ff5722] text-white shadow-pin-coral'
+                        : 'border-[#1e293b] bg-[#06090e] text-white hover:border-[#334155]'
                     }`}
                   >
                     ${amt}
@@ -277,7 +277,7 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="rounded-full border border-[var(--pin-border)] px-4 py-2 text-xs font-semibold text-[var(--pin-muted)] hover:text-[var(--pin-ink)] cursor-pointer"
+                className="rounded-full border border-[#1e293b] px-4 py-2 text-xs font-semibold text-[#94a3b8] hover:text-white cursor-pointer"
               >
                 ← Back
               </button>
@@ -285,9 +285,9 @@ export function StakeModal({ country, onClose, onSuccess }: StakeModalProps) {
                 type="button"
                 onClick={handleConfirmStake}
                 disabled={isSubmitting}
-                className="flex-1 rounded-full bg-[var(--pin-coral)] py-2.5 text-center text-xs font-bold text-white shadow-pin-coral hover:bg-[var(--pin-coral-ink)] transition-transform hover:scale-[1.02] cursor-pointer"
+                className="flex-1 rounded-full bg-[#ff5722] hover:bg-[#ff7043] py-2.5 text-center text-xs font-extrabold text-white shadow-pin-coral transition-transform hover:scale-[1.02] cursor-pointer"
               >
-                {isSubmitting ? 'Pinning...' : `Pin it for $${stakeAmount} on ${targetCountry.name}`}
+                {isSubmitting ? 'Claiming...' : `Claim for $${stakeAmount} on ${targetCountry.name}`}
               </button>
             </div>
           </div>

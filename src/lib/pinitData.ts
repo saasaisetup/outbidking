@@ -1,11 +1,12 @@
 export interface CountryInfo {
-  id: string; // ISO numeric code string (e.g. "124" for Canada, "840" for USA, "643" for Russia)
+  id: string; // ISO numeric code string or custom id
   slug: string;
   name: string;
-  code: string; // 2-letter ISO (e.g. "CA", "US", "RU")
+  code: string; // 2-letter ISO
   flag: string;
   coordinates: [number, number]; // [longitude, latitude]
   color?: string;
+  isOceanZone?: boolean;
   currentLeader?: {
     id: string;
     name: string;
@@ -104,15 +105,51 @@ export function getProductFavicon(urlOrHandle: string): string {
   return '/globe.svg';
 }
 
-// Complete World Countries Registry mapping ISO numeric to info
+// Neon Dark Mode Palette for Countries
+export const DARK_MAP_COLORS = [
+  '#f59e0b', // vibrant amber/orange
+  '#e11d48', // vivid crimson/magenta
+  '#06b6d4', // cyan/aqua
+  '#3b82f6', // bright blue
+  '#10b981', // emerald green
+  '#8b5cf6', // purple
+  '#ec4899', // hot pink
+  '#d97706', // dark gold
+  '#14b8a6', // teal
+  '#6366f1', // indigo
+];
+
+// Complete World Countries & Maritime Trade Zones Registry
 export const COUNTRIES_DATA: Record<string, CountryInfo> = {
+  "united-states-of-america": {
+    id: "840",
+    slug: "united-states-of-america",
+    name: "United States",
+    code: "US",
+    flag: "🇺🇸",
+    coordinates: [-98.5795, 39.8283],
+    color: "#3b82f6",
+    currentLeader: {
+      id: "claude-ai",
+      name: "Claude",
+      tagline: "Next generation AI assistant by Anthropic",
+      url: "https://claude.ai",
+      logo: "https://www.google.com/s2/favicons?domain=claude.ai&sz=128",
+      stake: 3,
+      category: "AI",
+      claimedAt: "3d ago",
+      expiresIn: "18h 40m",
+      clicks: 98,
+    }
+  },
   russia: {
     id: "643",
     slug: "russia",
     name: "Russia",
     code: "RU",
     flag: "🇷🇺",
-    coordinates: [105.3188, 61.524],
+    coordinates: [95.3188, 61.524],
+    color: "#f59e0b",
     currentLeader: {
       id: "shipxankit",
       name: "@shipxankit",
@@ -126,6 +163,27 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
       clicks: 34,
     },
   },
+  china: {
+    id: "156",
+    slug: "china",
+    name: "China",
+    code: "CN",
+    flag: "🇨🇳",
+    coordinates: [104.1954, 35.8617],
+    color: "#10b981",
+    currentLeader: {
+      id: "deepseek-com",
+      name: "DeepSeek",
+      tagline: "Unraveling the mystery of AGI",
+      url: "https://deepseek.com",
+      logo: "https://www.google.com/s2/favicons?domain=deepseek.com&sz=128",
+      stake: 2,
+      category: "AI",
+      claimedAt: "2d ago",
+      expiresIn: "14h 15m",
+      clicks: 81,
+    }
+  },
   canada: {
     id: "124",
     slug: "canada",
@@ -133,6 +191,7 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "CA",
     flag: "🇨🇦",
     coordinates: [-106.3468, 56.1304],
+    color: "#e11d48",
     currentLeader: {
       id: "outoutbid-lol",
       name: "outoutbid.lol",
@@ -147,85 +206,26 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
       clicks: 42,
     },
   },
-  "united-states-of-america": {
-    id: "840",
-    slug: "united-states-of-america",
-    name: "United States of America",
-    code: "US",
-    flag: "🇺🇸",
-    coordinates: [-95.7129, 37.0902],
+  brazil: {
+    id: "076",
+    slug: "brazil",
+    name: "Brazil",
+    code: "BR",
+    flag: "🇧🇷",
+    coordinates: [-51.9253, -14.235],
+    color: "#e11d48",
     currentLeader: {
-      id: "claude-ai",
-      name: "Claude",
-      tagline: "Next generation AI assistant by Anthropic",
-      url: "https://claude.ai",
-      logo: "https://www.google.com/s2/favicons?domain=claude.ai&sz=128",
-      stake: 3,
-      category: "AI",
-      claimedAt: "3d ago",
-      expiresIn: "18h 40m",
-      clicks: 98,
-    }
-  },
-  china: {
-    id: "156",
-    slug: "china",
-    name: "China",
-    code: "CN",
-    flag: "🇨🇳",
-    coordinates: [104.1954, 35.8617],
-    currentLeader: {
-      id: "deepseek-com",
-      name: "DeepSeek",
-      tagline: "Unraveling the mystery of AGI",
-      url: "https://deepseek.com",
-      logo: "https://www.google.com/s2/favicons?domain=deepseek.com&sz=128",
+      id: "snapsong-app",
+      name: "SnapSong",
+      tagline: "Create viral AI music videos in seconds",
+      url: "https://snapsong.io",
+      logo: "https://www.google.com/s2/favicons?domain=spotify.com&sz=128",
       stake: 2,
       category: "AI",
-      claimedAt: "2d ago",
-      expiresIn: "14h 15m",
-      clicks: 81,
+      claimedAt: "1d ago",
+      expiresIn: "16h 20m",
+      clicks: 53,
     }
-  },
-  turkey: {
-    id: "792",
-    slug: "turkey",
-    name: "Turkey",
-    code: "TR",
-    flag: "🇹🇷",
-    coordinates: [35.2433, 38.9637],
-  },
-  libya: {
-    id: "434",
-    slug: "libya",
-    name: "Libya",
-    code: "LY",
-    flag: "🇱🇾",
-    coordinates: [17.2283, 26.3351],
-  },
-  algeria: {
-    id: "012",
-    slug: "algeria",
-    name: "Algeria",
-    code: "DZ",
-    flag: "🇩🇿",
-    coordinates: [1.6596, 28.0339],
-  },
-  egypt: {
-    id: "818",
-    slug: "egypt",
-    name: "Egypt",
-    code: "EG",
-    flag: "🇪🇬",
-    coordinates: [30.8025, 26.8206],
-  },
-  "saudi-arabia": {
-    id: "682",
-    slug: "saudi-arabia",
-    name: "Saudi Arabia",
-    code: "SA",
-    flag: "🇸🇦",
-    coordinates: [45.0792, 23.8859],
   },
   india: {
     id: "356",
@@ -234,110 +234,7 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "IN",
     flag: "🇮🇳",
     coordinates: [78.9629, 20.5937],
-  },
-  kazakhstan: {
-    id: "398",
-    slug: "kazakhstan",
-    name: "Kazakhstan",
-    code: "KZ",
-    flag: "🇰🇿",
-    coordinates: [66.9237, 48.0196],
-  },
-  iran: {
-    id: "364",
-    slug: "iran",
-    name: "Iran",
-    code: "IR",
-    flag: "🇮🇷",
-    coordinates: [53.688, 32.4279],
-  },
-  sudan: {
-    id: "729",
-    slug: "sudan",
-    name: "Sudan",
-    code: "SD",
-    flag: "🇸🇩",
-    coordinates: [30.2176, 12.8628],
-  },
-  chad: {
-    id: "148",
-    slug: "chad",
-    name: "Chad",
-    code: "TD",
-    flag: "🇹🇩",
-    coordinates: [18.7322, 15.4542],
-  },
-  niger: {
-    id: "562",
-    slug: "niger",
-    name: "Niger",
-    code: "NE",
-    flag: "🇳🇪",
-    coordinates: [8.0817, 17.6078],
-  },
-  nigeria: {
-    id: "566",
-    slug: "nigeria",
-    name: "Nigeria",
-    code: "NG",
-    flag: "🇳🇬",
-    coordinates: [8.6753, 9.082],
-  },
-  mali: {
-    id: "466",
-    slug: "mali",
-    name: "Mali",
-    code: "ML",
-    flag: "🇲🇱",
-    coordinates: [-3.9962, 17.5707],
-  },
-  mauritania: {
-    id: "478",
-    slug: "mauritania",
-    name: "Mauritania",
-    code: "MR",
-    flag: "🇲🇷",
-    coordinates: [-10.9408, 21.0079],
-  },
-  "dem-rep-congo": {
-    id: "180",
-    slug: "dem-rep-congo",
-    name: "Dem. Rep. Congo",
-    code: "CD",
-    flag: "🇨🇩",
-    coordinates: [21.7587, -4.0383],
-  },
-  angola: {
-    id: "024",
-    slug: "angola",
-    name: "Angola",
-    code: "AO",
-    flag: "🇦🇴",
-    coordinates: [17.8739, -11.2027],
-  },
-  "south-africa": {
-    id: "710",
-    slug: "south-africa",
-    name: "South Africa",
-    code: "ZA",
-    flag: "🇿🇦",
-    coordinates: [22.9375, -30.5595],
-  },
-  ethiopia: {
-    id: "231",
-    slug: "ethiopia",
-    name: "Ethiopia",
-    code: "ET",
-    flag: "🇪🇹",
-    coordinates: [40.4897, 9.145],
-  },
-  brazil: {
-    id: "076",
-    slug: "brazil",
-    name: "Brazil",
-    code: "BR",
-    flag: "🇧🇷",
-    coordinates: [-51.9253, -14.235],
+    color: "#f59e0b",
   },
   australia: {
     id: "036",
@@ -346,14 +243,7 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "AU",
     flag: "🇦🇺",
     coordinates: [133.7751, -25.2744],
-  },
-  germany: {
-    id: "276",
-    slug: "germany",
-    name: "Germany",
-    code: "DE",
-    flag: "🇩🇪",
-    coordinates: [10.4515, 51.1657],
+    color: "#fbbf24",
   },
   "united-kingdom": {
     id: "826",
@@ -362,6 +252,16 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "GB",
     flag: "🇬🇧",
     coordinates: [-3.436, 55.3781],
+    color: "#3b82f6",
+  },
+  germany: {
+    id: "276",
+    slug: "germany",
+    name: "Germany",
+    code: "DE",
+    flag: "🇩🇪",
+    coordinates: [10.4515, 51.1657],
+    color: "#8b5cf6",
   },
   france: {
     id: "250",
@@ -370,6 +270,7 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "FR",
     flag: "🇫🇷",
     coordinates: [2.2137, 46.2276],
+    color: "#06b6d4",
   },
   japan: {
     id: "392",
@@ -378,22 +279,43 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "JP",
     flag: "🇯🇵",
     coordinates: [138.2529, 36.2048],
+    color: "#ec4899",
   },
-  czechia: {
-    id: "203",
-    slug: "czechia",
-    name: "Czechia",
-    code: "CZ",
-    flag: "🇨🇿",
-    coordinates: [15.473, 49.8175],
+  turkey: {
+    id: "792",
+    slug: "turkey",
+    name: "Turkey",
+    code: "TR",
+    flag: "🇹🇷",
+    coordinates: [35.2433, 38.9637],
+    color: "#e11d48",
   },
-  argentina: {
-    id: "032",
-    slug: "argentina",
-    name: "Argentina",
-    code: "AR",
-    flag: "🇦🇷",
-    coordinates: [-63.6167, -38.4161],
+  "saudi-arabia": {
+    id: "682",
+    slug: "saudi-arabia",
+    name: "Saudi Arabia",
+    code: "SA",
+    flag: "🇸🇦",
+    coordinates: [45.0792, 23.8859],
+    color: "#10b981",
+  },
+  egypt: {
+    id: "818",
+    slug: "egypt",
+    name: "Egypt",
+    code: "EG",
+    flag: "🇪🇬",
+    coordinates: [30.8025, 26.8206],
+    color: "#f59e0b",
+  },
+  "south-africa": {
+    id: "710",
+    slug: "south-africa",
+    name: "South Africa",
+    code: "ZA",
+    flag: "🇿🇦",
+    coordinates: [22.9375, -30.5595],
+    color: "#14b8a6",
   },
   mexico: {
     id: "484",
@@ -402,150 +324,53 @@ export const COUNTRIES_DATA: Record<string, CountryInfo> = {
     code: "MX",
     flag: "🇲🇽",
     coordinates: [-102.5528, 23.6345],
+    color: "#10b981",
   },
-  indonesia: {
-    id: "360",
-    slug: "indonesia",
-    name: "Indonesia",
-    code: "ID",
-    flag: "🇮🇩",
-    coordinates: [113.9213, -0.7893],
+  argentina: {
+    id: "032",
+    slug: "argentina",
+    name: "Argentina",
+    code: "AR",
+    flag: "🇦🇷",
+    coordinates: [-63.6167, -38.4161],
+    color: "#06b6d4",
   },
-  spain: {
-    id: "724",
-    slug: "spain",
-    name: "Spain",
-    code: "ES",
-    flag: "ES",
-    coordinates: [-3.7492, 40.4637],
+  // Maritime Ocean Spots
+  "south-atlantic-patrol": {
+    id: "ocean-1",
+    slug: "south-atlantic-patrol",
+    name: "South Atlantic Patrol",
+    code: "SA",
+    flag: "⚓",
+    coordinates: [-25.0, -32.0],
+    isOceanZone: true,
   },
-  italy: {
-    id: "380",
-    slug: "italy",
-    name: "Italy",
-    code: "IT",
-    flag: "🇮🇹",
-    coordinates: [12.5674, 41.8719],
+  "north-pacific-fleet": {
+    id: "ocean-2",
+    slug: "north-pacific-fleet",
+    name: "North Pacific Fleet",
+    code: "NP",
+    flag: "⚓",
+    coordinates: [-160.0, 32.0],
+    isOceanZone: true,
   },
-  sweden: {
-    id: "752",
-    slug: "sweden",
-    name: "Sweden",
-    code: "SE",
-    flag: "🇸🇪",
-    coordinates: [18.6435, 60.1282],
+  "south-pacific-patrol": {
+    id: "ocean-3",
+    slug: "south-pacific-patrol",
+    name: "South Pacific Patrol",
+    code: "SP",
+    flag: "⚓",
+    coordinates: [-135.0, -28.0],
+    isOceanZone: true,
   },
-  norway: {
-    id: "578",
-    slug: "norway",
-    name: "Norway",
-    code: "NO",
-    flag: "🇳🇴",
-    coordinates: [8.4689, 60.472],
-  },
-  poland: {
-    id: "616",
-    slug: "poland",
-    name: "Poland",
-    code: "PL",
-    flag: "🇵🇱",
-    coordinates: [19.1451, 51.9194],
-  },
-  ukraine: {
-    id: "804",
-    slug: "ukraine",
-    name: "Ukraine",
-    code: "UA",
-    flag: "🇺🇦",
-    coordinates: [31.1656, 48.3794],
-  },
-  pakistan: {
-    id: "586",
-    slug: "pakistan",
-    name: "Pakistan",
-    code: "PK",
-    flag: "🇵🇰",
-    coordinates: [69.3451, 30.3753],
-  },
-  thailand: {
-    id: "764",
-    slug: "thailand",
-    name: "Thailand",
-    code: "TH",
-    flag: "🇹🇭",
-    coordinates: [100.9925, 15.87],
-  },
-  vietnam: {
-    id: "704",
-    slug: "vietnam",
-    name: "Vietnam",
-    code: "VN",
-    flag: "🇻🇳",
-    coordinates: [108.2772, 14.0583],
-  },
-  "south-korea": {
-    id: "410",
-    slug: "south-korea",
-    name: "South Korea",
-    code: "KR",
-    flag: "🇰🇷",
-    coordinates: [127.7669, 35.9078],
-  },
-  kenya: {
-    id: "404",
-    slug: "kenya",
-    name: "Kenya",
-    code: "KE",
-    flag: "🇰🇪",
-    coordinates: [37.9062, -0.0236],
-  },
-  morocco: {
-    id: "504",
-    slug: "morocco",
-    name: "Morocco",
-    code: "MA",
-    flag: "🇲🇦",
-    coordinates: [-7.0926, 31.7917],
-  },
-  ghana: {
-    id: "288",
-    slug: "ghana",
-    name: "Ghana",
-    code: "GH",
-    flag: "🇬🇭",
-    coordinates: [-1.0232, 7.9465],
-  },
-  chile: {
-    id: "152",
-    slug: "chile",
-    name: "Chile",
-    code: "CL",
-    flag: "🇨🇱",
-    coordinates: [-71.543, -35.6751],
-  },
-  colombia: {
-    id: "170",
-    slug: "colombia",
-    name: "Colombia",
-    code: "CO",
-    flag: "🇨🇴",
-    coordinates: [-74.2973, 4.5709],
-  },
-  peru: {
-    id: "604",
-    slug: "peru",
-    name: "Peru",
-    code: "PE",
-    flag: "🇵🇪",
-    coordinates: [-75.0152, -9.1899],
-  },
-  "new-zealand": {
-    id: "554",
-    slug: "new-zealand",
-    name: "New Zealand",
-    code: "NZ",
-    flag: "🇳🇿",
-    coordinates: [174.886, -40.9006],
+  "indian-ocean-trade-route": {
+    id: "ocean-4",
+    slug: "indian-ocean-trade-route",
+    name: "Indian Ocean Trade Route",
+    code: "IO",
+    flag: "⚓",
+    coordinates: [75.0, -18.0],
+    isOceanZone: true,
   }
 };
 
@@ -595,6 +420,20 @@ export const HOT_COUNTRIES: HotCountryItem[] = [
   {
     id: "hot-4",
     rank: 4,
+    countryName: "Brazil",
+    countrySlug: "brazil",
+    countryFlag: "🇧🇷",
+    countryCode: "BR",
+    rulerName: "SnapSong",
+    rulerLogo: "https://www.google.com/s2/favicons?domain=spotify.com&sz=128",
+    currentStake: 2,
+    stealPrice: 3,
+    multiplier: "5.4x",
+    isClaimed: true,
+  },
+  {
+    id: "hot-5",
+    rank: 5,
     countryName: "Canada",
     countrySlug: "canada",
     countryFlag: "🇨🇦",
@@ -607,8 +446,8 @@ export const HOT_COUNTRIES: HotCountryItem[] = [
     isClaimed: true,
   },
   {
-    id: "hot-5",
-    rank: 5,
+    id: "hot-6",
+    rank: 6,
     countryName: "India",
     countrySlug: "india",
     countryFlag: "🇮🇳",
@@ -618,20 +457,6 @@ export const HOT_COUNTRIES: HotCountryItem[] = [
     currentStake: 0,
     stealPrice: 1,
     multiplier: "9.2x",
-    isClaimed: false,
-  },
-  {
-    id: "hot-6",
-    rank: 6,
-    countryName: "Germany",
-    countrySlug: "germany",
-    countryFlag: "🇩🇪",
-    countryCode: "DE",
-    rulerName: "Unclaimed",
-    rulerLogo: "/globe.svg",
-    currentStake: 0,
-    stealPrice: 1,
-    multiplier: "5.8x",
     isClaimed: false,
   }
 ];
@@ -644,7 +469,7 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     productUrl: "https://claude.ai",
     logo: "https://www.google.com/s2/favicons?domain=claude.ai&sz=128",
     stake: 3,
-    countryName: "United States of America",
+    countryName: "United States",
     countryFlag: "🇺🇸",
     countryCode: "US",
     countrySlug: "united-states-of-america",
@@ -687,6 +512,22 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
   },
   {
     id: "act-3",
+    productName: "SnapSong",
+    productSlug: "snapsong-app",
+    productUrl: "https://snapsong.io",
+    logo: "https://www.google.com/s2/favicons?domain=spotify.com&sz=128",
+    stake: 2,
+    countryName: "Brazil",
+    countryFlag: "🇧🇷",
+    countryCode: "BR",
+    countrySlug: "brazil",
+    category: "AI",
+    action: "claimed",
+    timeAgo: "1d ago",
+    placementSlug: "snapsong-brazil",
+  },
+  {
+    id: "act-4",
     productName: "outoutbid.lol",
     productSlug: "outoutbid-lol",
     productUrl: "https://outoutbid.lol",
@@ -703,7 +544,7 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     placementSlug: "outoutbid-lol-canada-20260831",
   },
   {
-    id: "act-4",
+    id: "act-5",
     productName: "IndieTools",
     productSlug: "indietools-app",
     productUrl: "https://www.indietools.app",
@@ -719,7 +560,7 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     placementSlug: "indietools-app-turkey-20260831",
   },
   {
-    id: "act-5",
+    id: "act-6",
     productName: "QueueForm",
     productSlug: "queueform-com",
     productUrl: "https://www.queueform.com",
@@ -733,40 +574,6 @@ export const INITIAL_ACTIVITY: ActivityItem[] = [
     action: "expired",
     timeAgo: "12h ago",
     placementSlug: "queueform-com-us-20260831",
-  },
-  {
-    id: "act-6",
-    productName: "LiftOff (@lift_off_sh) on X",
-    productSlug: "x-lift-off-sh",
-    productUrl: "https://x.com/lift_off_sh",
-    logo: "https://unavatar.io/twitter/lift_off_sh",
-    stake: 1,
-    isLaunchSponsored: true,
-    countryName: "Dem. Rep. Congo",
-    countryFlag: "🇨🇩",
-    countryCode: "CD",
-    countrySlug: "dem-rep-congo",
-    category: "Marketing",
-    action: "expired",
-    timeAgo: "21h ago",
-    placementSlug: "x-lift-off-sh-congo-20260830",
-  },
-  {
-    id: "act-7",
-    productName: "Wafler DDoS Protection",
-    productSlug: "wafler-one",
-    productUrl: "https://wafler.one",
-    logo: "https://wafler.one/favicon.ico",
-    stake: 1,
-    isLaunchSponsored: true,
-    countryName: "Saudi Arabia",
-    countryFlag: "🇸🇦",
-    countryCode: "SA",
-    countrySlug: "saudi-arabia",
-    category: "SaaS",
-    action: "expired",
-    timeAgo: "21h ago",
-    placementSlug: "wafler-one-saudi-arabia-20260830",
   }
 ];
 
@@ -781,14 +588,34 @@ export const CATEGORIES_LIST = [
   { value: "ecommerce", label: "E-commerce" },
   { value: "finance", label: "Finance" },
   { value: "games", label: "Games" },
-  { value: "education", label: "Education" },
-  { value: "health", label: "Health" },
-  { value: "media", label: "Media & Content" },
-  { value: "community", label: "Community" },
   { value: "other", label: "Other" }
 ];
 
 export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
+  "claude-ai": {
+    id: "claude-ai",
+    slug: "claude-ai",
+    name: "Claude",
+    tagline: "Next generation AI assistant by Anthropic",
+    url: "https://claude.ai",
+    logo: "https://www.google.com/s2/favicons?domain=claude.ai&sz=128",
+    category: "AI",
+    description: "State of the art AI reasoning, coding, and writing assistant.",
+    launchDate: "August 2026",
+    totalStaked: 3,
+    allTimeClicks: 98,
+    countriesClaimed: [
+      {
+        countryName: "United States",
+        countryFlag: "🇺🇸",
+        countrySlug: "united-states-of-america",
+        rank: 1,
+        staked: 3,
+        date: "3d ago",
+        status: "active",
+      }
+    ]
+  },
   "shipxankit": {
     id: "shipxankit",
     slug: "shipxankit",
@@ -813,30 +640,6 @@ export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
       }
     ]
   },
-  "claude-ai": {
-    id: "claude-ai",
-    slug: "claude-ai",
-    name: "Claude",
-    tagline: "Next generation AI assistant by Anthropic",
-    url: "https://claude.ai",
-    logo: "https://www.google.com/s2/favicons?domain=claude.ai&sz=128",
-    category: "AI",
-    description: "State of the art AI reasoning, coding, and writing.",
-    launchDate: "August 2026",
-    totalStaked: 3,
-    allTimeClicks: 98,
-    countriesClaimed: [
-      {
-        countryName: "United States of America",
-        countryFlag: "🇺🇸",
-        countrySlug: "united-states-of-america",
-        rank: 1,
-        staked: 3,
-        date: "3d ago",
-        status: "active",
-      }
-    ]
-  },
   "deepseek-com": {
     id: "deepseek-com",
     slug: "deepseek-com",
@@ -857,6 +660,30 @@ export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
         rank: 1,
         staked: 2,
         date: "2d ago",
+        status: "active",
+      }
+    ]
+  },
+  "snapsong-app": {
+    id: "snapsong-app",
+    slug: "snapsong-app",
+    name: "SnapSong",
+    tagline: "Create viral AI music videos in seconds",
+    url: "https://snapsong.io",
+    logo: "https://www.google.com/s2/favicons?domain=spotify.com&sz=128",
+    category: "AI",
+    description: "Turn your ideas and lyrics into studio-quality songs and visualizers.",
+    launchDate: "August 2026",
+    totalStaked: 2,
+    allTimeClicks: 53,
+    countriesClaimed: [
+      {
+        countryName: "Brazil",
+        countryFlag: "🇧🇷",
+        countrySlug: "brazil",
+        rank: 1,
+        staked: 2,
+        date: "1d ago",
         status: "active",
       }
     ]
@@ -893,7 +720,7 @@ export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
     url: "https://www.indietools.app",
     logo: "https://www.indietools.app/favicon.ico",
     category: "Marketing",
-    description: "Curated directory and launchpad for indie makers, bootstrapped products, and micro-SaaS founders.",
+    description: "Curated directory and launchpad for indie makers and micro-SaaS founders.",
     launchDate: "August 2026",
     totalStaked: 1,
     allTimeClicks: 124,
@@ -917,13 +744,13 @@ export const SAMPLE_PRODUCTS: Record<string, ProductDetail> = {
     url: "https://www.queueform.com",
     logo: "https://framerusercontent.com/images/tfR1y96Rt21pquBZznoCbQMC5Qw.png",
     category: "Marketing",
-    description: "Turn your waiting list into an interactive referral engine that brings thousands of users on autopilot.",
+    description: "Turn your waiting list into an interactive referral engine.",
     launchDate: "August 2026",
-    totalStaked: 2,
+    totalStaked: 1,
     allTimeClicks: 210,
     countriesClaimed: [
       {
-        countryName: "United States of America",
+        countryName: "United States",
         countryFlag: "🇺🇸",
         countrySlug: "united-states-of-america",
         rank: 1,
